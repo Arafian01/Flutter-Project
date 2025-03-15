@@ -18,7 +18,8 @@ void main() {
               navigatorKey: Utils.mainAppNav,
               routes: {
                 '/': (context) => SplashPage(),
-                '/main': (context) => DonutShopMain()
+                '/main': (context) => DonutShopMain(),
+                '/details': (context) => DonutShopDetails(),
               }
           )
       )
@@ -476,70 +477,80 @@ class _DonutListState extends State<DonutList> {
 }
 
 class DonutCard extends StatelessWidget {
+
   DonutModel? donutInfo;
   DonutCard({ this.donutInfo });
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            width: 150,
-            padding: EdgeInsets.all(15),
-            alignment: Alignment.bottomLeft,
-            margin: EdgeInsets.only(left: 10, top: 80, right: 10, bottom: 20),
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: Offset(0.0, 4.0)
+    return GestureDetector(
+      onTap: () {
+        var donutService = Provider.of<DonutService>(context, listen: false);
+        donutService.onDonutSelected(donutInfo!);
+      },
+      child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 150,
+              padding: EdgeInsets.all(15),
+              alignment: Alignment.bottomLeft,
+              margin: EdgeInsets.only(left: 10, top: 80, right: 10, bottom: 20),
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: Offset(0.0, 4.0)
+                    )
+                  ]
+              ),
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${donutInfo!.name}',
+                        style: TextStyle(
+                            color: Utils.mainDark,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15
+                        )
+                    ),
+                    SizedBox(height: 10),
+                    Container(
+                        decoration: BoxDecoration(
+                          color: Utils.mainColor,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: EdgeInsets.only(
+                            left: 10, right: 10, top: 5, bottom: 5
+                        ),
+                        child: Text('\$${donutInfo!.price!.toStringAsFixed(2)}',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold
+                            )
+                        )
+                    )
+                  ]
+              ),
+            ),
+            Align(
+              alignment: Alignment.topCenter,
+              child: Hero(
+                  tag: donutInfo!.name!,
+                  child: Image.network(
+                      donutInfo!.imgUrl!,
+                      width: 150, height: 150,
+                      fit: BoxFit.contain
                   )
-                ]
-            ),
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('${donutInfo!.name}',
-                      style: TextStyle(
-                          color: Utils.mainDark,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15
-                      )
-                  ),
-                  SizedBox(height: 10),
-                  Container(
-                      decoration: BoxDecoration(
-                        color: Utils.mainColor,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      padding: EdgeInsets.only(
-                          left: 10, right: 10, top: 5, bottom: 5
-                      ),
-                      child: Text('\$${donutInfo!.price!.toStringAsFixed(2)}',
-                          style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold
-                          )
-                      )
-                  )
-                ]
-            ),
-          ),
-          Align(
-            alignment: Alignment.topCenter,
-            child: Image.network(
-                donutInfo!.imgUrl!,
-                width: 150, height: 150,
-                fit: BoxFit.contain
-            ),
-          )
-        ]
+              ),
+            )
+          ]
+      ),
     );
   }
 }
@@ -566,6 +577,18 @@ class DonutService extends ChangeNotifier {
   String? selectedDonutType;
   List<DonutModel> filteredDonuts = [];
 
+
+  late DonutModel selectedDonut;
+
+  DonutModel getSelecteDonut() {
+    return selectedDonut;
+  }
+
+  void onDonutSelected(DonutModel donut) {
+    selectedDonut = donut;
+    Utils.mainAppNav.currentState!.pushNamed('/details');
+  }
+
   DonutService() {
     selectedDonutType = filterBarItems.first.id;
     filteredDonutsByType(selectedDonutType!);
@@ -578,8 +601,204 @@ class DonutService extends ChangeNotifier {
 
     notifyListeners();
   }
+}
+
+class DonutShopDetails extends StatefulWidget {
+  @override
+  State<DonutShopDetails> createState() => _DonutShopDetailsState();
+}
+
+class _DonutShopDetailsState extends State<DonutShopDetails>
+    with SingleTickerProviderStateMixin{
+
+  DonutModel? selectedDonut;
+  AnimationController? controller;
+  Animation<double>? rotationAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    controller = AnimationController(
+        duration: const Duration(
+            seconds: 20),
+        vsync: this)..repeat();
+
+    rotationAnimation = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(
+        parent: controller!, curve: Curves.linear));
+  }
+
+  @override
+  void dispose() {
+    controller!.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    DonutService donutService = Provider.of<DonutService>(context, listen: false);
+    selectedDonut = donutService.getSelecteDonut();
+
+    return Scaffold(
+        appBar: AppBar(
+            iconTheme: const IconThemeData(color: Utils.mainDark),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: SizedBox(
+                width: 120,
+                child: Image.network(Utils.donutLogoRedText)
+            )
+        ),
+        body: Column(
+            children: [
+              Container(
+                  height: MediaQuery.of(context).size.height / 2,
+                  child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Positioned(
+                          top: -40,
+                          right: -120,
+                          child: Hero(
+                              tag: selectedDonut!.name!,
+                              child: RotationTransition(
+                                  turns: rotationAnimation!,
+                                  child: Image.network(selectedDonut!.imgUrl!,
+                                      width: MediaQuery.of(context).size.width * 1.25,
+                                      fit: BoxFit.contain
+                                  )
+                              )
+                          ),
+                        )
+                      ]
+                  )
+              ),
+              Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(30),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                  child: Text('${selectedDonut!.name!}',
+                                      style: TextStyle(color: Utils.mainDark,
+                                          fontSize: 30,
+                                          fontWeight: FontWeight.bold)
+                                  )
+                              ),
+                              SizedBox(width: 50),
+                              IconButton(
+                                  icon: Icon(Icons.favorite_outline),
+                                  color: Utils.mainDark,
+                                  onPressed: () {}
+                              )
+                            ]
+                        ),
+                        SizedBox(height: 10),
+                        Container(
+                          padding: EdgeInsets.only(top: 10, bottom: 10, left: 20, right: 20),
+                          decoration: BoxDecoration(
+                            color: Utils.mainDark,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text('\$${selectedDonut!.price!.toStringAsFixed(2)}',
+                              style: TextStyle(color: Colors.white)
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        Text('${selectedDonut!.description!}'),
+
+    Consumer<DonutShoppingCartService>(
+    builder: (context, cartService, child) {
+
+    if (!cartService.isDonutInCart(selectedDonut!)) {
+    return GestureDetector(
+    onTap: () {
+    cartService.addToCart(selectedDonut!);
+    },
+    child: Container(
+    margin: EdgeInsets.only(top: 20),
+    alignment: Alignment.center,
+    padding: EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
+    decoration: BoxDecoration(
+    color: Utils.mainDark.withOpacity(0.1),
+    borderRadius: BorderRadius.circular(50)
+    ),
+    child: Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+    Icon(Icons.shopping_cart, color: Utils.mainDark),
+    SizedBox(width: 20),
+    Text('Add To Cart', style: TextStyle(color: Utils.mainDark)),
+    ]
+    )
+    )
+    );
+    }
+
+    return Padding(
+    padding: EdgeInsets.only(top: 30, bottom: 30),
+    child: Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+    Icon(Icons.check_rounded, color: Utils.mainDark),
+    SizedBox(width: 20),
+    Text('Added to Cart', style: TextStyle(
+    fontWeight: FontWeight.bold, color: Utils.mainDark)
+    )
+    ],
+    ),
+    );
+    }
+    )
 
 
+
+                      ],
+                    ),
+                  )
+              )
+            ]
+        )
+    );
+  }
+}
+
+class DonutShoppingCartService extends ChangeNotifier {
+
+  List<DonutModel> cartDonuts = [];
+
+  void addToCart(DonutModel donut) {
+    cartDonuts.add(donut);
+    notifyListeners();
+  }
+
+  void removeFromCart(DonutModel donut) {
+    cartDonuts.removeWhere((d) => d.name == donut.name);
+    notifyListeners();
+  }
+
+  void clearCart() {
+    cartDonuts.clear();
+    notifyListeners();
+  }
+
+  double getTotal() {
+    double cartTotal = 0.0;
+    cartDonuts.forEach((element) {
+      cartTotal += element.price!;
+    });
+
+    return cartTotal;
+  }
+
+  bool isDonutInCart(DonutModel donut) {
+    return cartDonuts.any((d) => d.name == donut.name);
+  }
 }
 
 class DonutFilterBarItem {
