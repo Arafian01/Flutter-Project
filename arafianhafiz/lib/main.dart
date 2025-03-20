@@ -84,7 +84,7 @@ class FoodShopMain extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: Image.network(Utils.foodLogo, width: 120),
+        title: Image.asset(Utils.foodLogo, width: 120),
       ),
       body: Column(
         children: [
@@ -192,7 +192,7 @@ class _FoodPagerState extends State<FoodPager> {
                     ),
                   ),
                   child: Center(
-                    child: Image.network(page.logoImgUrl!, width: 100),
+                    child: Image.asset(page.logoImgUrl!, width: 100),
                   ),
                 );
               }),
@@ -252,7 +252,7 @@ class FoodSideMenu extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.network(Utils.foodLogo, width: 100),
+          Image.asset(Utils.foodLogo, width: 100),
           SizedBox(height: 20),
           Text("Menu", style: TextStyle(color: Colors.white, fontSize: 20)),
           // Tambahkan menu lainnya jika diperlukan...
@@ -468,7 +468,7 @@ class FoodCard extends StatelessWidget {
             alignment: Alignment.topCenter,
             child: Hero(
               tag: foodInfo!.foodName,
-              child: Image.network(foodInfo!.foodImage, width: 150, height: 150, fit: BoxFit.contain),
+              child: Image.asset(foodInfo!.foodImage, width: 150, height: 150, fit: BoxFit.contain),
             ),
           ),
         ],
@@ -587,7 +587,7 @@ class _FoodDetailsPageState extends State<FoodDetailsPage>
         iconTheme: IconThemeData(color: Colors.red[900]),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Image.network(Utils.foodLogo, width: 120),
+        title: Image.asset(Utils.foodLogo, width: 120),
         actions: [
           FoodShoppingCartBadge(),
         ],
@@ -604,14 +604,11 @@ class _FoodDetailsPageState extends State<FoodDetailsPage>
                   right: -120,
                   child: Hero(
                     tag: selectedFood!.foodName,
-                    child: RotationTransition(
-                      turns: rotationAnimation!,
-                      child: Image.network(
+                      child: Image.asset(
                         selectedFood!.foodImage,
                         width: MediaQuery.of(context).size.width * 1.25,
                         fit: BoxFit.contain,
                       ),
-                    ),
                   ),
                 ),
               ],
@@ -788,7 +785,7 @@ class _FoodShoppingCartPageState extends State<FoodShoppingCartPage>
             opacity: Tween(begin: 0.0, end: 1.0)
                 .animate(CurvedAnimation(
                 parent: titleAnimation!, curve: Curves.easeInOut)),
-            child: Image.network(Utils.foodTitleCart, width: 170),
+            child: Image.asset(Utils.foodTitleCart, width: 170),
           ),
           Expanded(
             child: Consumer<FoodShoppingCartService>(
@@ -954,7 +951,7 @@ class FoodShoppingListRow extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
       child: Row(
         children: [
-          Image.network('${food!.foodImage}', width: 80, height: 80),
+          Image.asset('${food!.foodImage}', width: 80, height: 80),
           SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -1051,14 +1048,14 @@ class Utils {
   static const Color mainColor = Color(0xFFFF4C4C); // merah terang
   static const Color mainDark = Color(0xFFB22222);  // merah gelap
 
-  // URL asset (silakan ganti dengan URL asset yang sesuai)
-  static const String foodLogo = 'https://example.com/food_logo.png';
-  static const String foodPromo1 = 'https://example.com/food_promo1.png';
-  static const String foodPromo2 = 'https://example.com/food_promo2.png';
-  static const String foodPromo3 = 'https://example.com/food_promo3.png';
-  static const String foodTitleCart = 'https://example.com/food_title_cart.png';
+  // Data asset dari folder lokal
+  static const String foodLogo = 'assets/images/logo.jpg';
+  static const String foodPromo1 = 'assets/images/food_promo1.jpg';
+  static const String foodPromo2 = 'assets/images/food_promo2.jpg';
+  static const String foodPromo3 = 'assets/images/food_promo3.jpg';
+  static const String foodTitleCart = 'assets/images/food_title_cart.jpg';
 
-  // Data dummy untuk list Food
+// Data dummy untuk list Food
   static List<FoodModel> foods = [
     FoodModel(
       food_id: '1',
@@ -1067,7 +1064,7 @@ class Utils {
       food_weigth: '200g',
       food_type: 'snack',
       food_description: 'Roti manis lezat yang pas untuk sarapan atau cemilan.',
-      foodImage: 'https://example.com/roti_manis.png',
+      foodImage: 'assets/images/roti_manis.jpg',
       food_quantity: '3.50',
     ),
     FoodModel(
@@ -1077,7 +1074,7 @@ class Utils {
       food_weigth: '500g',
       food_type: 'main course',
       food_description: 'Pizza klasik dengan keju mozzarella dan saus tomat segar.',
-      foodImage: 'https://example.com/pizza_margherita.png',
+      foodImage: 'assets/images/pizza_margherita.jpg',
       food_quantity: '8.99',
     ),
     FoodModel(
@@ -1087,7 +1084,7 @@ class Utils {
       food_weigth: '350g',
       food_type: 'snack',
       food_description: 'Martabak telur gurih dengan isian daging dan sayuran.',
-      foodImage: 'https://example.com/martabak_telur.png',
+      foodImage: 'assets/images/martabak_telur.jpg',
       food_quantity: '5.50',
     ),
     FoodModel(
@@ -1097,7 +1094,7 @@ class Utils {
       food_weigth: '150g',
       food_type: 'snack',
       food_description: 'Pisang goreng renyah dengan taburan gula halus.',
-      foodImage: 'https://example.com/pisang_goreng.png',
+      foodImage: 'assets/images/pisang_goreng.jpg',
       food_quantity: '2.99',
     ),
     FoodModel(
@@ -1107,7 +1104,7 @@ class Utils {
       food_weigth: '300g',
       food_type: 'main course',
       food_description: 'Bakso sapi kenyal disajikan dengan kuah kaldu gurih.',
-      foodImage: 'https://example.com/bakso_sapi.png',
+      foodImage: 'assets/images/bakso_sapi.jpg',
       food_quantity: '6.50',
     ),
   ];
