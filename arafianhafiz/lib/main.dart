@@ -32,7 +32,6 @@ void main() {
 }
 
 class SplashPage extends StatefulWidget {
-
   @override
   SplashPageState createState() => SplashPageState();
 }
