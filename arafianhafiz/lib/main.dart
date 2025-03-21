@@ -9,7 +9,7 @@ class Utils {
   static const Color mainColor = Color(0xFFFF5656);
   static const Color mainDark = Color(0xFFB22222);
 
-  // Aset gambar lokal (pastikan file-file berikut ada di folder assets/images/)
+  // Aset gambar lokal (pastikan file-file berikut ada di assets/images/)
   static const String foodLogo = 'assets/images/logo.jpg';
   static const String foodPromo1 = 'assets/images/food_promo1.jpg';
   static const String foodPromo2 = 'assets/images/food_promo2.jpg';
@@ -18,6 +18,7 @@ class Utils {
 
   // Data dummy untuk daftar Food
   static List<FoodModel> foodItems = [
+    // Produk tipe Bread
     FoodModel(
       food_id: '1',
       foodName: 'Roti Manis',
@@ -30,6 +31,17 @@ class Utils {
     ),
     FoodModel(
       food_id: '2',
+      foodName: 'Roti Gandum',
+      food_category: 'Bread',
+      food_weight: '250g',
+      food_type: 'Snack',
+      food_description: 'Roti gandum sehat dengan serat tinggi.',
+      food_image: 'assets/images/roti_manis.jpg',
+      food_quantity: '4.00',
+    ),
+    // Produk tipe Pizza
+    FoodModel(
+      food_id: '3',
       foodName: 'Pizza Margherita',
       food_category: 'Pizza',
       food_weight: '500g',
@@ -39,7 +51,18 @@ class Utils {
       food_quantity: '8.99',
     ),
     FoodModel(
-      food_id: '3',
+      food_id: '4',
+      foodName: 'Pizza Pepperoni',
+      food_category: 'Pizza',
+      food_weight: '550g',
+      food_type: 'Main Course',
+      food_description: 'Pizza dengan topping pepperoni yang melimpah.',
+      food_image: 'assets/images/pizza_margherita.jpg',
+      food_quantity: '10.50',
+    ),
+    // Produk tipe Martabak
+    FoodModel(
+      food_id: '5',
       foodName: 'Martabak Telur',
       food_category: 'Martabak',
       food_weight: '350g',
@@ -49,7 +72,18 @@ class Utils {
       food_quantity: '5.50',
     ),
     FoodModel(
-      food_id: '4',
+      food_id: '6',
+      foodName: 'Martabak Manis',
+      food_category: 'Martabak',
+      food_weight: '400g',
+      food_type: 'Dessert',
+      food_description: 'Martabak manis dengan cokelat dan keju.',
+      food_image: 'assets/images/martabak_telur.jpg',
+      food_quantity: '6.00',
+    ),
+    // Produk tipe Fritter
+    FoodModel(
+      food_id: '7',
       foodName: 'Pisang Goreng',
       food_category: 'Fritter',
       food_weight: '150g',
@@ -59,7 +93,18 @@ class Utils {
       food_quantity: '2.99',
     ),
     FoodModel(
-      food_id: '5',
+      food_id: '8',
+      foodName: 'Tahu Goreng',
+      food_category: 'Fritter',
+      food_weight: '180g',
+      food_type: 'Snack',
+      food_description: 'Tahu goreng gurih dengan sambal kacang.',
+      food_image: 'assets/images/pisang_goreng.jpg',
+      food_quantity: '3.50',
+    ),
+    // Produk tipe Meatball
+    FoodModel(
+      food_id: '9',
       foodName: 'Bakso Sapi',
       food_category: 'Meatball',
       food_weight: '300g',
@@ -67,6 +112,16 @@ class Utils {
       food_description: 'Bakso sapi kenyal dengan kuah kaldu gurih.',
       food_image: 'assets/images/bakso_sapi.jpg',
       food_quantity: '6.50',
+    ),
+    FoodModel(
+      food_id: '10',
+      foodName: 'Bakso Ayam',
+      food_category: 'Meatball',
+      food_weight: '280g',
+      food_type: 'Main Course',
+      food_description: 'Bakso ayam lembut dengan bumbu rempah khas.',
+      food_image: 'assets/images/bakso_sapi.jpg',
+      food_quantity: '5.99',
     ),
   ];
 }
@@ -112,13 +167,14 @@ class FoodFilterBarItem {
 
 // Provider untuk mengelola daftar food, filtering, dan navigasi detail
 class FoodService extends ChangeNotifier {
+  // Hanya 5 tipe sesuai permintaan
   List<FoodFilterBarItem> filterBarItems = [
     FoodFilterBarItem(id: 'all', label: 'All'),
     FoodFilterBarItem(id: 'Bread', label: 'Bread'),
     FoodFilterBarItem(id: 'Pizza', label: 'Pizza'),
     FoodFilterBarItem(id: 'Martabak', label: 'Martabak'),
     FoodFilterBarItem(id: 'Fritter', label: 'Fritter'),
-    FoodFilterBarItem(id: 'Meatball', label: 'Meatball'),
+    // Jika ingin 5 tipe, bisa pilih Meatball atau tidak; disini kami gunakan 5: all, Bread, Pizza, Martabak, Fritter
   ];
   String selectedFoodCategory = 'all';
   List<FoodModel> filteredFoods = [];
@@ -135,8 +191,9 @@ class FoodService extends ChangeNotifier {
     if (category == 'all') {
       filteredFoods = List.from(Utils.foodItems);
     } else {
+      // Pastikan perbandingan tidak sensitif huruf besar/kecil
       filteredFoods = Utils.foodItems
-          .where((food) => food.food_category == category)
+          .where((food) => food.food_category.toLowerCase() == category.toLowerCase())
           .toList();
     }
     notifyListeners();
@@ -536,23 +593,14 @@ class FoodCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: Offset(0, 4))],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Gambar di paling atas dengan top rounded (sesuai card)
+            // Gambar produk di paling atas dengan rounded top
             ClipRRect(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
               child: Image.asset(
                 foodInfo!.food_image,
                 width: 150,
@@ -562,19 +610,14 @@ class FoodCard extends StatelessWidget {
             ),
             Padding(
               padding: EdgeInsets.all(8),
-              child: Column(
-                children: [
-                  // Harga di bawah
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Utils.mainColor,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text('\$${foodInfo!.food_quantity}',
-                        style: TextStyle(color: Colors.white, fontSize: 12)),
-                  ),
-                ],
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Utils.mainColor,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text('\$${foodInfo!.food_quantity}',
+                    style: TextStyle(color: Colors.white, fontSize: 12)),
               ),
             ),
           ],
@@ -618,8 +661,8 @@ class FoodShoppingCartBadge extends StatelessWidget {
 }
 
 //----- Food Details Page -----
-// Detail page menampilkan gambar (dengan gradient overlay di bawah), field tambahan (weight, category, type, description),
-// tombol Add To Cart dan tombol Favorite yang berfungsi (nama dihapus karena sudah ada di AppBar)
+// Layout detail produk: gambar di atas dengan gradient overlay di bagian bawah, detail produk di bawah gambar (weight, category, type, deskripsi, harga, tombol Add To Cart),
+// dan tombol favorite (logo love) yang berfungsi.
 class FoodDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -629,10 +672,10 @@ class FoodDetailsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Utils.mainDark),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: Utils.mainDark),
-        title: Container(), // Nama dihapus karena sudah ada di topbar
+        title: Container(), // Nama tidak ditampilkan (sudah ada di AppBar pada halaman sebelumnya)
         actions: [
           IconButton(
             icon: Consumer<FoodFavoritesService>(
@@ -654,13 +697,11 @@ class FoodDetailsPage extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Gambar produk dengan gradient overlay di bagian bawah (mirip detail donut)
+            // Gambar produk dengan overlay gradient (bagian atas)
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(40),
-                      bottomRight: Radius.circular(40)),
+                  borderRadius: BorderRadius.only(bottomLeft: Radius.circular(40), bottomRight: Radius.circular(40)),
                   child: Image.asset(
                     selectedFood.food_image,
                     width: double.infinity,
@@ -681,20 +722,18 @@ class FoodDetailsPage extends StatelessWidget {
                 ),
               ],
             ),
-            // Detail informasi (tanpa nama, karena sudah ada di AppBar)
+            // Detail produk di bawah gambar (sama seperti layout donut)
             Padding(
               padding: EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Weight: ${selectedFood.food_weight}',
-                      style: TextStyle(fontSize: 16, color: Utils.mainDark)),
+                  // Detail tambahan: weight, category, type, deskripsi
+                  Text('Weight: ${selectedFood.food_weight}', style: TextStyle(fontSize: 16, color: Utils.mainDark)),
                   SizedBox(height: 5),
-                  Text('Category: ${selectedFood.food_category}',
-                      style: TextStyle(fontSize: 16, color: Utils.mainDark)),
+                  Text('Category: ${selectedFood.food_category}', style: TextStyle(fontSize: 16, color: Utils.mainDark)),
                   SizedBox(height: 5),
-                  Text('Type: ${selectedFood.food_type}',
-                      style: TextStyle(fontSize: 16, color: Utils.mainDark)),
+                  Text('Type: ${selectedFood.food_type}', style: TextStyle(fontSize: 16, color: Utils.mainDark)),
                   SizedBox(height: 10),
                   Text(
                     selectedFood.food_description,
@@ -712,28 +751,21 @@ class FoodDetailsPage extends StatelessWidget {
                         ),
                         child: Text(
                           '\$${selectedFood.food_quantity}',
-                          style: TextStyle(
-                              color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
                       Consumer<FoodShoppingCartService>(
                         builder: (context, cartService, child) {
                           bool inCart = cartService.isFoodInCart(selectedFood);
                           return inCart
-                              ? Text('Added to Cart',
-                              style: TextStyle(
-                                  color: Utils.mainDark,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold))
+                              ? Text('Added to Cart', style: TextStyle(color: Utils.mainDark, fontSize: 16, fontWeight: FontWeight.bold))
                               : ElevatedButton(
                             onPressed: () {
                               cartService.addToCart(selectedFood);
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Utils.mainColor,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                             ),
                             child: Text('Add To Cart'),
                           );
