@@ -12,8 +12,9 @@ class Utils {
   // Aset gambar lokal (pastikan file-file berikut ada di assets/images/)
   static const String foodLogo = 'assets/images/logo.png';
   static const String foodPromo1 = 'assets/images/pizza_margherita.jpg';
-  static const String foodPromo2 = 'assets/images/martabak_manis.jpg';
-  static const String foodPromo3 = 'assets/images/bakso_ayam.jpg';
+  static const String foodPromo2 = 'assets/images/martabak_telur.jpg';
+  static const String foodPromo3 = 'assets/images/pisang_goreng.jpg';
+  static const String foodTitleCart = 'assets/images/food_title_cart.png';
 
   // Data dummy untuk daftar Food (total 10 data)
   static List<FoodModel> foodItems = [
@@ -35,7 +36,7 @@ class Utils {
       food_weight: '250g',
       food_type: 'Snack',
       food_description: 'Roti gandum sehat dengan serat tinggi.',
-      food_image: 'assets/images/roti_gandum.jpg',
+      food_image: 'assets/images/roti_manis.jpg',
       food_quantity: '4.00',
     ),
     // Produk tipe Pizza
@@ -56,7 +57,7 @@ class Utils {
       food_weight: '550g',
       food_type: 'Main Course',
       food_description: 'Pizza dengan topping pepperoni yang melimpah.',
-      food_image: 'assets/images/Pepperoni.jpg',
+      food_image: 'assets/images/pizza_margherita.jpg',
       food_quantity: '10.50',
     ),
     // Produk tipe Martabak
@@ -77,7 +78,7 @@ class Utils {
       food_weight: '400g',
       food_type: 'Dessert',
       food_description: 'Martabak manis dengan cokelat dan keju.',
-      food_image: 'assets/images/martabak_manis.jpg',
+      food_image: 'assets/images/martabak_telur.jpg',
       food_quantity: '6.00',
     ),
     // Produk tipe Fritter
@@ -98,7 +99,7 @@ class Utils {
       food_weight: '180g',
       food_type: 'Snack',
       food_description: 'Tahu goreng gurih dengan sambal kacang.',
-      food_image: 'assets/images/tahu_goreng.jpg',
+      food_image: 'assets/images/pisang_goreng.jpg',
       food_quantity: '3.50',
     ),
     // Produk tipe Meatball
@@ -119,7 +120,7 @@ class Utils {
       food_weight: '280g',
       food_type: 'Main Course',
       food_description: 'Bakso ayam lembut dengan bumbu rempah khas.',
-      food_image: 'assets/images/bakso_ayam.jpg',
+      food_image: 'assets/images/bakso_sapi.jpg',
       food_quantity: '5.99',
     ),
   ];
@@ -301,50 +302,25 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  // Menambahkan parameter optional initialIndex untuk mengatur halaman awal
+  final int initialIndex;
+  MyApp({this.initialIndex = 0});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Food App',
       debugShowCheckedModeBanner: false,
       navigatorKey: Utils.mainAppNav,
-      home: SplashPage(),
+      home: FoodShopMain(initialIndex: initialIndex),
     );
   }
 }
 
-//----- Splash Page -----
-class SplashPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    Future.delayed(Duration(seconds: 2), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => FoodShopMain()),
-      );
-    });
-    return Scaffold(
-      body: Container(
-        color: Utils.mainColor,
-        child: Stack(
-          children: [
-            Center(child: Icon(Icons.fastfood, size: 90, color: Colors.white)),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                margin: EdgeInsets.only(bottom: 80),
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-//----- Main Page with Drawer, AppBar, and Bottom Navigation -----
+//----- FoodShopMain -----
+// Halaman utama dengan Drawer, AppBar, dan BottomNavigationBar. Halaman ini dapat diinisiasi dengan parameter initialIndex (0: Home, 1: Favorites, 2: Cart)
 class FoodShopMain extends StatefulWidget {
+  final int initialIndex;
+  FoodShopMain({this.initialIndex = 0});
   @override
   _FoodShopMainState createState() => _FoodShopMainState();
 }
@@ -356,6 +332,12 @@ class _FoodShopMainState extends State<FoodShopMain> {
     FoodFavoritesPage(),
     FoodShoppingCartPage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -381,10 +363,14 @@ class _FoodShopMainState extends State<FoodShopMain> {
         iconTheme: IconThemeData(color: Colors.white),
         title: Center(child: Image.asset(Utils.foodLogo, width: 120)),
         actions: [
-          Consumer<FoodShoppingCartService>(
-            builder: (context, cartService, child) {
-              return FoodShoppingCartBadge();
+          // Jika di AppBar, klik ikon cart akan navigasi ke halaman cart (FoodShopMain dengan initialIndex = 2)
+          GestureDetector(
+            onTap: () {
+              Navigator.of(Utils.mainAppNav.currentContext!).push(
+                MaterialPageRoute(builder: (context) => FoodShopMain(initialIndex: 2)),
+              );
             },
+            child: FoodShoppingCartBadge(),
           ),
         ],
       ),
@@ -668,7 +654,8 @@ class FoodShoppingCartBadge extends StatelessWidget {
 
 //----- Food Details Page -----
 // Layout detail produk: gambar di atas dengan gradient overlay, detail produk di bawah gambar dengan tampilan seperti halaman detail donut.
-// Nama produk ditampilkan di AppBar, dan tombol "Add To Cart" selalu terlihat, dengan label berubah jika produk sudah ada di cart.
+// Nama produk ditampilkan di AppBar. Tombol "Add To Cart" selalu terlihat dan bila ditekan, jika produk belum ada, ditambahkan ke cart,
+// jika sudah ada, quantity bertambah dan SnackBar menampilkan pesan.
 class FoodDetailsPage extends StatefulWidget {
   @override
   _FoodDetailsPageState createState() => _FoodDetailsPageState();
@@ -680,6 +667,7 @@ class _FoodDetailsPageState extends State<FoodDetailsPage> {
     final foodService = Provider.of<FoodService>(context, listen: false);
     final selectedFood = foodService.selectedFood;
     final favoritesService = Provider.of<FoodFavoritesService>(context, listen: false);
+    final cartService = Provider.of<FoodShoppingCartService>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Utils.mainColor,
@@ -700,7 +688,15 @@ class _FoodDetailsPageState extends State<FoodDetailsPage> {
               favoritesService.toggleFavorite(selectedFood);
             },
           ),
-          FoodShoppingCartBadge(),
+          // Ketika ikon cart di AppBar diklik, pindah ke halaman FoodShopMain dengan initialIndex = 2
+          GestureDetector(
+            onTap: () {
+              Navigator.of(Utils.mainAppNav.currentContext!).push(
+                MaterialPageRoute(builder: (context) => FoodShopMain(initialIndex: 2)),
+              );
+            },
+            child: FoodShoppingCartBadge(),
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -768,20 +764,27 @@ class _FoodDetailsPageState extends State<FoodDetailsPage> {
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
-                      Consumer<FoodShoppingCartService>(
-                        builder: (context, cartService, child) {
-                          bool inCart = cartService.isFoodInCart(selectedFood);
-                          return ElevatedButton(
-                            onPressed: () {
-                              cartService.addToCart(selectedFood);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Utils.mainColor,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      ElevatedButton(
+                        onPressed: () {
+                          bool alreadyInCart = cartService.isFoodInCart(selectedFood);
+                          cartService.addToCart(selectedFood);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(alreadyInCart ? 'Quantity bertambah' : 'Product added to cart'),
+                              duration: Duration(seconds: 2),
                             ),
-                            child: Text(inCart ? 'Added' : 'Add To Cart'),
                           );
                         },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Utils.mainColor,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        ),
+                        child: Consumer<FoodShoppingCartService>(
+                          builder: (context, cartService, child) {
+                            bool inCart = cartService.isFoodInCart(selectedFood);
+                            return Text(inCart ? 'Added' : 'Add To Cart');
+                          },
+                        ),
                       ),
                     ],
                   )
@@ -866,8 +869,8 @@ class FoodShoppingCartPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Shopping Cart', style: TextStyle(color: Utils.mainDark)),
-        backgroundColor: Colors.transparent,
-        iconTheme: IconThemeData(color: Utils.mainDark),
+        backgroundColor: Utils.mainColor,
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: EdgeInsets.all(30),
