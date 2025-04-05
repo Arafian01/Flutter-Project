@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
 
@@ -19,7 +20,15 @@ void main() async {
     )
   );
 
-  runApp(FlutterBankApp());
+  runApp(
+    MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => LoginService(),
+          )
+        ],
+        child: FlutterBankApp(),
+    )
+  );
 }
 
 class Utils {
@@ -86,6 +95,9 @@ class FlutterBankLoginState extends State<FlutterBankLogin>{
 
   @override
   Widget build(BuildContext context) {
+
+    LoginService loginService = Provider.of<LoginService>(context, listen: false);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Container(
@@ -181,7 +193,20 @@ class FlutterBankLoginState extends State<FlutterBankLogin>{
             FlutterBankMainButton(
               label: 'Sign In',
               enabled: true,
-              onTap: () {},
+              onTap: () async {
+                var username = usernameController.value.text;
+                var pwd = passwordController.value.text;
+
+                bool isLoggedIn = await loginService.signInWithEmailAndPassword(username, pwd);
+
+                if (isLoggedIn) {
+                  usernameController.clear();
+                  passwordController.clear();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => FlutterBankMain())
+                  );
+                }
+              },
             ),
             const SizedBox(height: 10),
             FlutterBankMainButton(
@@ -261,6 +286,43 @@ class FlutterBankMainButton extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class LoginService extends ChangeNotifier {
+
+  String _userId = '';
+
+  String getUserId() {
+    return _userId;
+  }
+
+  Future<bool> signInWithEmailAndPassword(String email, String password) async {
+
+    try {
+      UserCredential credentials = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      _userId = credentials.user!.uid;
+
+      return true;
+    } on FirebaseAuthException catch (ex) {
+      return false;
+    }
+  }
+}
+
+class FlutterBankMain extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Text('main page'),
+      ),
     );
   }
 }
