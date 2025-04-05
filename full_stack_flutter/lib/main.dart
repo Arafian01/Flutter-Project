@@ -1,7 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-void main() {
+void main() async {
+
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: const FirebaseOptions(
+        apiKey: "AIzaSyAx6fTH7tTCp52VACrDsy4HOPj44hPNFoA",
+        authDomain: "flutter-bank-app-a6bcb.firebaseapp.com",
+        projectId: "flutter-bank-app-a6bcb",
+        storageBucket: "flutter-bank-app-a6bcb.firebasestorage.app",
+        messagingSenderId: "171914461505",
+        appId: "1:171914461505:web:f4ed22ef1c9d9caf2061c0"
+    )
+  );
+
   runApp(FlutterBankApp());
 }
 
