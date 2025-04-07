@@ -23,7 +23,8 @@ void main() async {
   runApp(
     MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => LoginService(),
+          ChangeNotifierProvider(
+            create: (_) => LoginService(),
           )
         ],
         child: FlutterBankApp(),
@@ -33,6 +34,16 @@ void main() async {
 
 class Utils {
   static const Color mainThemeColor = Color(0xFF8700C3);
+
+  static bool validateEmail(String? value) {
+    String pattern =
+        r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]"
+        r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
+        r"{0,253}[a-zA-Z0-9])?)*$";
+    RegExp regex = RegExp(pattern);
+
+    return (value != null || value!.isNotEmpty || regex.hasMatch(value));
+  }
 }
 
 class FlutterBankApp extends StatelessWidget {
@@ -186,13 +197,40 @@ class FlutterBankLoginState extends State<FlutterBankLogin>{
                           controller: passwordController,
                           style: const TextStyle(fontSize: 16),
                         ),
+                      ),
+
+                      Consumer<LoginService>(
+                        builder: (context, lService, child) {
+
+                          String errorMsg = lService.getErrorMessage();
+
+                          if (errorMsg.isEmpty) {
+                            return const SizedBox(height: 40,);
+                          }
+
+                          return Container(
+                            padding: const EdgeInsets.all(10),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.warning, color: Colors.red,),
+                                const SizedBox(width: 10,),
+                                Expanded(
+                                    child: Text(
+                                      errorMsg,
+                                      style: const TextStyle(color: Colors.red),
+                                    ))
+                              ],
+                            ),
+                          );
+                          return Container();
+                        },
                       )
                     ],
                   ),
                 )),
             FlutterBankMainButton(
               label: 'Sign In',
-              enabled: true,
+              enabled: validateEmailAndPassword(),
               onTap: () async {
                 var username = usernameController.value.text;
                 var pwd = passwordController.value.text;
@@ -221,6 +259,11 @@ class FlutterBankLoginState extends State<FlutterBankLogin>{
         ),
       ),
     );
+  }
+  bool validateEmailAndPassword() {
+    return usernameController.value.text.isNotEmpty &&
+        passwordController.value.text.isNotEmpty
+        && Utils.validateEmail(usernameController.value.text);
   }
 }
 
@@ -293,12 +336,22 @@ class FlutterBankMainButton extends StatelessWidget {
 class LoginService extends ChangeNotifier {
 
   String _userId = '';
+  String _errorMessage = '';
 
+  String getErrorMessage() {
+    return _errorMessage;
+  }
+
+  void setLoginErrorMessage(String msg) {
+    _errorMessage = msg;
+    notifyListeners();
+  }
   String getUserId() {
     return _userId;
   }
 
   Future<bool> signInWithEmailAndPassword(String email, String password) async {
+    setLoginErrorMessage('');
 
     try {
       UserCredential credentials = await FirebaseAuth.instance
@@ -311,6 +364,7 @@ class LoginService extends ChangeNotifier {
 
       return true;
     } on FirebaseAuthException catch (ex) {
+      setLoginErrorMessage('Error during sign-in' + ex.message!);
       return false;
     }
   }
