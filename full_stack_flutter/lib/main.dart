@@ -95,7 +95,7 @@ class FlutterBankApp extends StatelessWidget {
         )
       ),
       debugShowCheckedModeBanner: false,
-      home: FlutterAccountRegistration(),
+      home: FlutterBankSplash(),
     );
   }
 }
@@ -289,7 +289,11 @@ class FlutterBankLoginState extends State<FlutterBankLogin>{
             FlutterBankMainButton(
               label: 'Register',
               icon: Icons.account_circle,
-              onTap: () {},
+              onTap: () {
+                Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => FlutterAccountRegistration())
+                );
+              },
               backgroundColor: Utils.mainThemeColor.withOpacity(0.05),
               iconColor: Utils.mainThemeColor,
               labelColor: Utils.mainThemeColor,
