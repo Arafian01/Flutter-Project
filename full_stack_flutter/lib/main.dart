@@ -54,6 +54,7 @@ class Utils {
 
       return Container(
         padding: const EdgeInsets.all(5),
+        margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
             color: Colors.grey.withOpacity(0.2),
             borderRadius: BorderRadius.circular(50)
@@ -396,6 +397,18 @@ class LoginService extends ChangeNotifier {
     return _userId;
   }
 
+  Future<bool> createUserWithEmailAndPassword(String email, String pwd) async {
+
+    try {
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: pwd);
+      return true;
+
+    } on FirebaseAuthException {
+      return false;
+    }
+  }
+
   Future<bool> signInWithEmailAndPassword(String email, String password) async {
     setLoginErrorMessage('');
 
@@ -448,6 +461,9 @@ class FlutterAccountRegistrationState extends State<FlutterAccountRegistration> 
 
   @override
   Widget build(BuildContext context) {
+
+    LoginService loginService = Provider.of<LoginService>(context, listen: false);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -472,16 +488,54 @@ class FlutterAccountRegistrationState extends State<FlutterAccountRegistration> 
                         style: TextStyle(color: Utils.mainThemeColor, fontSize: 20),
                       ),
                     ),
+
                     Utils.generateInputField('Email', Icons.email,
                       usernameController,
                       false, (text) {
                        setState(() {});
-                      } )
+                      }),
+
+                    Utils.generateInputField('Password', Icons.lock,
+                      passwordController,
+                      true, (text) {
+                        setState(() {});
+                      }),
+
+                    Utils.generateInputField('Confitm Password', Icons.lock,
+                        confirmPasswordController,
+                        true, (text) {
+                          setState(() {});
+                        }),
                   ],
-            ))
+            )
+            ),
+
+            FlutterBankMainButton(
+              label: 'Register',
+              enabled: validateFormFields(),
+              onTap: () async{
+                String username = usernameController.value.text;
+                String pwd = passwordController.value.text;
+
+                bool accountCreated =
+                    await loginService.createUserWithEmailAndPassword(username, pwd);
+
+                if (accountCreated) {
+                  Navigator.of(context).pop();
+                }
+              },
+            )
           ],
         ),
       )
     );
+  }
+
+  bool validateFormFields() {
+    return Utils.validateEmail(usernameController.value.text) &&
+    usernameController.value.text.isNotEmpty &&
+    passwordController.value.text.isNotEmpty &&
+    confirmPasswordController.value.text.isNotEmpty &&
+      (passwordController.value.text == confirmPasswordController.value.text);
   }
 }
