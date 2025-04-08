@@ -44,6 +44,44 @@ class Utils {
 
     return (value != null || value!.isNotEmpty || regex.hasMatch(value));
   }
+
+  static Widget generateInputField(
+    String hintText,
+    IconData iconData,
+    TextEditingController controller,
+    bool isPasswordField,
+    Function onChanged) {
+
+      return Container(
+        padding: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+            color: Colors.grey.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(50)
+        ),
+        child: TextField(
+          onChanged: (text) {
+            onChanged(text);
+          },
+          obscureText: isPasswordField,
+          obscuringCharacter: "*",
+          decoration: InputDecoration(
+              prefixIcon: Icon(iconData, color: Utils.mainThemeColor,),
+              border: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              errorBorder: InputBorder.none,
+              disabledBorder: InputBorder.none,
+              contentPadding: EdgeInsets.only(
+                  left: 15, bottom: 11, top: 11, right: 15
+              ),
+              hintText: hintText
+          ),
+          controller: controller,
+          style: const TextStyle(fontSize: 16),
+        ),
+      );
+    }
+
 }
 
 class FlutterBankApp extends StatelessWidget {
@@ -56,7 +94,7 @@ class FlutterBankApp extends StatelessWidget {
         )
       ),
       debugShowCheckedModeBanner: false,
-      home: FlutterBankSplash(),
+      home: FlutterAccountRegistration(),
     );
   }
 }
@@ -389,3 +427,61 @@ class FlutterBankMain extends StatelessWidget {
   }
 }
 
+class FlutterAccountRegistration extends StatefulWidget {
+  @override
+  FlutterAccountRegistrationState createState() => FlutterAccountRegistrationState();
+}
+
+class FlutterAccountRegistrationState extends State<FlutterAccountRegistration> {
+
+  TextEditingController usernameController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  TextEditingController confirmPasswordController = TextEditingController();
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Utils.mainThemeColor),
+        backgroundColor: Colors.transparent,
+        title: const Icon(Icons.savings, color: Utils.mainThemeColor, size: 40,),
+        centerTitle: true,
+      ),
+      body: Container(
+        padding: const EdgeInsets.all(30),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 40),
+                      child: Text('Create New account',
+                        style: TextStyle(color: Utils.mainThemeColor, fontSize: 20),
+                      ),
+                    ),
+                    Utils.generateInputField('Email', Icons.email,
+                      usernameController,
+                      false, (text) {
+                       setState(() {});
+                      } )
+                  ],
+            ))
+          ],
+        ),
+      )
+    );
+  }
+}
