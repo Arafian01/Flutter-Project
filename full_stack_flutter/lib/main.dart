@@ -1054,6 +1054,11 @@ class FlutterBankDeposit extends StatelessWidget {
 }
 
 class AccountActionSelection extends StatelessWidget {
+
+  final String? actionTypeLabel;
+
+  const AccountActionSelection({ this.actionTypeLabel});
+
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
@@ -1078,7 +1083,10 @@ class AccountActionSelection extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.start,
-                children: [],
+                children: [
+                  Text(actionTypeLabel!, style: TextStyle(color: Colors.grey, fontSize: 15)),
+                  const SizedBox(height: 10,)
+                ],
               );
             }
         );
@@ -1106,6 +1114,57 @@ class FlutterBankError extends StatelessWidget {
           )
         ],
       ),
+    );
+  }
+}
+
+class AccountActionCard extends StatelessWidget {
+
+  final List<Account>? account;
+  final Account? selectedAccount;
+
+  const AccountActionCard({this.account, this.selectedAccount});
+
+  @override
+  Widget build(BuildContext context) {
+
+    FlutterBankService bankService = 
+        Provider.of<FlutterBankService>(context, listen: false);
+
+    return Row(
+      children: List.generate(account!.length, (index) {
+        var currentAccount = account![index];
+
+        return Container(
+          margin: const EdgeInsets.all(5),
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20, offset: const Offset(0.0, 5.0)
+              )
+            ],
+            border: Border.all(
+              width: 5,
+              color: selectedAccount != null &&
+                selectedAccount!.id == currentAccount.id ?
+                  Utils.mainThemeColor : Colors.transparent
+            )
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('${currentAccount.type!.toUpperCase()} ACCT',
+                style: const TextStyle(color: Utils.mainThemeColor)
+              ),
+              Text(currentAccount.accountNumber!)
+            ],
+          ),
+        );
+      }),
     );
   }
 }
