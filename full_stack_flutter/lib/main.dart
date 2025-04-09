@@ -997,3 +997,53 @@ class DepositService extends ChangeNotifier {
     return amountToDeposit > 0;
   }
 }
+
+class AccountActionHeader extends StatelessWidget {
+  final String? headerTitle;
+  final IconData? icon;
+
+  const AccountActionHeader({ this.headerTitle, this.icon });
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      child: Row(
+        children: [
+          Icon(icon, color: Utils.mainThemeColor, size: 30,),
+          const SizedBox(width: 10,),
+          Text(headerTitle!,
+            style: const TextStyle(color: Utils.mainThemeColor, fontSize: 20),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class FlutterBankDeposit extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Utils.mainThemeColor),
+        backgroundColor: Colors.transparent,
+        title: const Icon(Icons.savings, color: Utils.mainThemeColor, size: 40,),
+        centerTitle: true,
+      ),
+      body: Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            AccountActionHeader(headerTitle: 'Deposit', icon: Icons.login,)
+          ],
+        ),
+      ),
+    );
+  }
+}
