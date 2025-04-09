@@ -51,7 +51,7 @@ class FlutterBankApp extends StatelessWidget {
             )
         ),
         debugShowCheckedModeBanner: false,
-        home: FlutterBankSplash()
+        home: FlutterBankDeposit()
     );
   }
 }
@@ -908,16 +908,21 @@ class FlutterBankService extends ChangeNotifier {
         .collection('user_accounts')
         .get().then((QuerySnapshot collection) {
 
-      for(var doc in collection.docs) {
-        var acctDoc = doc.data() as Map<String, dynamic>;
-        var acct = Account.fromJson(acctDoc, doc.id);
-        accounts.add(acct);
-      }
+          for(var doc in collection.docs) {
+            var acctDoc = doc.data() as Map<String, dynamic>;
+            var acct = Account.fromJson(acctDoc, doc.id);
+            accounts.add(acct);
+          }
 
-      Future.delayed(const Duration(seconds: 1), () {
-        accountsCompleter.complete(accounts);
-      });
-    });
+          Future.delayed(const Duration(seconds: 1), () {
+            accountsCompleter.complete(accounts);
+          });
+
+        },
+        onError: (error) {
+          accountsCompleter.completeError({ 'error': error });
+        }
+        );
 
     return accountsCompleter.future;
   }
@@ -1043,6 +1048,63 @@ class FlutterBankDeposit extends StatelessWidget {
             AccountActionHeader(headerTitle: 'Deposit', icon: Icons.login,)
           ],
         ),
+      ),
+    );
+  }
+}
+
+class AccountActionSelection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return Consumer<FlutterBankService>(
+      builder: (context, service, child) {
+
+        return FutureBuilder(
+            future: service.getAccounts(context),
+            builder: (context, snapshot) {
+
+              if (!snapshot.hasData){
+                return FlutterBankLoading();
+              }
+
+              if (!snapshot.hasError) {
+                return FlutterBankError();
+              }
+
+              var selectedAccount = service.getSelectedAccount();
+              List<Account> accounts = snapshot.data as List<Account>;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [],
+              );
+            }
+        );
+      },
+    );
+  }
+}
+
+class FlutterBankError extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: const [
+          Icon(Icons.warning_outlined, color: Utils.mainThemeColor, size: 80,),
+          SizedBox(height: 20,),
+          Text('Error fetching data',
+            style: TextStyle(color: Utils.mainThemeColor, fontSize: 20),
+          ),
+          Text('Please try again',
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+          )
+        ],
       ),
     );
   }
