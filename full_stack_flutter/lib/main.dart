@@ -1045,7 +1045,10 @@ class FlutterBankDeposit extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            AccountActionHeader(headerTitle: 'Deposit', icon: Icons.login,)
+            AccountActionHeader(headerTitle: 'Deposit', icon: Icons.login,),
+            Expanded(
+                child: AccountActionSelection(actionTypeLabel: 'To',),
+            )
           ],
         ),
       ),
@@ -1085,7 +1088,11 @@ class AccountActionSelection extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Text(actionTypeLabel!, style: TextStyle(color: Colors.grey, fontSize: 15)),
-                  const SizedBox(height: 10,)
+                  const SizedBox(height: 10,),
+                  AccountActionCard(
+                    selectedAccount: selectedAccount,
+                    account: accounts,
+                  )
                 ],
               );
             }
