@@ -31,6 +31,9 @@ void main() async {
             ),
             ChangeNotifierProvider(
               create: (_) => FlutterBankService(),
+            ),
+            ChangeNotifierProvider(
+              create: (_) => DepositService(),
             )
           ],
           child: FlutterBankApp()
@@ -878,6 +881,17 @@ class LoginService extends ChangeNotifier {
 
 class FlutterBankService extends ChangeNotifier {
 
+  Account? selectedAccount;
+
+  void setSelectedAccount(Account? acct) {
+    selectedAccount = acct;
+    notifyListeners();
+  }
+
+  Account? getSelectedAccount() {
+    return selectedAccount;
+  }
+
   Future<List<Account>> getAccounts(BuildContext context) {
 
     LoginService loginService = Provider.of<LoginService>(context, listen: false);
@@ -908,6 +922,33 @@ class FlutterBankService extends ChangeNotifier {
     return accountsCompleter.future;
   }
 
+  Future<bool> performDeposit(BuildContext context) {
+    Completer<bool> depositComplete = Completer();
+
+    LoginService loginService = Provider.of<LoginService>(context, listen: false);
+    String userId = loginService.getUserId();
+
+    DepositService depositService = Provider.of<DepositService>(context, listen: false);
+    int amountDeposit = depositService.amountToDeposit.toInt();
+
+    DocumentReference doc =
+    FirebaseFirestore.instance
+      .collection('accounts')
+      .doc(userId)
+      .collection('user_accounts')
+      .doc(selectedAccount!.id!);
+
+    doc.update({
+      'balance': selectedAccount!.balance! + amountDeposit
+    }).then((value) {
+      depositService.resetDepositService();
+      depositComplete.complete(true);
+    }, onError: (error) {
+      depositComplete.completeError({'error': error});
+    });
+
+    return depositComplete.future;
+  }
 }
 
 // MODELS
@@ -937,4 +978,22 @@ class FlutterBankBottomBarItem {
   Function? action;
 
   FlutterBankBottomBarItem({ this.label, this.icon, this.action });
+}
+
+class DepositService extends ChangeNotifier {
+  double amountToDeposit = 0;
+
+  void setAmountToDeposit(double amount) {
+    amountToDeposit = amount;
+    notifyListeners();
+  }
+
+  void resetDepositService() {
+    amountToDeposit = 0;
+    notifyListeners();
+  }
+
+  bool checkAmountToDeposit() {
+    return amountToDeposit > 0;
+  }
 }
