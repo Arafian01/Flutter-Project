@@ -51,7 +51,7 @@ class FlutterBankApp extends StatelessWidget {
             )
         ),
         debugShowCheckedModeBanner: false,
-        home: FlutterBankDeposit()
+        home: FlutterBankSplash()
     );
   }
 }
