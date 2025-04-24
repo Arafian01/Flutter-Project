@@ -4,6 +4,10 @@ import 'pages/pelanggan_page.dart';
 import 'pages/tagihan_page.dart';
 import 'pages/pembayaran_page.dart';
 import 'widgets/bottom_navbar.dart';
+import 'pages/splash_page.dart';
+import 'pages/landing_page.dart';
+import 'pages/register_page.dart';
+import 'pages/login_page.dart';
 
 void main() {
   runApp(MyApp());
@@ -18,7 +22,15 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.red,
         fontFamily: 'Poppins',
       ),
-      home: MainLayout(),
+      debugShowCheckedModeBanner: false,
+      initialRoute: '/splash',
+      routes: {
+        '/splash': (context) => SplashPage(),
+        '/landing': (context) => LandingPage(),
+        '/login': (context) => LoginPage(),
+        '/register': (context) => RegisterPage(),
+        '/main': (context) => MainLayout(),
+      },
     );
   }
 }
