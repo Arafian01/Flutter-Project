@@ -1,0 +1,46 @@
+// lib/models/user.dart
+class User {
+  final String id;
+  final String name;
+  final String email;
+  final String paket;
+  final String status;
+  final String alamat;
+  final String telepon;
+
+  User({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.paket,
+    required this.status,
+    required this.alamat,
+    required this.telepon,
+  });
+
+
+  factory User.fromRow(List<dynamic> row) {
+    return User(
+      // name: row[0] as String,
+      // paket: row[1] as String,
+      // status: row[2] as String,
+      id: row[0] as String,
+      name: row[1] as String,
+      email: row[2] as String,
+      paket: row[3] as String,
+      status: row[4] as String,
+      alamat: row[5] as String,
+      telepon: row[6] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'email': email,
+        'paket': paket,
+        'status': status,
+        'alamat': alamat,
+        'telepon': telepon,
+      };
+}
