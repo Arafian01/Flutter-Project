@@ -1,6 +1,5 @@
-// lib/models/user.dart
-class User {
-  final String id;
+class Pelanggan {
+  final int id;
   final String name;
   final String email;
   final String paket;
@@ -8,7 +7,7 @@ class User {
   final String alamat;
   final String telepon;
 
-  User({
+  Pelanggan({
     required this.id,
     required this.name,
     required this.email,
@@ -18,13 +17,9 @@ class User {
     required this.telepon,
   });
 
-
-  factory User.fromRow(List<dynamic> row) {
-    return User(
-      // name: row[0] as String,
-      // paket: row[1] as String,
-      // status: row[2] as String,
-      id: row[0] as String,
+  factory Pelanggan.fromRow(List<dynamic> row) {
+    return Pelanggan(
+      id: row[0] as int,
       name: row[1] as String,
       email: row[2] as String,
       paket: row[3] as String,

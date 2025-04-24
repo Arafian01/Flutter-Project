@@ -1,8 +1,7 @@
-// routes/pelanggan.dart
 import 'package:dart_frog/dart_frog.dart';
-import 'package:postgres/postgres.dart'; // ⬅️ Tambahkan ini
-import '../lib/database.dart';
-
+import 'package:postgres/postgres.dart'; // Pastikan import PostgreSQL
+import '../lib/database.dart';  // Pastikan import ke database.dart dengan path yang benar
+import '../lib/models/pelanggan.dart';  // Pastikan import ke pelanggan.dart dengan path yang benar
 
 Future<Response> onRequest(RequestContext context) async {
   late final PostgreSQLConnection connection;
@@ -17,17 +16,10 @@ Future<Response> onRequest(RequestContext context) async {
       JOIN pakets ON pelanggans.paket_id = pakets.id
     ''');
 
-    final users = results.map((row) => {
-      'id': row[0],
-      'name': row[1],
-      'email': row[2],
-      'paket': row[3],
-      'status': row[4],
-      'alamat': row[5],
-      'telepon': row[6],
-    }).toList();
+    // Mapping hasil query ke model Pelanggan
+    final pelangganList = results.map((row) => Pelanggan.fromRow(row)).toList();
 
-    return Response.json(body: users);
+    return Response.json(body: pelangganList);
   } catch (e) {
     return Response.json(body: {'error': e.toString()}, statusCode: 500);
   } finally {

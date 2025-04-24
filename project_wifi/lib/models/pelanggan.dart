@@ -17,15 +17,27 @@ class Pelanggan {
     required this.telepon,
   });
 
-  factory Pelanggan.fromJson(Map<String, dynamic> json) {
+  // Factory method untuk membuat objek Pelanggan dari row hasil query
+  factory Pelanggan.fromRow(Map<String, dynamic> row) {
     return Pelanggan(
-      id: json['id'],
-      name: json['name'],
-      email: json['email'],
-      paket: json['paket'],
-      status: json['status'],
-      alamat: json['alamat'],
-      telepon: json['telepon'],
+      id: row['id'] as int,
+      name: row['name'] as String,
+      email: row['email'] as String,
+      paket: row['paket'] as String,
+      status: row['status'] as String,
+      alamat: row['alamat'] as String,
+      telepon: row['telepon'] as String,
     );
   }
+
+  // Fungsi untuk mengubah objek Pelanggan menjadi format JSON
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'email': email,
+    'paket': paket,
+    'status': status,
+    'alamat': alamat,
+    'telepon': telepon,
+  };
 }

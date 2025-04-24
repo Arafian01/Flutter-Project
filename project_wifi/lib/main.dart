@@ -8,6 +8,7 @@ import 'pages/splash_page.dart';
 import 'pages/landing_page.dart';
 import 'pages/register_page.dart';
 import 'pages/login_page.dart';
+import 'pages/paket_page.dart';
 
 void main() {
   runApp(MyApp());
@@ -46,6 +47,7 @@ class _MainLayoutState extends State<MainLayout> {
   final List<Widget> _pages = [
     HomePage(),
     PelangganPage(),
+    PaketPage(),
     TagihanPage(),
     PembayaranPage(),
   ];
