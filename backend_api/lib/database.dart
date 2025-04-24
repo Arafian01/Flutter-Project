@@ -1,13 +1,14 @@
+// lib/database.dart
 import 'package:postgres/postgres.dart';
 
-final connection = PostgreSQLConnection(
-  'localhost', 
-  5432,
-  'db_strongnet',
-  username: 'postgres',
-  password: '99',
-);
-
-Future<void> connect() async {
+Future<PostgreSQLConnection> createConnection() async {
+  final connection = PostgreSQLConnection(
+    'localhost',
+    5432,
+    'db_strongnet',
+    username: 'postgres',
+    password: '99',
+  );
   await connection.open();
+  return connection;
 }
