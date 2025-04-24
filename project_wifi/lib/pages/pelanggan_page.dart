@@ -13,7 +13,7 @@ class _PelangganPageState extends State<PelangganPage> {
   @override
   void initState() {
     super.initState();
-    _futurePelanggan = ApiService.fetchPelanggan();
+    _futurePelanggan = fetchPelanggan();
   }
 
   @override
