@@ -1,25 +1,27 @@
 class Paket {
+  final int? id;
   final String namaPaket;
   final String deskripsi;
   final int harga;
 
-  Paket({
-    required this.namaPaket,
-    required this.deskripsi,
-    required this.harga,
-  });
+  Paket({ this.id, required this.namaPaket, required this.deskripsi, required this.harga });
 
-  // Factory method untuk membuat objek Paket dari row hasil query
-  factory Paket.fromRow(Map<String, dynamic> row) {
-    return Paket(
-      namaPaket: row['nama_paket'] as String,
-      deskripsi: row['deskripsi'] as String,
-      harga: row['harga'] as int,
-    );
-  }
+  factory Paket.fromRow(List<dynamic> row) => Paket(
+    id: row[0] as int,
+    namaPaket: row[1] as String,
+    deskripsi: row[2] as String,
+    harga: row[3] as int,
+  );
 
-  // Fungsi untuk mengubah objek Paket menjadi JSON
+  factory Paket.fromJson(Map<String, dynamic> json) => Paket(
+    id: json['id'] as int?,
+    namaPaket: json['nama_paket'] as String,
+    deskripsi: json['deskripsi'] as String,
+    harga: json['harga'] as int,
+  );
+
   Map<String, dynamic> toJson() => {
+    if (id != null) 'id': id,
     'nama_paket': namaPaket,
     'deskripsi': deskripsi,
     'harga': harga,
