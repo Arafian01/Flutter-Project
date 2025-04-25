@@ -3,12 +3,13 @@ import 'pages/home_page.dart';
 import 'pages/pelanggan_page.dart';
 import 'pages/tagihan_page.dart';
 import 'pages/pembayaran_page.dart';
-import 'widgets/bottom_navbar.dart';
 import 'pages/splash_page.dart';
-import 'pages/landing_page.dart';
 import 'pages/register_page.dart';
 import 'pages/login_page.dart';
 import 'pages/paket_page.dart';
+
+import 'widgets/bottom_navbar.dart';
+import 'widgets/top_navbar.dart';
 
 void main() {
   runApp(MyApp());
@@ -27,7 +28,6 @@ class MyApp extends StatelessWidget {
       initialRoute: '/splash',
       routes: {
         '/splash': (context) => SplashPage(),
-        '/landing': (context) => LandingPage(),
         '/login': (context) => LoginPage(),
         '/register': (context) => RegisterPage(),
         '/main': (context) => MainLayout(),
@@ -61,6 +61,7 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: TopNavbar(),
       body: _pages[_selectedIndex],
       bottomNavigationBar: AppBottomBar(
         selectedIndex: _selectedIndex,
