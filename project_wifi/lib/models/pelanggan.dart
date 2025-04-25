@@ -1,43 +1,56 @@
 class Pelanggan {
-  final int id;
+  final int? id;
+  final int userId;
   final String name;
   final String email;
-  final String paket;
+  final int paketId;
   final String status;
+  final String? tanggalAktif;
+  final String tanggalLangganan;
   final String alamat;
   final String telepon;
 
   Pelanggan({
-    required this.id,
+    this.id,
+    required this.userId,
     required this.name,
     required this.email,
-    required this.paket,
+    required this.paketId,
     required this.status,
+    this.tanggalAktif,
+    required this.tanggalLangganan,
     required this.alamat,
     required this.telepon,
   });
 
-  // Factory method untuk membuat objek Pelanggan dari row hasil query
-  factory Pelanggan.fromRow(Map<String, dynamic> row) {
+  /// untuk parsing response list/detail
+  factory Pelanggan.fromJson(Map<String, dynamic> json) {
     return Pelanggan(
-      id: row['id'] as int,
-      name: row['name'] as String,
-      email: row['email'] as String,
-      paket: row['paket'] as String,
-      status: row['status'] as String,
-      alamat: row['alamat'] as String,
-      telepon: row['telepon'] as String,
+      id: json['id'] as int?,
+      userId: json['user_id'] as int,
+      name: json['name'] as String,
+      email: json['email'] as String,
+      paketId: json['paket_id'] as int,
+      status: json['status'] as String,
+      tanggalAktif: json['tanggal_aktif'] as String?,
+      tanggalLangganan: json['tanggal_langganan'] as String,
+      alamat: json['alamat'] as String,
+      telepon: json['telepon'] as String,
     );
   }
 
-  // Fungsi untuk mengubah objek Pelanggan menjadi format JSON
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'email': email,
-    'paket': paket,
-    'status': status,
-    'alamat': alamat,
-    'telepon': telepon,
-  };
+  Map<String, dynamic> toJson() {
+    return {
+      if (id != null) 'id': id,
+      'user_id': userId,
+      'name': name,
+      'email': email,
+      'paket_id': paketId,
+      'status': status,
+      'tanggal_aktif': tanggalAktif,
+      'tanggal_langganan': tanggalLangganan,
+      'alamat': alamat,
+      'telepon': telepon,
+    };
+  }
 }
