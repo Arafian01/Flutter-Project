@@ -58,18 +58,6 @@ class _PaketPageState extends State<PaketPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Paket'),
-        backgroundColor: Colors.red,  // Ganti dengan warna tema yang sesuai
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              // Tambahkan aksi ke halaman profil atau logout
-            },
-          ),
-        ],
-      ),
       body: FutureBuilder<List<Paket>>(
         future: _futurePaket,
         builder: (context, snapshot) {
