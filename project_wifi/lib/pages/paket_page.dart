@@ -1,6 +1,10 @@
+// lib/pages/paket_page.dart
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';  // Mengimpor api_service.dart
-import '../models/paket.dart';  // Mengimpor model Paket
+import '../models/paket.dart';
+import '../services/api_service.dart';
+import '../utils/utils.dart';
+import 'add_paket_page.dart';
+import 'edit_paket_page.dart';
 
 class PaketPage extends StatefulWidget {
   @override
@@ -13,42 +17,65 @@ class _PaketPageState extends State<PaketPage> {
   @override
   void initState() {
     super.initState();
-    _futurePaket = fetchPaket();  // Memanggil fetchPaket yang akan menggunakan fetchData
+    _load();
   }
 
-  // Fungsi untuk mengambil data Paket dari API
-  Future<List<Paket>> fetchPaket() async {
-    final data = await fetchData('paket');  // Memanggil api_service dengan endpoint 'paket'
-    return data.map((item) => Paket.fromRow(item)).toList();
+  void _load() {
+    _futurePaket = fetchData('paket').then(
+          (list) => list.map((e) => Paket.fromJson(e)).toList(),
+    );
   }
 
-  void _showDetailModal(BuildContext context, Paket paket) {
+  void _showDetail(Paket p) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(paket.namaPaket),
+        title: Text(p.namaPaket),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Deskripsi: ${paket.deskripsi}"),
-            Text("Harga: ${paket.harga}"),
+            Text('Deskripsi: ${p.deskripsi}'),
+            Text('Harga: ${p.harga}'),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              // Tambahkan navigasi ke halaman edit jika perlu
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => EditPaketPage(paket: p)),
+              ).then((_) => setState(_load));
             },
-            child: const Text("Edit"),
+            child: const Text('Edit'),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              // Tambahkan aksi hapus jika perlu
+              showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text('Konfirmasi'),
+                  content: const Text('Hapus paket ini?'),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Batal')
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        await deletePaket(p.id!);
+                        setState(_load);
+                      },
+                      child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
             },
-            child: const Text("Hapus", style: TextStyle(color: Colors.red)),
+            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -60,36 +87,58 @@ class _PaketPageState extends State<PaketPage> {
     return Scaffold(
       body: FutureBuilder<List<Paket>>(
         future: _futurePaket,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+        builder: (c, s) {
+          if (s.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+          if (s.hasError) {
+            return Center(child: Text('Error: ${s.error}'));
           }
-          final paketList = snapshot.data ?? [];
-          return ListView.builder(
-            itemCount: paketList.length,
-            itemBuilder: (context, index) {
-              final paket = paketList[index];
+          final list = s.data!;
+          return GridView.builder(
+            padding: const EdgeInsets.all(12),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: (MediaQuery.of(context).size.width ~/ 200).clamp(2, 4),
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1,
+            ),
+            itemCount: list.length,
+            itemBuilder: (_, i) {
+              final p = list[i];
               return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: ListTile(
-                  title: Text(paket.namaPaket),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Deskripsi: ${paket.deskripsi}"),
-                      Text("Harga: ${paket.harga}"),
-                    ],
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: InkWell(
+                  onTap: () => _showDetail(p),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.wifi, size: 36, color: Utils.mainThemeColor),
+                        const SizedBox(height: 12),
+                        Text(p.namaPaket, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Text('Rp${p.harga}'),
+                      ],
+                    ),
                   ),
-                  onTap: () => _showDetailModal(context, paket),
                 ),
               );
             },
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Utils.mainThemeColor,
+        child: const Icon(Icons.add),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => AddPaketPage()),
+          ).then((_) => setState(_load));
+        },
+      )
     );
   }
 }

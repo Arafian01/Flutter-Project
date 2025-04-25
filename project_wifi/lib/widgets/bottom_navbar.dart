@@ -19,9 +19,9 @@ class AppBottomBar extends StatelessWidget {
       unselectedItemColor: Colors.grey,
       type: BottomNavigationBarType.fixed, // agar bisa lebih dari 3 item
       items: [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Pelanggan'),
         BottomNavigationBarItem(icon: Icon(Icons.wifi), label: 'Paket'),
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Tagihan'),
         BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'Pembayaran'),
       ],

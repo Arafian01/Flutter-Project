@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
 import '../models/pelanggan.dart';
+import '../services/api_service.dart';
+import '../utils/utils.dart';
+import 'add_pelanggan_page.dart';
+import 'edit_pelanggan_page.dart';
 
 class PelangganPage extends StatefulWidget {
   @override
@@ -8,41 +11,74 @@ class PelangganPage extends StatefulWidget {
 }
 
 class _PelangganPageState extends State<PelangganPage> {
-  late Future<List<Pelanggan>> _futurePelanggan;
+  late Future<List<Pelanggan>> _future;
 
   @override
   void initState() {
     super.initState();
-    _futurePelanggan = fetchPelanggan();
+    _load();
   }
 
-  Future<List<Pelanggan>> fetchPelanggan() async {
-    final data = await fetchData('pelanggan');
-    return data.map((item) => Pelanggan.fromRow(item)).toList();
+  void _load() {
+    _future = fetchData('pelanggan')
+        .then((list) => list.map((j) => Pelanggan.fromJson(j)).toList());
   }
 
-  void _showDetailModal(BuildContext context, Pelanggan pelanggan) {
+  void _showDetail(Pelanggan p) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(pelanggan.name),
+        title: Text(p.name),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Email: ${pelanggan.email}"),
-            Text("Paket: ${pelanggan.paket}"),
-            Text("Status: ${pelanggan.status}"),
-            Text("Alamat: ${pelanggan.alamat}"),
-            Text("Telepon: ${pelanggan.telepon}"),
+            Text('Email: ${p.email}'),
+            Text('Paket ID: ${p.paketId}'),
+            Text('Status: ${p.status}'),
+            Text('Alamat: ${p.alamat}'),
+            Text('Telepon: ${p.telepon}'),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditPelangganPage(pelanggan: p),
+                ),
+              ).then((_) => setState(_load));
             },
-            child: const Text("Tutup"),
+            child: const Text('Edit'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text('Konfirmasi'),
+                  content: const Text('Hapus pelanggan ini?'),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Batal')),
+                    TextButton(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        await deletePelanggan(p.id!);
+                        setState(_load);
+                      },
+                      child:
+                      const Text('Hapus', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -53,29 +89,38 @@ class _PelangganPageState extends State<PelangganPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: FutureBuilder<List<Pelanggan>>(
-        future: _futurePelanggan,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+        future: _future,
+        builder: (_, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+          if (snap.hasError) {
+            return Center(child: Text('Error: ${snap.error}'));
           }
-          final pelangganList = snapshot.data ?? [];
-          return ListView.builder(
-            itemCount: pelangganList.length,
-            itemBuilder: (context, index) {
-              final pelanggan = pelangganList[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: ListTile(
-                  title: Text(pelanggan.name),
-                  subtitle: Text("Paket: ${pelanggan.paket}"),
-                  onTap: () => _showDetailModal(context, pelanggan),
-                ),
+          final list = snap.data!;
+          return ListView.separated(
+            padding: const EdgeInsets.all(12),
+            itemCount: list.length,
+            separatorBuilder: (_, __) => const Divider(),
+            itemBuilder: (_, i) {
+              final p = list[i];
+              return ListTile(
+                title: Text(p.name),
+                subtitle: Text('Paket ID: ${p.paketId}'),
+                onTap: () => _showDetail(p),
               );
             },
           );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Utils.mainThemeColor,
+        child: const Icon(Icons.add),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => AddPelangganPage()),
+          ).then((_) => setState(_load));
         },
       ),
     );
