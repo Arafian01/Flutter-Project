@@ -42,12 +42,12 @@ class MainLayout extends StatefulWidget {
 }
 
 class _MainLayoutState extends State<MainLayout> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 2;
 
   final List<Widget> _pages = [
-    HomePage(),
     PelangganPage(),
     PaketPage(),
+    HomePage(),
     TagihanPage(),
     PembayaranPage(),
   ];
