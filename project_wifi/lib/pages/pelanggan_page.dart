@@ -52,9 +52,6 @@ class _PelangganPageState extends State<PelangganPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pelanggan'),
-      ),
       body: FutureBuilder<List<Pelanggan>>(
         future: _futurePelanggan,
         builder: (context, snapshot) {
