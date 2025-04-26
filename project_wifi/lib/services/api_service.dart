@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../utils/constants.dart';
+import '../models/paket.dart';
 
 /// Fungsi untuk mengambil list data dari endpoint (seperti untuk tabel/list)
 Future<List<Map<String, dynamic>>> fetchData(String endpoint) async {
@@ -24,6 +25,17 @@ Future<Map<String, dynamic>> fetchSingleData(String endpoint) async {
     return json.decode(response.body) as Map<String, dynamic>;
   } else {
     throw Exception('Gagal mengambil data tunggal dari $endpoint');
+  }
+}
+
+Future<List<Paket>> fetchPakets() async {
+  final response = await http.get(Uri.parse('$baseUrl/paket'));
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    return List<Paket>.from(data.map((item) => Paket.fromJson(item)));
+  } else {
+    throw Exception('Gagal memuat data paket');
   }
 }
 
