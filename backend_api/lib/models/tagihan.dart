@@ -1,45 +1,53 @@
 class Tagihan {
-  final int id;
-  final String name;
+  final int? id;
+  final int pelangganId;
+  final String name;           // from users via pelanggan
   final String bulanTahun;
   final String statusPembayaran;
   final DateTime jatuhTempo;
 
   Tagihan({
-    required this.id,
+    this.id,
+    required this.pelangganId,
     required this.name,
     required this.bulanTahun,
     required this.statusPembayaran,
     required this.jatuhTempo,
   });
 
-  // Fungsi untuk membuat instance Tagihan dari row hasil query
+  /// Build from a SQL row. Handles date parsing.
   factory Tagihan.fromRow(List<dynamic> row) {
-    // Periksa apakah kolom jatuh_tempo benar-benar berupa DateTime atau string yang dapat diparse
-    DateTime jatuhTempo;
-    if (row[4] is DateTime) {
-      jatuhTempo = row[4]; // Langsung gunakan jika sudah DateTime
-    } else if (row[4] is String) {
-      jatuhTempo = DateTime.parse(row[4]); // Parse string ke DateTime
-    } else {
-      throw FormatException('Invalid format for jatuh_tempo');
-    }
+    dynamic parseDate(dynamic v) =>
+        v is DateTime ? v : DateTime.parse(v as String);
 
     return Tagihan(
-      id: row[0] as int,
-      name: row[1] as String,
-      bulanTahun: row[2] as String,
-      statusPembayaran: row[3] as String,
-      jatuhTempo: jatuhTempo,
+      id: row[0] as int?,
+      pelangganId: row[1] as int,
+      name: row[2] as String,
+      bulanTahun: row[3] as String,
+      statusPembayaran: row[4] as String,
+      jatuhTempo: parseDate(row[5]),
     );
   }
 
-  // Fungsi untuk mengubah data Tagihan menjadi format JSON
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'bulan_tahun': bulanTahun,
-        'status_pembayaran': statusPembayaran,
-        'jatuh_tempo': jatuhTempo.toIso8601String(),  // Mengonversi DateTime ke string
-      };
+  factory Tagihan.fromJson(Map<String, dynamic> json) => Tagihan(
+        id: json['id'] as int?,
+        pelangganId: json['pelanggan_id'] as int,
+        name: json['name'] as String,
+        bulanTahun: json['bulan_tahun'] as String,
+        statusPembayaran: json['status_pembayaran'] as String,
+        jatuhTempo: DateTime.parse(json['jatuh_tempo'] as String),
+      );
+
+  Map<String, dynamic> toJson() {
+    final m = <String, dynamic>{
+      if (id != null) 'id': id,
+      'pelanggan_id': pelangganId,
+      'name': name,
+      'bulan_tahun': bulanTahun,
+      'status_pembayaran': statusPembayaran,
+      'jatuh_tempo': jatuhTempo.toIso8601String(),
+    };
+    return m;
+  }
 }
