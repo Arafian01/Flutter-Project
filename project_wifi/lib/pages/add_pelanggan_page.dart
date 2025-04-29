@@ -11,12 +11,15 @@ class _AddPelangganPageState extends State<AddPelangganPage> {
   final _formKey = GlobalKey<FormState>();
   final _namaController = TextEditingController();
   final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _alamatController = TextEditingController();
   final _teleponController = TextEditingController();
-  final _statusController = TextEditingController();
 
   List<Paket> _pakets = [];
   int? _selectedPaketId;
+  String _selectedStatus = 'aktif'; // default status
+  DateTime _tanggalAktif = DateTime.now();
+  DateTime _tanggalLangganan = DateTime.now();
 
   @override
   void initState() {
@@ -42,12 +45,14 @@ class _AddPelangganPageState extends State<AddPelangganPage> {
       final pelangganData = {
         'name': _namaController.text,
         'email': _emailController.text,
+        'password': _passwordController.text,
+        'paket_id': _selectedPaketId,
         'alamat': _alamatController.text,
         'telepon': _teleponController.text,
-        'paket_id': _selectedPaketId,
-        'status': 'aktif', // bisa ubah sesuai kebutuhan
-        'tanggal_aktif': DateTime.now().toIso8601String(),
-        'tanggal_langganan': DateTime.now().toIso8601String(),
+        'status': _selectedStatus,
+        'tanggal_aktif': _tanggalAktif.toIso8601String(),
+        'tanggal_langganan': _tanggalLangganan.toIso8601String(),
+        'role': 'pelanggan', // otomatis set role pelanggan
       };
 
       try {
@@ -61,6 +66,24 @@ class _AddPelangganPageState extends State<AddPelangganPage> {
           SnackBar(content: Text('Gagal simpan pelanggan: $e')),
         );
       }
+    }
+  }
+
+  Future<void> _selectDate(BuildContext context, bool isAktif) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: isAktif ? _tanggalAktif : _tanggalLangganan,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isAktif) {
+          _tanggalAktif = picked;
+        } else {
+          _tanggalLangganan = picked;
+        }
+      });
     }
   }
 
@@ -85,6 +108,13 @@ class _AddPelangganPageState extends State<AddPelangganPage> {
                 decoration: const InputDecoration(labelText: 'Email'),
                 validator: (value) =>
                 value == null || value.isEmpty ? 'Email wajib diisi' : null,
+              ),
+              TextFormField(
+                controller: _passwordController,
+                decoration: const InputDecoration(labelText: 'Password'),
+                obscureText: true,
+                validator: (value) =>
+                value == null || value.isEmpty ? 'Password wajib diisi' : null,
               ),
               TextFormField(
                 controller: _alamatController,
@@ -117,16 +147,34 @@ class _AddPelangganPageState extends State<AddPelangganPage> {
                 value == null ? 'Paket wajib dipilih' : null,
               ),
               const SizedBox(height: 16),
-              if (_selectedPaketId != null)
-                ..._pakets
-                    .where((p) => p.id == _selectedPaketId)
-                    .map((p) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Harga: Rp ${p.harga}"),
-                    Text("Deskripsi: ${p.deskripsi}"),
-                  ],
-                )),
+              DropdownButtonFormField<String>(
+                value: _selectedStatus,
+                decoration: const InputDecoration(labelText: 'Status'),
+                items: ['aktif', 'nonaktif', 'isolir'].map((status) {
+                  return DropdownMenuItem<String>(
+                    value: status,
+                    child: Text(status),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedStatus = value!;
+                  });
+                },
+                validator: (value) =>
+                value == null || value.isEmpty ? 'Status wajib dipilih' : null,
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                title: Text('Tanggal Aktif: ${_tanggalAktif.toLocal()}'.split(' ')[0]),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: () => _selectDate(context, true),
+              ),
+              ListTile(
+                title: Text('Tanggal Langganan: ${_tanggalLangganan.toLocal()}'.split(' ')[0]),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: () => _selectDate(context, false),
+              ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _submitForm,
