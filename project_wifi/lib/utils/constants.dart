@@ -1,1 +1,1 @@
-const String baseUrl = 'http://192.168.88.41:8080'; // Ganti sesuai endpoint API kamu
+const String baseUrl = 'http://localhost:8080'; // Ganti sesuai endpoint API kamu
