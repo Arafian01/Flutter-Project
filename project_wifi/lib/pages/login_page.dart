@@ -1,6 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../utils/utils.dart';
 import '../widgets/strong_main_button.dart';
+import '../utils/constants.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../main.dart';
+import '../widgets/main_layout.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -12,12 +18,61 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final _storage = const FlutterSecureStorage();
+  bool _isLoading = false;
 
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _login() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email dan password wajib diisi')),
+      );
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      final url = Uri.parse('$baseUrl/login');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final user = body['user'] as Map<String, dynamic>;
+        final role = user['role'] as String;
+        final token = body['token'] as String?;
+        if (token != null) {
+          await _storage.write(key: 'token', value: token);
+        }
+        await _storage.write(key: 'role', value: role);
+        // Navigasi ke MainLayout dengan role
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => MainLayout(role: role)),
+        );
+      } else {
+        final error = jsonDecode(response.body)['error'] ?? 'Login gagal';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error)),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Kesalahan: \$e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -58,7 +113,7 @@ class _LoginPageState extends State<LoginPage> {
               iconData: Icons.email,
               controller: emailController,
               isPassword: false,
-              onChanged: (text) => setState(() {}),
+              onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 20),
             Utils.generateInputField(
@@ -66,22 +121,21 @@ class _LoginPageState extends State<LoginPage> {
               iconData: Icons.lock,
               controller: passwordController,
               isPassword: true,
-              onChanged: (text) => setState(() {}),
+              onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 40),
-            StrongMainButton(
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : StrongMainButton(
               label: 'Login',
-              onTap: () {
-                // Simulasikan login dan navigasi ke halaman utama
-                Navigator.of(context).pushReplacementNamed('/main');
-              },
+              onTap: _login,
             ),
             const SizedBox(height: 16),
             Center(
               child: TextButton(
-                onPressed: () {
-                  Navigator.of(context).pushNamed('/register');
-                },
+                onPressed: _isLoading
+                    ? null
+                    : () => Navigator.of(context).pushNamed('/register'),
                 child: Text(
                   'Belum punya akun? Register di sini',
                   style: TextStyle(color: Utils.mainThemeColor),
