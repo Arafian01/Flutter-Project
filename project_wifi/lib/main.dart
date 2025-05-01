@@ -1,21 +1,18 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
-import 'pages/home_page.dart';
-import 'pages/pelanggan_page.dart';
-import 'pages/tagihan_page.dart';
-import 'pages/pembayaran_page.dart';
+import 'widgets/main_layout.dart';
 import 'pages/splash_page.dart';
-import 'pages/register_page.dart';
 import 'pages/login_page.dart';
-import 'pages/paket_page.dart';
-
-import 'widgets/bottom_navbar.dart';
-import 'widgets/top_navbar.dart';
+import 'pages/register_page.dart';
 
 void main() {
-  runApp(MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -28,45 +25,18 @@ class MyApp extends StatelessWidget {
       initialRoute: '/splash',
       routes: {
         '/splash': (context) => SplashPage(),
-        '/login': (context) => LoginPage(),
+        '/login': (context) => const LoginPage(),
         '/register': (context) => RegisterPage(),
-        '/main': (context) => MainLayout(),
       },
-    );
-  }
-}
-
-class MainLayout extends StatefulWidget {
-  @override
-  _MainLayoutState createState() => _MainLayoutState();
-}
-
-class _MainLayoutState extends State<MainLayout> {
-  int _selectedIndex = 2;
-
-  final List<Widget> _pages = [
-    PelangganPage(),
-    PaketPage(),
-    HomePage(),
-    TagihanPage(),
-    PembayaranPage(),
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: TopNavbar(),
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: AppBottomBar(
-        selectedIndex: _selectedIndex,
-        onTap: _onItemTapped,
-      ),
+      onGenerateRoute: (settings) {
+        if (settings.name == '/main') {
+          final role = settings.arguments as String? ?? 'user';
+          return MaterialPageRoute(
+            builder: (_) => MainLayout(role: role),
+          );
+        }
+        return null;
+      },
     );
   }
 }
