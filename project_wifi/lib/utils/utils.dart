@@ -1,29 +1,30 @@
 import 'package:flutter/material.dart';
 
-class Utils {
-  static const Color mainThemeColor = Color(0xFFFF0000); // Warna merah
+abstract class Utils {
+  static const Color mainThemeColor = Color(0xFFFF0000);
 
+  /// Generate a TextFormField with consistent styling and optional validator.
   static Widget generateInputField({
     required String hintText,
     required IconData iconData,
     required TextEditingController controller,
-    required bool isPassword,
-    required Function(String) onChanged,
+    bool isPassword = false,
+    TextInputType keyboardType = TextInputType.text,
+    TextInputAction textInputAction = TextInputAction.next,
+    String? Function(String?)? validator,
+    void Function(String)? onChanged,
   }) {
-    return TextField(
+    return TextFormField(
       controller: controller,
       obscureText: isPassword,
       obscuringCharacter: '*',
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      validator: validator,
       onChanged: onChanged,
       decoration: InputDecoration(
         hintText: hintText,
-        prefixIcon: Icon(iconData, color: mainThemeColor),
-        filled: true,
-        fillColor: Colors.grey.withOpacity(0.1),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
-        ),
+        prefixIcon: Icon(iconData),
       ),
       style: const TextStyle(fontSize: 16),
     );
