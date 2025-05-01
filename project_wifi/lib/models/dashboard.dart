@@ -1,31 +1,29 @@
 class Dashboard {
-  final int pelanggan;
-  final int paketAktif;
+  final int totalPelanggan;
+  final int totalPaket;
   final int tagihanLunas;
-  final int pendingBayar;
+  final int tagihanPending;
 
   Dashboard({
-    required this.pelanggan,
-    required this.paketAktif,
+    required this.totalPelanggan,
+    required this.totalPaket,
     required this.tagihanLunas,
-    required this.pendingBayar,
+    required this.tagihanPending,
   });
 
   factory Dashboard.fromJson(Map<String, dynamic> json) {
     return Dashboard(
-      pelanggan: json['pelanggan'] ?? 0,
-      paketAktif: json['paket_aktif'] ?? 0,
-      tagihanLunas: json['tagihan_lunas'] ?? 0,
-      pendingBayar: json['pending_bayar'] ?? 0,
+      totalPelanggan: (json['totalPelanggan'] as int?) ?? 0,
+      totalPaket:     (json['totalPaket']     as int?) ?? 0,
+      tagihanLunas:   (json['tagihanLunas']   as int?) ?? 0,
+      tagihanPending: (json['tagihanPending'] as int?) ?? 0,
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'pelanggan': pelanggan,
-      'paket_aktif': paketAktif,
-      'tagihan_lunas': tagihanLunas,
-      'pending_bayar': pendingBayar,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+    'totalPelanggan': totalPelanggan,
+    'totalPaket': totalPaket,
+    'tagihanLunas': tagihanLunas,
+    'tagihanPending': tagihanPending,
+  };
 }
