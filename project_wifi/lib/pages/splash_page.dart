@@ -11,19 +11,23 @@ class SplashPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Utils.mainThemeColor,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        body: Stack(
           children: const [
-            Icon(Icons.wifi, color: Colors.white, size: 80),
-            SizedBox(height: 20),
-            CircularProgressIndicator(
-              color: Colors.white,
-              strokeWidth: 5,
+            Center(
+                child: Icon(Icons.wifi, color: Colors.white, size: 60)
             ),
+            Center(
+                child: SizedBox(
+                    width: 100,
+                    height: 100,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 8,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white)
+                    )
+                )
+            )
           ],
-        ),
-      ),
+        )
     );
   }
 }
