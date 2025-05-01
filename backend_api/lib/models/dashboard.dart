@@ -1,30 +1,29 @@
-// lib/models/dashboard.dart
 class Dashboard {
-  final int pelanggan;
-  final int paketAktif;
+  final int totalPelanggan;
+  final int totalPaket;
   final int tagihanLunas;
-  final int pendingBayar;
+  final int tagihanPending;
 
   Dashboard({
-    required this.pelanggan,
-    required this.paketAktif,
+    required this.totalPelanggan,
+    required this.totalPaket,
     required this.tagihanLunas,
-    required this.pendingBayar,
+    required this.tagihanPending,
   });
 
-  factory Dashboard.fromRow(List<List<dynamic>> rows) {
+  factory Dashboard.fromJson(Map<String, dynamic> json) {
     return Dashboard(
-      pelanggan: rows[0][0] as int,
-      paketAktif: rows[1][0] as int,
-      tagihanLunas: rows[2][0] as int,
-      pendingBayar: rows[3][0] as int,
+      totalPelanggan: (json['totalPelanggan'] as int?) ?? 0,
+      totalPaket:     (json['totalPaket']     as int?) ?? 0,
+      tagihanLunas:   (json['tagihanLunas']   as int?) ?? 0,
+      tagihanPending: (json['tagihanPending'] as int?) ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'pelanggan': pelanggan,
-        'paket_aktif': paketAktif,
-        'tagihan_lunas': tagihanLunas,
-        'pending_bayar': pendingBayar,
-      };
+    'totalPelanggan': totalPelanggan,
+    'totalPaket': totalPaket,
+    'tagihanLunas': tagihanLunas,
+    'tagihanPending': tagihanPending,
+  };
 }
