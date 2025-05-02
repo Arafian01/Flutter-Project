@@ -1,6 +1,5 @@
 // File: routes/pembayaran/[id].dart
 import 'dart:io';
-import 'dart:convert';
 import 'dart:typed_data';
 import 'package:dart_frog/dart_frog.dart';
 import '../../lib/database.dart';
@@ -14,12 +13,23 @@ Future<Response> onRequest(RequestContext context, String id) async {
   try {
     if (context.request.method == HttpMethod.get) {
       final rows = await conn.query('''
-        SELECT pm.id, pm.tagihan_id, t.bulan_tahun, pm.image, pm.tanggal_kirim,
-               pm.user_id, u.name, pm.status_verifikasi, pm.tanggal_verifikasi
+        SELECT
+          pm.id,
+          pm.tagihan_id,
+          t.bulan_tahun,
+          pm.image,
+          pm.tanggal_kirim,
+          pm.user_id AS admin_id,
+          u_admin.name AS admin_name,
+          pm.status_verifikasi,
+          pm.tanggal_verifikasi,
+          p.user_id AS pelanggan_user_id,
+          u_pelanggan.name AS pelanggan_name
         FROM pembayarans pm
         JOIN tagihans t ON pm.tagihan_id = t.id
         JOIN pelanggans p ON t.pelanggan_id = p.id
-        JOIN users u ON p.user_id = u.id
+        JOIN users u_pelanggan ON p.user_id = u_pelanggan.id
+        LEFT JOIN users u_admin ON pm.user_id = u_admin.id
         WHERE pm.id = @id;
       ''', substitutionValues: {'id': pid});
       if (rows.isEmpty) return Response.json(statusCode: 404, body: {'error': 'Not found'});
@@ -37,6 +47,9 @@ Future<Response> onRequest(RequestContext context, String id) async {
       final formData = await context.request.formData();
       final status = formData.fields['status_verifikasi'];
       if (status == null) return Response.json(statusCode: 400, body: {'error': 'Missing status'});
+
+      // extract editor id from header (assumes auth middleware sets this)
+      final editorId = int.tryParse(context.request.headers['x-user-id'] ?? '');
       final tv = (status == 'diterima' || status == 'ditolak')
           ? DateTime.now().toIso8601String().split('T').first
           : null;
@@ -44,7 +57,6 @@ Future<Response> onRequest(RequestContext context, String id) async {
       String? imageName;
       final filePart = formData.files['image'];
       if (filePart != null) {
-        // delete old
         if (oldImage != null) {
           final f = File('.$oldImage');
           if (await f.exists()) await f.delete();
@@ -59,12 +71,14 @@ Future<Response> onRequest(RequestContext context, String id) async {
       await conn.query('''
         UPDATE pembayarans
         SET status_verifikasi = @st,
-            tanggal_verifikasi = @tv
+            tanggal_verifikasi = @tv,
+            user_id = @uid
             ${imageName != null ? ', image = @img' : ''}
         WHERE id = @id;
       ''', substitutionValues: {
         'st': status,
         'tv': tv,
+        'uid': editorId,
         if (imageName != null) 'img': '/uploads/$imageName',
         'id': pid,
       });
@@ -73,7 +87,8 @@ Future<Response> onRequest(RequestContext context, String id) async {
         'SELECT tagihan_id FROM pembayarans WHERE id = @id',
         substitutionValues: {'id': pid},
       )).first[0] as int;
-      final newSt = status == 'diterima' ? 'lunas' : 'menunggu_verifikasi';
+
+      final newSt = status == 'diterima' ? 'lunas' : 'menunggu verifikasi';
       await conn.query(
         'UPDATE tagihans SET status_pembayaran = @s WHERE id = @tid',
         substitutionValues: {'s': newSt, 'tid': tid},
