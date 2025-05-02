@@ -38,7 +38,7 @@ Future<Response> onRequest(RequestContext context) async {
           VALUES (@name, @email, crypt(@password, gen_salt('bf')), 'pelanggan')
           RETURNING id;
           ''',
-          substitutionValues: {
+          substitutionValues: { 
             'name': jsonMap['name'],
             'email': jsonMap['email'],
             'password': jsonMap['password'],
