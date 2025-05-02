@@ -1,20 +1,17 @@
 import 'dart:convert';
 import 'package:dart_frog/dart_frog.dart';
-import 'package:postgres/postgres.dart';
-import '../../lib/database.dart'; // Pastikan path ini sesuai
-import '../../lib/models/user.dart'; // Pastikan path ini sesuai
+import 'package:bcrypt/bcrypt.dart';
+import '../../lib/database.dart';
+import '../../lib/models/user.dart';
 
 Future<Response> onRequest(RequestContext context) async {
-  // Hanya terima POST
   if (context.request.method != HttpMethod.post) {
-    return Response.json(statusCode: 405, body: {
-      'error': 'Method Not Allowed',
-    });
+    return Response.json(statusCode: 405, body: {'error': 'Method Not Allowed'});
   }
 
   try {
     final body = await context.request.body();
-    final data = jsonDecode(body);
+    final data = jsonDecode(body) as Map<String, dynamic>;
 
     final email = data['email']?.toString().trim();
     final password = data['password']?.toString();
@@ -27,36 +24,34 @@ Future<Response> onRequest(RequestContext context) async {
 
     final conn = await createConnection();
 
-    // Gunakan parameter untuk keamanan
-    final result = await conn.query(
-      'SELECT id, name, email, password, role FROM users WHERE email = @email',
-      substitutionValues: {'email': email},
-    );
+    try {
+      final result = await conn.query(
+        'SELECT id, name, email, password, role FROM users WHERE email = @e',
+        substitutionValues: {'e': email},
+      );
 
-    if (result.isEmpty) {
-      return Response.json(statusCode: 401, body: {
-        'error': 'Email tidak ditemukan',
+      if (result.isEmpty) {
+        return Response.json(statusCode: 401, body: {'error': 'Email tidak ditemukan'});
+      }
+
+      final row = result.first;
+      final user = User.fromRow(row);
+
+      // Bandingkan password input dengan hash dari database
+      final isValid = BCrypt.checkpw(password, user.password);
+
+      if (!isValid) {
+        return Response.json(statusCode: 401, body: {'error': 'Password salah'});
+      }
+
+      return Response.json(body: {
+        'message': 'Login berhasil',
+        'user': user.toJson(),
       });
+    } finally {
+      await conn.close();
     }
-
-    final row = result.first;
-    final user = User.fromRow(row);
-
-    // Bandingkan password biasa (plaintext) — GUNAKAN hash di produksi!
-    if (user.password != password) {
-      return Response.json(statusCode: 401, body: {
-        'error': 'Password salah',
-      });
-    }
-
-    // Sukses, kembalikan data user tanpa password
-    return Response.json(body: {
-      'message': 'Login berhasil',
-      'user': user.toJson(),
-    });
   } catch (e) {
-    return Response.json(statusCode: 500, body: {
-      'error': 'Terjadi kesalahan: $e',
-    });
+    return Response.json(statusCode: 500, body: {'error': 'Terjadi kesalahan: $e'});
   }
 }
