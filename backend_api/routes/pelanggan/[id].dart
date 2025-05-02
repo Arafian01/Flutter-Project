@@ -12,7 +12,6 @@ Future<Response> onRequest(RequestContext context, String id) async {
 
   try {
     switch (context.request.method) {
-      // GET /pelanggan/:id
       case HttpMethod.get:
         final results = await connection.query(
           '''
@@ -31,76 +30,87 @@ Future<Response> onRequest(RequestContext context, String id) async {
         if (results.isEmpty) return Response(statusCode: 404);
         return Response.json(body: Pelanggan.fromRow(results.first).toJson());
 
-      // PUT /pelanggan/:id
       case HttpMethod.put:
         final body = await context.request.body();
         final jsonMap = json.decode(body) as Map<String, dynamic>;
-        final updated = Pelanggan.fromJson(jsonMap);
 
-        // update users table
+        // Update users table
+        // Always update name & email
         await connection.query(
           '''
           UPDATE users
-          SET name     = @name,
-              email    = @email,
-              password = crypt(@password, gen_salt('bf'))
+          SET name  = @name,
+              email = @email
           WHERE id = @userId;
           ''',
           substitutionValues: {
-            'userId': updated.userId,
-            'name': updated.name,
-            'email': updated.email,
-            'password': jsonMap['password'],
+            'userId': jsonMap['user_id'],
+            'name': jsonMap['name'],
+            'email': jsonMap['email'],
           },
         );
 
-        // determine tanggal_aktif
-        final tanggalAktifValue = (updated.status == 'aktif')
+        // Only update password if provided and non-empty
+        final newPassword = jsonMap['password'] as String?;
+        if (newPassword != null && newPassword.isNotEmpty) {
+          await connection.query(
+            '''
+            UPDATE users
+            SET password = crypt(@password, gen_salt('bf'))
+            WHERE id = @userId;
+            ''',
+            substitutionValues: {
+              'userId': jsonMap['user_id'],
+              'password': newPassword,
+            },
+          );
+        }
+
+        // Determine tanggal_aktif
+        final status = jsonMap['status'] as String;
+        final tanggalAktifValue = (status == 'aktif')
             ? DateTime.now().toIso8601String()
             : null;
 
-        // update pelanggans table
+        // Update pelanggans table
         await connection.query(
           '''
           UPDATE pelanggans
-          SET paket_id           = @paketId,
-              status             = @status,
-              alamat             = @alamat,
-              telepon            = @telepon,
-              tanggal_aktif      = @tanggalAktif,
-              tanggal_langganan  = @tanggalLangganan
+          SET paket_id          = @paketId,
+              status            = @status,
+              alamat            = @alamat,
+              telepon           = @telepon,
+              tanggal_aktif     = @tanggalAktif,
+              tanggal_langganan = @tanggalLangganan
           WHERE id = @id;
           ''',
           substitutionValues: {
-            'id': updated.id,
-            'paketId': updated.paketId,
-            'status': updated.status,
-            'alamat': updated.alamat,
-            'telepon': updated.telepon,
+            'id': pelangganId,
+            'paketId': jsonMap['paket_id'],
+            'status': status,
+            'alamat': jsonMap['alamat'],
+            'telepon': jsonMap['telepon'],
             'tanggalAktif': tanggalAktifValue,
-            'tanggalLangganan': updated.tanggalLangganan.toIso8601String(),
+            'tanggalLangganan': jsonMap['tanggal_langganan'],
           },
         );
 
         return Response.json(body: {'message': 'Pelanggan updated'});
 
-      // DELETE /pelanggan/:id
       case HttpMethod.delete:
-        // fetch the associated user_id
         final res = await connection.query(
-          'SELECT user_id FROM pelanggans WHERE id = @id;',
+          'SELECT user_id FROM pelanggans WHERE id = @id;', 
           substitutionValues: {'id': pelangganId},
         );
         if (res.isEmpty) return Response(statusCode: 404);
         final userId = res.first[0] as int;
 
-        // delete pelanggan then user
         await connection.query(
-          'DELETE FROM pelanggans WHERE id = @id;',
+          'DELETE FROM pelanggans WHERE id = @id;', 
           substitutionValues: {'id': pelangganId},
         );
         await connection.query(
-          'DELETE FROM users WHERE id = @userId;',
+          'DELETE FROM users WHERE id = @userId;', 
           substitutionValues: {'userId': userId},
         );
 
