@@ -55,7 +55,7 @@ Future<Response> onRequest(RequestContext context) async {
         '''INSERT INTO pelanggans
              (user_id, paket_id, alamat, telepon, status, tanggal_aktif, tanggal_langganan)
            VALUES
-             (@uid, @pid, @alamat, @telepon, 'belum_verifikasi', NULL, CURRENT_DATE);''',
+             (@uid, @pid, @alamat, @telepon, 'nonaktif', NULL, CURRENT_DATE);''',
         substitutionValues: {
           'uid': userId,
           'pid': paketId,
