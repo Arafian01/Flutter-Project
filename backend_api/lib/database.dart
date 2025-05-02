@@ -4,7 +4,7 @@ Future<PostgreSQLConnection> createConnection() async {
   final connection = PostgreSQLConnection(
     'localhost',  // Host
     5432,  // Port PostgreSQL
-    'db_strongapp',  // Nama database
+    'db_strongapp',  // db_strongnet
     username: 'postgres',  // Username DB
     password: '99',  // Password DB
   );
