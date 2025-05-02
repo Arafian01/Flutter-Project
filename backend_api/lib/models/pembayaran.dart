@@ -1,59 +1,64 @@
-// File: lib/models/pembayaran.dart
-
+// lib/models/pembayaran.dart
 class Pembayaran {
-  final int? id;
+  final int id;
   final int tagihanId;
   final String bulanTahun;
-  final String imagePath;
-  final DateTime tanggalKirim;
-  final int userId;
-  final String name;
+  final String image;
+  final String tanggalKirim;
+  final int? adminId;
+  final String? adminName;
+  final int pelangganUserId;
+  final String pelangganName;
   final String statusVerifikasi;
-  final DateTime? tanggalVerifikasi;
+  final String? tanggalVerifikasi;
 
   Pembayaran({
-    this.id,
+    required this.id,
     required this.tagihanId,
     required this.bulanTahun,
-    required this.imagePath,
+    required this.image,
     required this.tanggalKirim,
-    required this.userId,
-    required this.name,
+    this.adminId,
+    this.adminName,
+    required this.pelangganUserId,
+    required this.pelangganName,
     required this.statusVerifikasi,
     this.tanggalVerifikasi,
   });
 
+  /// Buat instance dari satu baris hasil query
   factory Pembayaran.fromRow(List row) {
-    DateTime parseDate(dynamic v) =>
-        v is DateTime ? v : DateTime.parse(v as String);
-    DateTime? parseNullable(dynamic v) => v == null ? null : parseDate(v);
     return Pembayaran(
-      id: row[0] as int?,
+      id: row[0] as int,
       tagihanId: row[1] as int,
       bulanTahun: row[2] as String,
-      imagePath: row[3] as String,
-      tanggalKirim: parseDate(row[4]),
-      userId: row[5] as int,
-      name: row[6] as String,
+      image: row[3] as String,
+      tanggalKirim: (row[4] as DateTime).toIso8601String(),
+      adminId: row[5] as int?,          // user_id sebagai admin yang verifikasi
+      adminName: row[6] as String?,     // nama admin, bisa null
+      pelangganUserId: row[9] as int,    // user_id pelanggan dari relasi
+      pelangganName: row[10] as String,  // nama pelanggan
       statusVerifikasi: row[7] as String,
-      tanggalVerifikasi: parseNullable(row[8]),
+      tanggalVerifikasi: row[8] != null
+          ? (row[8] as DateTime).toIso8601String()
+          : null,
     );
   }
 
+  /// Konversi ke JSON
   Map<String, dynamic> toJson() {
-    final m = <String, dynamic>{
-      if (id != null) 'id': id,
+    return {
+      'id': id,
       'tagihan_id': tagihanId,
       'bulan_tahun': bulanTahun,
-      'image': imagePath,
-      'tanggal_kirim': tanggalKirim.toIso8601String(),
-      'user_id': userId,
-      'name': name,
+      'image': image,
+      'tanggal_kirim': tanggalKirim,
+      'admin_id': adminId,
+      'admin_name': adminName,
+      'pelanggan_user_id': pelangganUserId,
+      'pelanggan_name': pelangganName,
       'status_verifikasi': statusVerifikasi,
+      'tanggal_verifikasi': tanggalVerifikasi,
     };
-    if (tanggalVerifikasi != null) {
-      m['tanggal_verifikasi'] = tanggalVerifikasi!.toIso8601String();
-    }
-    return m;
   }
 }
