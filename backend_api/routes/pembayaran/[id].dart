@@ -37,6 +37,7 @@ Future<Response> onRequest(RequestContext context, String id) async {
     }
 
     if (context.request.method == HttpMethod.put) {
+      // ambil existing record
       final rec = await conn.query(
         'SELECT image FROM pembayarans WHERE id = @id',
         substitutionValues: {'id': pid},
@@ -44,16 +45,22 @@ Future<Response> onRequest(RequestContext context, String id) async {
       if (rec.isEmpty) return Response.json(statusCode: 404, body: {'error': 'Not found'});
       final oldImage = rec.first[0] as String?;
 
+      // parse multipart form-data
       final formData = await context.request.formData();
       final status = formData.fields['status_verifikasi'];
-      if (status == null) return Response.json(statusCode: 400, body: {'error': 'Missing status'});
+      final adminId = formData.fields['user_id'];
+      if (status == null) return Response.json(statusCode: 400, body: {'error': 'Missing status_verifikasi'});
 
-      // extract editor id from header (assumes auth middleware sets this)
-      final editorId = int.tryParse(context.request.headers['x-user-id'] ?? '');
+      if (adminId == null) {
+        return Response.json(statusCode: 401, body: {'error': 'Unauthorized: missing user id in header'});
+      }
+
+      // tentukan tanggal verifikasi jika status final
       final tv = (status == 'diterima' || status == 'ditolak')
           ? DateTime.now().toIso8601String().split('T').first
           : null;
 
+      // handle optional file upload
       String? imageName;
       final filePart = formData.files['image'];
       if (filePart != null) {
@@ -63,58 +70,60 @@ Future<Response> onRequest(RequestContext context, String id) async {
         }
         final bytes = Uint8List.fromList(await filePart.readAsBytes());
         final ext = filePart.name.split('.').last;
-        imageName = 'img_${DateTime.now().millisecondsSinceEpoch}.$ext';
+        imageName = 'img_\${DateTime.now().millisecondsSinceEpoch}.\$ext';
         await Directory('uploads').create(recursive: true);
-        await File('uploads/$imageName').writeAsBytes(bytes);
+        await File('uploads/\$imageName').writeAsBytes(bytes);
       }
 
-      await conn.query('''
-        UPDATE pembayarans
-        SET status_verifikasi = @st,
-            tanggal_verifikasi = @tv,
-            user_id = @uid
-            ${imageName != null ? ', image = @img' : ''}
-        WHERE id = @id;
-      ''', substitutionValues: {
-        'st': status,
-        'tv': tv,
-        'uid': editorId,
-        if (imageName != null) 'img': '/uploads/$imageName',
-        'id': pid,
+      // update pembayaran
+      await conn.transaction((ctx) async {
+        await ctx.query('''
+          UPDATE pembayarans
+          SET status_verifikasi = @st,
+              tanggal_verifikasi = @tv,
+              user_id           = @uid
+              ${imageName != null ? ', image = @img' : ''}
+          WHERE id = @id;
+        ''', substitutionValues: {
+          'st': status,
+          'tv': tv,
+          'uid': adminId,
+          if (imageName != null) 'img': '/uploads/\$imageName',
+          'id': pid,
+        });
+
+        // update status tagihan
+        final newSt = status == 'diterima' ? 'lunas' : 'menunggu_verifikasi';
+        await ctx.query(
+          'UPDATE tagihans SET status_pembayaran = @s WHERE id = @tid',
+          substitutionValues: {'s': newSt, 'tid': pid},
+        );
       });
-
-      final tid = (await conn.query(
-        'SELECT tagihan_id FROM pembayarans WHERE id = @id',
-        substitutionValues: {'id': pid},
-      )).first[0] as int;
-
-      final newSt = status == 'diterima' ? 'lunas' : 'menunggu verifikasi';
-      await conn.query(
-        'UPDATE tagihans SET status_pembayaran = @s WHERE id = @tid',
-        substitutionValues: {'s': newSt, 'tid': tid},
-      );
 
       return Response.json(body: {'message': 'Updated'});
     }
 
     if (context.request.method == HttpMethod.delete) {
-      final rec = await conn.query(
+      final rec2 = await conn.query(
         'SELECT image, tagihan_id FROM pembayarans WHERE id = @id',
         substitutionValues: {'id': pid},
       );
-      if (rec.isEmpty) return Response.json(statusCode: 404, body: {'error': 'Not found'});
-      final oldImage = rec.first[0] as String?;
-      final tid2 = rec.first[1] as int;
+      if (rec2.isEmpty) return Response.json(statusCode: 404, body: {'error': 'Not found'});
+      final oldImage2 = rec2.first[0] as String?;
+      final tid2 = rec2.first[1] as int;
 
-      await conn.query('DELETE FROM pembayarans WHERE id = @id', substitutionValues: {'id': pid});
-      if (oldImage != null) {
-        final f = File('.$oldImage');
-        if (await f.exists()) await f.delete();
-      }
-      await conn.query(
-        "UPDATE tagihans SET status_pembayaran='belum_dibayar' WHERE id=@tid",
-        substitutionValues: {'tid': tid2},
-      );
+      await conn.transaction((ctx) async {
+        await ctx.query('DELETE FROM pembayarans WHERE id = @id', substitutionValues: {'id': pid});
+        if (oldImage2 != null) {
+          final f2 = File('.$oldImage2');
+          if (await f2.exists()) await f2.delete();
+        }
+        await ctx.query(
+          "UPDATE tagihans SET status_pembayaran = 'belum_dibayar' WHERE id = @tid",
+          substitutionValues: {'tid': tid2},
+        );
+      });
+
       return Response.json(body: {'message': 'Deleted'});
     }
 
