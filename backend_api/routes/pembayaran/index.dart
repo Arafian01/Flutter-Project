@@ -79,7 +79,7 @@ Future<Response> onRequest(RequestContext context) async {
       String newSt;
       if (status == 'diterima') newSt = 'lunas';
       else if (status == 'ditolak') newSt = 'belum_dibayar';
-      else newSt = 'menunggu verifikasi';
+      else newSt = 'menunggu_verifikasi';
 
       await conn.query(
         'UPDATE tagihans SET status_pembayaran = @s WHERE id = @tid',
