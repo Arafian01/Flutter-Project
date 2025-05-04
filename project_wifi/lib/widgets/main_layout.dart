@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../pages/dashboard_admin_page.dart';
-import '../pages/dashboard_user_page.dart';
-import '../pages/paket_page.dart';
-import '../pages/pelanggan_page.dart';
-import '../pages/tagihan_page.dart';
-import '../pages/pembayaran_page.dart';
+import '../pages/admin/dashboard_admin_page.dart';
+import '../pages/user/dashboard_user_page.dart';
+import '../pages/admin/paket/paket_page.dart';
+import '../pages/admin/pelanggan/pelanggan_page.dart';
+import '../pages/admin/tagihan/tagihan_page.dart';
+import '../pages/admin/pembayaran/pembayaran_page.dart';
 import '../pages/profil_page.dart';
 import 'top_navbar.dart';
 
