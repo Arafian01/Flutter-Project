@@ -1,56 +1,61 @@
+// lib/models/pelanggan.dart
+import 'dart:convert';
+
 class Pelanggan {
-  final int? id;
+  final int id;
   final int userId;
+  final int paketId;
   final String name;
   final String email;
-  final int paketId;
+  final String namaPaket;
   final String status;
-  final String? tanggalAktif;
-  final String tanggalLangganan;
   final String alamat;
   final String telepon;
+  final DateTime tanggalAktif;
+  final DateTime tanggalLangganan;
 
   Pelanggan({
-    this.id,
+    required this.id,
     required this.userId,
+    required this.paketId,
     required this.name,
     required this.email,
-    required this.paketId,
+    required this.namaPaket,
     required this.status,
-    this.tanggalAktif,
-    required this.tanggalLangganan,
     required this.alamat,
     required this.telepon,
+    required this.tanggalAktif,
+    required this.tanggalLangganan,
   });
 
-  /// untuk parsing response list/detail
-  factory Pelanggan.fromJson(Map<String, dynamic> json) {
-    return Pelanggan(
-      id: json['id'] as int?,
-      userId: json['user_id'] as int,
-      name: json['name'] as String,
-      email: json['email'] as String,
-      paketId: json['paket_id'] as int,
-      status: json['status'] as String,
-      tanggalAktif: json['tanggal_aktif'] as String?,
-      tanggalLangganan: json['tanggal_langganan'] as String,
-      alamat: json['alamat'] as String,
-      telepon: json['telepon'] as String,
-    );
-  }
+  factory Pelanggan.fromJson(Map<String, dynamic> json) => Pelanggan(
+    id: json['id'] as int,
+    userId: json['user_id'] as int,
+    paketId: json['paket_id'] as int,
+    name: (json['name'] as String?) ?? '',
+    email: (json['email'] as String?) ?? '',
+    namaPaket: (json['nama_paket'] as String?) ?? '',
+    status: (json['status'] as String?) ?? '',
+    alamat: (json['alamat'] as String?) ?? '',
+    telepon: (json['telepon'] as String?) ?? '',
+    tanggalAktif: json['tanggal_aktif'] != null
+        ? DateTime.parse(json['tanggal_aktif'] as String)
+        : DateTime.fromMillisecondsSinceEpoch(0),
+    tanggalLangganan: json['tanggal_langganan'] != null
+        ? DateTime.parse(json['tanggal_langganan'] as String)
+        : DateTime.fromMillisecondsSinceEpoch(0),
+  );
 
-  Map<String, dynamic> toJson() {
-    return {
-      if (id != null) 'id': id,
-      'user_id': userId,
-      'name': name,
-      'email': email,
-      'paket_id': paketId,
-      'status': status,
-      'tanggal_aktif': tanggalAktif,
-      'tanggal_langganan': tanggalLangganan,
-      'alamat': alamat,
-      'telepon': telepon,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+    'user_id': userId,
+    'paket_id': paketId,
+    'name': name,
+    'email': email,
+    'password': null, // handled separately
+    'status': status,
+    'alamat': alamat,
+    'telepon': telepon,
+    'tanggal_aktif': tanggalAktif.toIso8601String(),
+    'tanggal_langganan': tanggalLangganan.toIso8601String(),
+  };
 }
