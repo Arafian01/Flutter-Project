@@ -14,8 +14,8 @@ import 'pages/admin/pelanggan/add_pelanggan_page.dart';
 import 'pages/admin/pelanggan/edit_pelanggan_page.dart';
 import 'pages/admin/tagihan/add_tagihan_page.dart';
 import 'pages/admin/tagihan/edit_tagihan_page.dart';
-import 'pages/add_pembayaran_page.dart';
-import 'pages/edit_pembayaran_page.dart';
+import 'pages/admin/pembayaran/add_pembayaran_page.dart';
+import 'pages/admin/pembayaran/edit_pembayaran_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
