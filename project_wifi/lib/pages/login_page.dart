@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../utils/utils.dart';
@@ -51,14 +52,17 @@ class _LoginPageState extends State<LoginPage> {
         final user = body['user'] as Map<String, dynamic>;
         final role = user['role'] as String;
         final token = body['token'] as String?;
-        if (token != null) {
-          await _storage.write(key: 'token', value: token);
-        }
+        final userId = user['id'] as int;                             // ← baru
+        if (token != null) await _storage.write(key: 'token', value: token);
         await _storage.write(key: 'role', value: role);
-        // Navigasi ke MainLayout dengan role
+        await _storage.write(key: 'user_id', value: userId.toString()); // ← baru
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => MainLayout(role: role)),
+        );
+      } else if (response.statusCode == 401) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Email atau password salah')),
         );
       } else {
         final error = jsonDecode(response.body)['error'] ?? 'Login gagal';
@@ -66,9 +70,18 @@ class _LoginPageState extends State<LoginPage> {
           SnackBar(content: Text(error)),
         );
       }
+
+    } on http.ClientException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tidak dapat terhubung ke server')),
+      );
+    } on TimeoutException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Waktu koneksi habis, coba lagi')),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kesalahan: \$e')),
+        SnackBar(content: Text('Kesalahan: $e')),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
