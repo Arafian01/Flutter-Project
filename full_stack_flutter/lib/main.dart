@@ -1072,7 +1072,7 @@ class AccountActionSelection extends StatelessWidget {
             future: service.getAccounts(context),
             builder: (context, snapshot) {
 
-              if (!snapshot.hasData){
+              if (snapshot.connectionState != ConnectionState.done || !snapshot.hasData){
                 return FlutterBankLoading();
               }
 
@@ -1087,7 +1087,8 @@ class AccountActionSelection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Text(actionTypeLabel!, style: TextStyle(color: Colors.grey, fontSize: 15)),
+                  Text(actionTypeLabel!, style: TextStyle(color: Colors.grey, fontSize: 15)
+                  ),
                   const SizedBox(height: 10,),
                   AccountActionCard(
                     selectedAccount: selectedAccount,
@@ -1182,3 +1183,23 @@ class AccountActionCard extends StatelessWidget {
     );
   }
 }
+
+class DepositeService extends ChangeNotifier {
+  double amountToDeposit = 0;
+
+  void setAmountToDeposite(double amount) {
+    amountToDeposit = amount;
+        notifyListeners();
+  }
+
+  void resetDepositeService() {
+    amountToDeposit = 0;
+    notifyListeners();
+  }
+
+  bool checkAmountToDeposit() {
+    return amountToDeposit > 0;
+  }
+}
+
+
