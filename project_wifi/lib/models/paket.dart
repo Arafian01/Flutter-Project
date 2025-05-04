@@ -4,7 +4,7 @@ class Paket {
   final int id;
   final String namaPaket;
   final String deskripsi;
-  final double harga;
+  final int harga;
 
   Paket({
     required this.id,
@@ -19,7 +19,7 @@ class Paket {
       id: json['id'] as int,
       namaPaket: json['nama_paket'] as String,
       deskripsi: json['deskripsi'] as String,
-      harga: (json['harga'] as num).toDouble(),
+      harga: json['harga'] as int,
     );
   }
 
