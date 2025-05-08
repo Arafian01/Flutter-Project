@@ -55,6 +55,13 @@ Future<void> sendData(
   }
 }
 
+/// Fetch all pelanggan, then return the one matching this user_id
+Future<Pelanggan> fetchPelangganByUserId(int userId) async {
+  final all = await fetchPelanggans();       // your existing fetchPelanggans()
+  return all.firstWhere((p) => p.userId == userId,
+      orElse: () => throw Exception('Pelanggan not found for user $userId'));
+}
+
 /// Fetch daftar paket
 Future<List<Paket>> fetchPakets() async {
   final list = await fetchData('paket');
