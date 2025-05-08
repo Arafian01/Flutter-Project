@@ -8,6 +8,7 @@ import '../utils/constants.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../main.dart';
 import '../widgets/main_layout.dart';
+import '../services/api_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -41,21 +42,39 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
     try {
       final url = Uri.parse('$baseUrl/login');
-      final response = await http.post(
+      final response = await http
+          .post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
-      ).timeout(const Duration(seconds: 10));
+      )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body) as Map<String, dynamic>;
         final user = body['user'] as Map<String, dynamic>;
         final role = user['role'] as String;
         final token = body['token'] as String?;
-        final userId = user['id'] as int;                             // ← baru
-        if (token != null) await _storage.write(key: 'token', value: token);
+        final userId = user['id'] as int;
+
+        if (token != null) {
+          await _storage.write(key: 'token', value: token);
+        }
         await _storage.write(key: 'role', value: role);
-        await _storage.write(key: 'user_id', value: userId.toString()); // ← baru
+        await _storage.write(key: 'user_id', value: userId.toString());
+
+        if (role == 'pelanggan') {
+          try {
+            final pelanggan = await fetchPelangganByUserId(userId);
+            await _storage.write(
+              key: 'pelanggan_id',
+              value: pelanggan.id.toString(),
+            );
+          } catch (_) {
+            // ignore if no pelanggan record found
+          }
+        }
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => MainLayout(role: role)),
@@ -65,12 +84,11 @@ class _LoginPageState extends State<LoginPage> {
           const SnackBar(content: Text('Email atau password salah')),
         );
       } else {
-        final error = jsonDecode(response.body)['error'] ?? 'Login gagal';
+        final error = (jsonDecode(response.body) as Map<String, dynamic>)['error'] ?? 'Login gagal';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(error)),
         );
       }
-
     } on http.ClientException {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Tidak dapat terhubung ke server')),
@@ -146,9 +164,7 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 16),
             Center(
               child: TextButton(
-                onPressed: _isLoading
-                    ? null
-                    : () => Navigator.of(context).pushNamed('/register'),
+                onPressed: _isLoading ? null : () => Navigator.of(context).pushNamed('/register'),
                 child: Text(
                   'Belum punya akun? Register di sini',
                   style: TextStyle(color: Utils.mainThemeColor),
