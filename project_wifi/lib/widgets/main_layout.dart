@@ -39,7 +39,8 @@ class _MainLayoutState extends State<MainLayout> {
         BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Tagihan'),
         BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'Pembayaran'),
       ];
-    } else {
+    } else if (widget.role == 'pelanggan'){
+
       _pages = [
         DashboardUserPage(),
         TagihanPage(),
@@ -52,6 +53,8 @@ class _MainLayoutState extends State<MainLayout> {
         BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'Pembayaran'),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
       ];
+    } else {
+
     }
   }
 
