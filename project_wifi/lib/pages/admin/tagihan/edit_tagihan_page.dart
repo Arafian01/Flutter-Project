@@ -9,7 +9,6 @@ import '../../../widgets/strong_main_button.dart';
 class EditTagihanPage extends StatefulWidget {
   final Tagihan tagihan;
   const EditTagihanPage({Key? key, required this.tagihan}) : super(key: key);
-
   @override
   State<EditTagihanPage> createState() => _EditTagihanPageState();
 }
@@ -20,7 +19,6 @@ class _EditTagihanPageState extends State<EditTagihanPage> {
   Pelanggan? _selected;
   late TextEditingController _bulanCtrl;
   String _status = '';
-  DateTime? _jatuhTempo;
   bool _saving = false;
 
   @override
@@ -28,42 +26,28 @@ class _EditTagihanPageState extends State<EditTagihanPage> {
     super.initState();
     _bulanCtrl = TextEditingController(text: widget.tagihan.bulanTahun);
     _status = widget.tagihan.statusPembayaran;
-    _jatuhTempo = widget.tagihan.jatuhTempo;
-    _loadPel();
+    _loadPelanggans();
   }
 
-  void _loadPel() async {
-    final list = await fetchPelanggans();
-    setState(() {
-      _pelanggans = list;
-      _selected = list.firstWhere((p) => p.id == widget.tagihan.pelangganId);
-    });
+  Future<void> _loadPelanggans() async {
+    _pelanggans = await fetchPelanggans();
+    _selected = _pelanggans.firstWhere((p) => p.id == widget.tagihan.pelangganId);
+    setState(() {});
   }
 
-  Future _pickDate() async {
-    final d = await showDatePicker(
-      context: context,
-      initialDate: _jatuhTempo!,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (d != null) setState(() => _jatuhTempo = d);
-  }
-
-  Future _update() async {
-    if (!_formKey.currentState!.validate() || _selected == null || _jatuhTempo == null) return;
+  Future<void> _update() async {
+    if (!_formKey.currentState!.validate() || _selected == null) return;
     setState(() => _saving = true);
-    final data = {
-      'pelanggan_id': _selected!.id,
-      'bulan_tahun': _bulanCtrl.text.trim(),
-      'status_pembayaran': _status,
-      'jatuh_tempo': _jatuhTempo!.toIso8601String(),
-    };
     try {
-      await updateTagihan(widget.tagihan.id, data);
+      await TagihanService.updateTagihan(
+        widget.tagihan.id,
+        pelangganId: _selected!.id,
+        bulanTahun: _bulanCtrl.text.trim(),
+        statusPembayaran: _status,
+      );
       Navigator.pop(context, true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal update tagihan: \$e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal update tagihan: $e')));
     } finally {
       setState(() => _saving = false);
     }
@@ -95,19 +79,18 @@ class _EditTagihanPageState extends State<EditTagihanPage> {
                   .map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
               onChanged: (v) => setState(() => _status = v!),
             ),
-            const SizedBox(height: 12),
-            ListTile(
-              title: Text(_jatuhTempo == null ? 'Pilih Jatuh Tempo' : _jatuhTempo!.toLocal().toString().split(' ')[0]),
-              trailing: const Icon(Icons.calendar_today),
-              onTap: _pickDate,
-            ),
             const SizedBox(height: 20),
-            _saving
-                ? const Center(child: CircularProgressIndicator())
-                : StrongMainButton(label: 'Update', onTap: _update),
+            _saving ? const Center(child: CircularProgressIndicator()) : StrongMainButton(label: 'Update', onTap: _update),
           ],
         ),
       ),
     ),
   );
+
 }
+
+
+
+
+
+
