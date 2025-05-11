@@ -1,4 +1,3 @@
-// File: routes/pembayaran/index.dart
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:dart_frog/dart_frog.dart';
@@ -6,91 +5,105 @@ import '../../lib/database.dart';
 import '../../lib/models/pembayaran.dart';
 
 Future<Response> onRequest(RequestContext context) async {
-  if (context.request.method == HttpMethod.get) {
-    final conn = await createConnection();
-    try {
+  final conn = await createConnection();
+  try {
+    if (context.request.method == HttpMethod.get) {
       final rows = await conn.query('''
         SELECT
           pm.id,
           pm.tagihan_id,
-          t.bulan_tahun,
+          pm.bulan_tahun,
+          pm.pelanggan_id,
           pm.image,
           pm.tanggal_kirim,
-          pm.user_id AS admin_id,
-          u_admin.name AS admin_name,
           pm.status_verifikasi,
           pm.tanggal_verifikasi,
-          p.user_id AS pelanggan_user_id,
-          u_pelanggan.name AS pelanggan_name
+          pm.harga
         FROM pembayarans pm
-        JOIN tagihans t ON pm.tagihan_id = t.id
-        JOIN pelanggans p ON t.pelanggan_id = p.id
-        JOIN users u_pelanggan ON p.user_id = u_pelanggan.id
-        LEFT JOIN users u_admin ON pm.user_id = u_admin.id
         ORDER BY pm.id;
       ''');
       final list = rows.map((r) => Pembayaran.fromRow(r).toJson()).toList();
       return Response.json(body: list);
-    } finally {
-      await conn.close();
-    }
-  }
-
-  if (context.request.method == HttpMethod.post) {
-    final formData = await context.request.formData();
-    final tagihanId = int.tryParse(formData.fields['tagihan_id'] ?? '');
-    final status = formData.fields['status_verifikasi'];
-    if (tagihanId == null || status == null) {
-      return Response.json(statusCode: 400, body: {'error': 'Missing fields'});
     }
 
-    final filePart = formData.files['image'];
-    if (filePart == null) {
-      return Response.json(statusCode: 400, body: {'error': 'Image required'});
-    }
+    if (context.request.method == HttpMethod.post) {
+      final form = await context.request.formData();
 
-    final bytes = await filePart.readAsBytes();
-    final ext = filePart.name.split('.').last;
-    final imageName = 'img_${DateTime.now().millisecondsSinceEpoch}.$ext';
-    await Directory('uploads').create(recursive: true);
-    await File('uploads/$imageName').writeAsBytes(bytes);
+      // wajib: bulan_tahun, pelanggan_id, status_verifikasi, image
+      final bt = form.fields['bulan_tahun'];
+      final pid = int.tryParse(form.fields['pelanggan_id'] ?? '');
+      final st = form.fields['status_verifikasi'];
+      final filePart = form.files['image'];
 
-    final tv = (status == 'diterima' || status == 'ditolak')
-        ? DateTime.now().toIso8601String().split('T').first
-        : null;
+      if (bt == null || pid == null || st == null || filePart == null) {
+        return Response.json(statusCode: 400, body: {'error': 'Missing fields'});
+      }
 
-    final conn = await createConnection();
-    try {
-      // On creation, admin (user_id) is null
+      // tentukan tagihan_id bila ada
+      final tagRes = await conn.query('''
+        SELECT id FROM tagihans
+         WHERE pelanggan_id = @pid AND bulan_tahun = @bt
+         LIMIT 1;
+      ''', substitutionValues: {'pid': pid, 'bt': bt});
+      final tid = tagRes.isEmpty ? null : tagRes.first[0] as int;
+
+      // ambil harga dari paket
+      final priceRes = await conn.query('''
+        SELECT pk.harga
+          FROM pelanggans pl
+          JOIN pakets pk ON pl.paket_id = pk.id
+         WHERE pl.id = @plid
+         LIMIT 1;
+      ''', substitutionValues: {'plid': pid});
+      final harga = priceRes.first[0] as int;
+
+      // simpan file
+      final bytes = await filePart.readAsBytes();
+      final ext = filePart.name.split('.').last;
+      final imgName = 'img_${DateTime.now().millisecondsSinceEpoch}.$ext';
+      await Directory('uploads').create(recursive: true);
+      await File('uploads/$imgName').writeAsBytes(bytes);
+
+      final tv = (st == 'diterima' || st == 'ditolak')
+          ? DateTime.now().toIso8601String().split('T')[0]
+          : null;
+
       final result = await conn.query('''
         INSERT INTO pembayarans
-          (tagihan_id, image, tanggal_kirim, status_verifikasi, tanggal_verifikasi)
+          (tagihan_id, bulan_tahun, pelanggan_id, image, tanggal_kirim,
+           status_verifikasi, tanggal_verifikasi, harga)
         VALUES
-          (@tid, @img, CURRENT_DATE, @st, @tv)
+          (@tid, @bt, @pid, @img, CURRENT_DATE, @st, @tv, @hr)
         RETURNING id;
       ''', substitutionValues: {
-        'tid': tagihanId,
-        'img': '/uploads/$imageName',
-        'st': status,
+        'tid': tid,
+        'bt': bt,
+        'pid': pid,
+        'img': '/uploads/$imgName',
+        'st': st,
         'tv': tv,
+        'hr': harga,
       });
       final newId = result.first[0] as int;
 
-      String newSt;
-      if (status == 'diterima') newSt = 'lunas';
-      else if (status == 'ditolak') newSt = 'belum_dibayar';
-      else newSt = 'menunggu_verifikasi';
-
-      await conn.query(
-        'UPDATE tagihans SET status_pembayaran = @s WHERE id = @tid',
-        substitutionValues: {'s': newSt, 'tid': tagihanId},
-      );
+      // update tagihan jika terhubung
+      if (tid != null) {
+        final newSt = st == 'diterima' ? 'lunas'
+                      : st == 'ditolak' ? 'belum_dibayar'
+                      : 'menunggu_verifikasi';
+        await conn.query(
+          'UPDATE tagihans SET status_pembayaran = @s WHERE id = @tid',
+          substitutionValues: {'s': newSt, 'tid': tid},
+        );
+      }
 
       return Response.json(statusCode: 201, body: {'id': newId});
-    } finally {
-      await conn.close();
     }
-  }
 
-  return Response(statusCode: 405);
+    return Response(statusCode: 405);
+  } catch (e) {
+    return Response.json(statusCode: 500, body: {'error': e.toString()});
+  } finally {
+    await conn.close();
+  }
 }
