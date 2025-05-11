@@ -103,54 +103,164 @@ Future<void> updatePelanggan(int id, Map<String, dynamic> data) async =>
 
 Future<void> deletePelanggan(int id) async => sendData('DELETE', 'pelanggan/$id');
 
-/// Tagihan CRUD
-Future<List<Tagihan>> fetchTagihans() async {
-  final list = await fetchData('tagihan');
-  return list.map((m) => Tagihan.fromJson(m)).toList();
+
+/// Tagihan CRUD via API terbaru
+class TagihanService {
+  /// GET /tagihan
+  static Future<List<Tagihan>> fetchTagihans() async {
+    final url = Uri.parse('$baseUrl/tagihan');
+    final resp = await http.get(url).timeout(const Duration(seconds: 10));
+    if (resp.statusCode == 200) {
+      final List data = jsonDecode(resp.body) as List;
+      return data.map((e) => Tagihan.fromJson(e)).toList();
+    }
+    throw Exception('Failed to load tagihans: ${resp.statusCode}');
+  }
+
+  static Future<List<Tagihan>> fetchTagihansByPelanggan(int pelangganId) async {
+    final uri = Uri.parse('$baseUrl/tagihan/pelanggan/$pelangganId');
+    final resp = await http.get(uri).timeout(Duration(seconds: 10));
+    if (resp.statusCode == 200) {
+      final List data = jsonDecode(resp.body) as List;
+      return data.map((e) => Tagihan.fromJson(e)).toList();
+    }
+    throw Exception('Gagal memuat tagihan pelanggan (${resp.statusCode})');
+  }
+
+  /// POST /tagihan
+  static Future<void> createTagihan({
+    required int pelangganId,
+    required String bulanTahun,
+    required String statusPembayaran,
+  }) async {
+    final url = Uri.parse('$baseUrl/tagihan');
+    final body = {
+      'pelanggan_id': pelangganId,
+      'bulan_tahun': bulanTahun,
+      'status_pembayaran': statusPembayaran,
+    };
+    final resp = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    ).timeout(const Duration(seconds: 10));
+    if (resp.statusCode != 201) {
+      final msg = jsonDecode(resp.body)['error'] ?? resp.statusCode;
+      throw Exception('Create tagihan failed: $msg');
+    }
+  }
+
+  /// PUT /tagihan/:id
+  static Future<void> updateTagihan(
+      int id, {
+        required int pelangganId,
+        required String bulanTahun,
+        required String statusPembayaran,
+      }) async {
+    final url = Uri.parse('$baseUrl/tagihan/$id');
+    final body = {
+      'pelanggan_id': pelangganId,
+      'bulan_tahun': bulanTahun,
+      'status_pembayaran': statusPembayaran,
+    };
+    final resp = await http.put(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    ).timeout(const Duration(seconds: 10));
+    if (resp.statusCode != 200) throw Exception('Update tagihan failed');
+  }
+
+  /// DELETE /tagihan/:id
+  static Future<void> deleteTagihan(int id) async {
+    final url = Uri.parse('$baseUrl/tagihan/$id');
+    final resp = await http.delete(url).timeout(const Duration(seconds: 10));
+    if (resp.statusCode != 200) throw Exception('Delete tagihan failed');
+  }
 }
 
-Future<void> createTagihan(Map<String, dynamic> data) async =>
-    sendData('POST', 'tagihan', body: data);
+class PembayaranService {
+  /// Ambil semua pembayaran (admin)
+  static Future<List<Pembayaran>> fetchPembayarans() async {
+    final resp = await http.get(Uri.parse('$baseUrl/pembayaran'))
+        .timeout(const Duration(seconds: 10));
+    if (resp.statusCode == 200) {
+      final list = jsonDecode(resp.body) as List;
+      return list.map((e) => Pembayaran.fromJson(e)).toList();
+    }
+    throw Exception('Failed load pembayaran');
+  }
 
-Future<void> updateTagihan(int id, Map<String, dynamic> data) async =>
-    sendData('PUT', 'tagihan/$id', body: data);
+  /// Ambil semua pembayaran untuk pelanggan (user)
+  static Future<List<Pembayaran>> fetchPembayaransByPelanggan(int pid) async {
+    final resp = await http.get(Uri.parse('$baseUrl/pembayaran/pelanggan/$pid'))
+        .timeout(const Duration(seconds: 10));
+    if (resp.statusCode == 200) {
+      final list = jsonDecode(resp.body) as List;
+      return list.map((e) => Pembayaran.fromJson(e)).toList();
+    }
+    throw Exception('Failed load pembayaran pelanggan');
+  }
 
-Future<void> deleteTagihan(int id) async => sendData('DELETE', 'tagihan/$id');
+  /// Create pembayaran (admin)
+  static Future<void> createPembayaran({
+    required int tagihanId,
+    required String statusVerifikasi,
+    required File imageFile,
+  }) async {
+    final uri = Uri.parse('$baseUrl/pembayaran');
+    final req = http.MultipartRequest('POST', uri)
+      ..fields['tagihan_id'] = tagihanId.toString()
+      ..fields['status_verifikasi'] = statusVerifikasi
+      ..files.add(await http.MultipartFile.fromPath('image', imageFile.path));
+    final res = await req.send().timeout(const Duration(seconds: 15));
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Create pembayaran failed (${res.statusCode})');
+    }
+  }
 
-/// Pembayaran CRUD
-Future<List<Pembayaran>> fetchPembayarans() async {
-  final list = await fetchData('pembayaran');
-  return list.map((m) => Pembayaran.fromJson(m)).toList();
+  /// Edit pembayaran
+  static Future<void> updatePembayaran({
+    required int id,
+    required String statusVerifikasi,
+    File? imageFile,
+  }) async {
+    final uri = Uri.parse('$baseUrl/pembayaran/$id');
+    final req = http.MultipartRequest('PUT', uri)
+      ..fields['status_verifikasi'] = statusVerifikasi;
+    if (imageFile != null) {
+      req.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
+    }
+    final res = await req.send().timeout(const Duration(seconds: 15));
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Update pembayaran failed (${res.statusCode})');
+    }
+  }
+
+  /// Hapus pembayaran
+  static Future<void> deletePembayaran(int id) async {
+    final resp = await http.delete(Uri.parse('$baseUrl/pembayaran/$id'))
+        .timeout(const Duration(seconds: 10));
+    if (resp.statusCode != 200) {
+      throw Exception('Delete pembayaran failed (${resp.statusCode})');
+    }
+  }
+
+  /// Tambah pembayaran (user)
+  static Future<void> createPembayaranUser({
+    required int pelangganId,
+    required String bulanTahun,
+    required String statusVerifikasi,
+    required File imageFile,
+  }) async {
+    final uri = Uri.parse('$baseUrl/pembayaran/pelanggan/$pelangganId');
+    final req = http.MultipartRequest('POST', uri)
+      ..fields['bulan_tahun'] = bulanTahun
+      ..fields['status_verifikasi'] = statusVerifikasi
+      ..files.add(await http.MultipartFile.fromPath('image', imageFile.path));
+    final res = await req.send().timeout(const Duration(seconds: 15));
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Create pembayaran user failed (${res.statusCode})');
+    }
+  }
 }
-
-Future<void> createPembayaran({
-  required int tagihanId,
-  required int pelangganUserId,
-  String status = 'menunggu verifikasi',
-  required File imageFile,
-}) async {
-  final uri = Uri.parse('$baseUrl/pembayaran');
-  final req = http.MultipartRequest('POST', uri);
-  req.fields['tagihan_id'] = tagihanId.toString();
-  req.fields['status_verifikasi'] = status;
-  req.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
-  final resp = await req.send();
-  if (resp.statusCode < 200 || resp.statusCode >= 300) throw Exception('Create pembayaran failed');
-}
-
-Future<void> updatePembayaran({
-  required int id,
-  required String status,
-  required int adminId,
-  File? imageFile,
-}) async {
-  final uri = Uri.parse('$baseUrl/pembayaran/$id');
-  final req = http.MultipartRequest('PUT', uri);
-  req.fields['status_verifikasi'] = status;
-  req.fields['user_id'] = adminId.toString();
-  if (imageFile != null) req.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
-  final resp = await req.send();
-  if (resp.statusCode < 200 || resp.statusCode >= 300) throw Exception('Update pembayaran failed');
-}
-
-Future<void> deletePembayaran(int id) async => sendData('DELETE', 'pembayaran/$id');
