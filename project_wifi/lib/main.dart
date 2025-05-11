@@ -16,6 +16,8 @@ import 'pages/admin/tagihan/add_tagihan_page.dart';
 import 'pages/admin/tagihan/edit_tagihan_page.dart';
 import 'pages/admin/pembayaran/add_pembayaran_page.dart';
 import 'pages/admin/pembayaran/edit_pembayaran_page.dart';
+import 'pages/add_pembayaran_user_page.dart';
+
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,11 +56,12 @@ class MyApp extends StatelessWidget {
           final tagihan = ModalRoute.of(context)!.settings.arguments as Tagihan;
           return EditTagihanPage(tagihan: tagihan);
         },
-        '/add_pembayaran': (_) => const AddPembayaranPage(),
+        '/add_pembayaran': (_) => AddPembayaranPage(),
         '/edit_pembayaran': (ctx) {
           final pembayaran = ModalRoute.of(ctx)!.settings.arguments as Pembayaran;
           return EditPembayaranPage(pembayaran: pembayaran);
         },
+        '/add_pembayaran_user' : (_) => AddPembayaranUserPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/main') {
