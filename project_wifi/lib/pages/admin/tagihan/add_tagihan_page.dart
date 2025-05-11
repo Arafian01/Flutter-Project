@@ -18,47 +18,38 @@ class _AddTagihanPageState extends State<AddTagihanPage> {
   Pelanggan? _selected;
   final TextEditingController _bulanCtrl = TextEditingController();
   String _status = 'belum_dibayar';
-  DateTime? _jatuhTempo;
   bool _saving = false;
 
   @override
   void initState() {
     super.initState();
-    _loadPel();
+    _loadPelanggans();
   }
 
-  void _loadPel() async {
-    final list = await fetchPelanggans();
-    setState(() => _pelanggans = list);
+  Future<void> _loadPelanggans() async {
+    _pelanggans = await fetchPelanggans();
+    setState(() {});
   }
 
-  Future _pickDate() async {
-    final now = DateTime.now();
-    final d = await showDatePicker(context: context, initialDate: now, firstDate: DateTime(2000), lastDate: DateTime(2100));
-    if (d != null) setState(() => _jatuhTempo = d);
-  }
-
-  Future _save() async {
-    if (!_formKey.currentState!.validate() || _selected == null || _jatuhTempo == null) return;
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate() || _selected == null) return;
     setState(() => _saving = true);
-    final data = {
-      'pelanggan_id': _selected!.id,
-      'bulan_tahun': _bulanCtrl.text.trim(),
-      'status_pembayaran': _status,
-      'jatuh_tempo': _jatuhTempo!.toIso8601String(),
-    };
     try {
-      await createTagihan(data);
+      await TagihanService.createTagihan(
+        pelangganId: _selected!.id,
+        bulanTahun: _bulanCtrl.text.trim(),
+        statusPembayaran: _status,
+      );
       Navigator.pop(context, true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal tambah tagihan: \$e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal tambah tagihan: $e')));
     } finally {
       setState(() => _saving = false);
     }
   }
 
   @override
-  Widget build(BuildContext c) => Scaffold(
+  Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Tambah Tagihan'), backgroundColor: Utils.mainThemeColor),
     body: Padding(
       padding: const EdgeInsets.all(16),
@@ -78,14 +69,9 @@ class _AddTagihanPageState extends State<AddTagihanPage> {
             DropdownButtonFormField<String>(
               value: _status,
               decoration: const InputDecoration(labelText: 'Status'),
-              items: ['belum_dibayar', 'menunggu_verifikasi', 'lunas'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+              items: ['belum_dibayar', 'menunggu_verifikasi', 'lunas']
+                  .map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
               onChanged: (v) => setState(() => _status = v!),
-            ),
-            const SizedBox(height: 12),
-            ListTile(
-              title: Text(_jatuhTempo == null ? 'Pilih Jatuh Tempo' : _jatuhTempo!.toLocal().toString().split(' ')[0]),
-              trailing: const Icon(Icons.calendar_today),
-              onTap: _pickDate,
             ),
             const SizedBox(height: 20),
             _saving ? const Center(child: CircularProgressIndicator()) : StrongMainButton(label: 'Simpan', onTap: _save),
@@ -94,4 +80,5 @@ class _AddTagihanPageState extends State<AddTagihanPage> {
       ),
     ),
   );
+
 }
