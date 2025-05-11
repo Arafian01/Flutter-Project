@@ -1,4 +1,4 @@
-// File: routes/tagihan/[id].dart
+// routes/tagihan/[id].dart
 import 'dart:convert';
 import 'package:dart_frog/dart_frog.dart';
 import '../../lib/database.dart';
@@ -6,14 +6,11 @@ import '../../lib/models/tagihan.dart';
 
 Future<Response> onRequest(RequestContext context, String id) async {
   final connection = await createConnection();
-  final tagihanId = int.tryParse(id);
-  if (tagihanId == null) {
-    return Response.json(statusCode: 400, body: {'error': 'Invalid ID'});
-  }
+  final tid = int.tryParse(id);
+  if (tid == null) return Response.json(statusCode: 400, body: {'error': 'Invalid ID'});
 
   try {
     switch (context.request.method) {
-      // GET /tagihan/:id
       case HttpMethod.get:
         final results = await connection.query(
           '''
@@ -30,12 +27,11 @@ Future<Response> onRequest(RequestContext context, String id) async {
           JOIN pakets pk    ON p.paket_id     = pk.id
           WHERE t.id = @id;
           ''',
-          substitutionValues: {'id': tagihanId},
+          substitutionValues: {'id': tid},
         );
         if (results.isEmpty) return Response(statusCode: 404);
         return Response.json(body: Tagihan.fromRow(results.first).toJson());
 
-      // PUT /tagihan/:id
       case HttpMethod.put:
         final body = await context.request.body();
         final jsonMap = json.decode(body) as Map<String, dynamic>;
@@ -43,45 +39,45 @@ Future<Response> onRequest(RequestContext context, String id) async {
         const allowed = ['belum_dibayar', 'menunggu_verifikasi', 'lunas'];
         final status = jsonMap['status_pembayaran'] as String;
         if (!allowed.contains(status)) {
-          return Response.json(
-            statusCode: 400,
-            body: {'error': 'Invalid status_pembayaran'},
-          );
+          return Response.json(statusCode: 400, body: {'error': 'Invalid status_pembayaran'});
         }
 
-        // recompute jatuh_tempo from bulan_tahun
+        // recompute jatuh_tempo
         final bulanTahun = jsonMap['bulan_tahun'] as String;
         final parts = bulanTahun.split('-');
-        final month = int.parse(parts[0]);
-        final year = int.parse(parts[1]);
-        final nextMonth = month == 12 ? 1 : month + 1;
-        final nextYear = month == 12 ? year + 1 : year;
-        final jatuhTempo = DateTime(nextYear, nextMonth, 5).toIso8601String().split('T')[0];
+        final m = int.parse(parts[0]), y = int.parse(parts[1]);
+        final nm = m == 12 ? 1 : m + 1;
+        final ny = m == 12 ? y + 1 : y;
+        final jatuhTempo = DateTime(ny, nm, 5).toIso8601String().split('T')[0];
 
         await connection.query(
           '''
           UPDATE tagihans
-          SET pelanggan_id      = @pelangganId,
-              bulan_tahun       = @bulanTahun,
-              status_pembayaran = @status,
-              jatuh_tempo       = @jatuhTempo
+          SET pelanggan_id      = @pid,
+              bulan_tahun       = @bt,
+              status_pembayaran = @st,
+              jatuh_tempo       = @jt,
+              harga             = (
+                SELECT pk.harga
+                  FROM pelanggans pl
+                  JOIN pakets pk ON pl.paket_id = pk.id
+                 WHERE pl.id = @pid
+              )
           WHERE id = @id;
           ''',
           substitutionValues: {
-            'id': tagihanId,
-            'pelangganId': jsonMap['pelanggan_id'],
-            'bulanTahun': bulanTahun,
-            'status': status,
-            'jatuhTempo': jatuhTempo,
+            'id': tid,
+            'pid': jsonMap['pelanggan_id'],
+            'bt': bulanTahun,
+            'st': status,
+            'jt': jatuhTempo,
           },
         );
         return Response.json(body: {'message': 'Tagihan updated'});
 
-      // DELETE /tagihan/:id
       case HttpMethod.delete:
         await connection.query(
-          'DELETE FROM tagihans WHERE id = @id;', substitutionValues: {'id': tagihanId},
-        );
+          'DELETE FROM tagihans WHERE id = @id;', substitutionValues: {'id': tid});
         return Response.json(body: {'message': 'Tagihan deleted'});
 
       default:
