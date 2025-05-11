@@ -14,37 +14,47 @@ Future<Response> onRequest(RequestContext context, String id) async {
     );
   }
 
+  // Only GET is allowed
+  if (context.request.method != HttpMethod.get) {
+    return Response.json(
+      statusCode: 405,
+      body: {'error': 'Method Not Allowed'},
+    );
+  }
+
   final conn = await createConnection();
   try {
-    if (context.request.method == HttpMethod.get) {
-      // Ambil semua tagihan milik pelanggan ini, urutkan terbaru dulu
-      final results = await conn.query(
-        '''
-        SELECT t.id,
-               t.pelanggan_id,
-               u.name,
-               t.bulan_tahun,
-               t.status_pembayaran,
-               t.jatuh_tempo
-        FROM tagihans t
-        JOIN pelanggans p ON t.pelanggan_id = p.id
-        JOIN users u       ON p.user_id      = u.id
-        WHERE t.pelanggan_id = @pid
-        ORDER BY t.id DESC;
-        ''',
-        substitutionValues: {'pid': pelangganId},
-      );
+    // Query semua tagihan milik pelanggan ini, urut dari ID terbesar (terbaru)
+    final results = await conn.query(
+      '''
+      SELECT
+        t.id,
+        t.pelanggan_id,
+        u.name AS pelanggan_name,
+        t.bulan_tahun,
+        t.status_pembayaran,
+        t.jatuh_tempo,
+        t.harga
+      FROM tagihans t
+      JOIN pelanggans p ON t.pelanggan_id = p.id
+      JOIN users u       ON p.user_id      = u.id
+      WHERE t.pelanggan_id = @pid
+      ORDER BY t.id DESC;
+      ''',
+      substitutionValues: {'pid': pelangganId},
+    );
 
-      final list =
-          results.map((row) => Tagihan.fromRow(row).toJson()).toList();
+    // Map setiap baris ke JSON lewat model Tagihan
+    final list = results
+        .map((row) => Tagihan.fromRow(row).toJson())
+        .toList();
 
-      return Response.json(body: list);
-    }
-
-    // Method selain GET tidak diizinkan
-    return Response(statusCode: 405);
+    return Response.json(body: list);
   } catch (e) {
-    return Response.json(statusCode: 500, body: {'error': e.toString()});
+    return Response.json(
+      statusCode: 500,
+      body: {'error': e.toString()},
+    );
   } finally {
     await conn.close();
   }
