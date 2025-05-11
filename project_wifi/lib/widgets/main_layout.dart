@@ -5,7 +5,9 @@ import '../pages/admin/paket/paket_page.dart';
 import '../pages/admin/pelanggan/pelanggan_page.dart';
 import '../pages/admin/tagihan/tagihan_page.dart';
 import '../pages/admin/pembayaran/pembayaran_page.dart';
+import '../pages/tagihan_user_page.dart';
 import '../pages/profil_page.dart';
+import '../pages/pembayaran_user_page.dart';
 import 'top_navbar.dart';
 
 class MainLayout extends StatefulWidget {
@@ -43,13 +45,13 @@ class _MainLayoutState extends State<MainLayout> {
 
       _pages = [
         DashboardUserPage(),
-        TagihanPage(),
-        PembayaranPage(),
+        TagihanUserPage(),
+        PembayaranUserPage(),
         ProfilPage(),
       ];
       _items = [
         BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-        BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Tagihan'),
+        BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Tagihan User'),
         BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'Pembayaran'),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
       ];
