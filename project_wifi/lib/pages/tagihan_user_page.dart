@@ -1,5 +1,4 @@
-// lib/pages/tagihan_page.dart
-
+// lib/pages/tagihan_user_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/tagihan.dart';
@@ -10,27 +9,23 @@ class TagihanUserPage extends StatefulWidget {
   const TagihanUserPage({Key? key}) : super(key: key);
 
   @override
-  State<TagihanUserPage> createState() => _TagihanPageState();
+  State<TagihanUserPage> createState() => _TagihanUserPageState();
 }
 
-class _TagihanPageState extends State<TagihanUserPage> {
+class _TagihanUserPageState extends State<TagihanUserPage> {
   final _storage = const FlutterSecureStorage();
   late final Future<List<Tagihan>> _future;
 
   @override
   void initState() {
     super.initState();
-    // Inisialisasi future sekali di initState
     _future = _loadTagihan();
   }
 
-  /// Kembalikan daftar tagihan pelanggan atau list kosong
   Future<List<Tagihan>> _loadTagihan() async {
     final pidStr = await _storage.read(key: 'pelanggan_id');
     final pid = int.tryParse(pidStr ?? '');
-    if (pid == null) {
-      return [];
-    }
+    if (pid == null) return [];
     return TagihanService.fetchTagihansByPelanggan(pid);
   }
 
@@ -38,27 +33,38 @@ class _TagihanPageState extends State<TagihanUserPage> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (_) => Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('ID Pelanggan: ${t.pelangganId}',
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text('Periode: ${t.bulanTahun}',
-                style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            Text('Status: ${t.statusPembayaran}'),
-            const SizedBox(height: 8),
-            Text(
-                'Jatuh Tempo: ${t.jatuhTempo.toLocal().toString().split(' ')[0]}'),
-            const SizedBox(height: 8),
-            Text('Harga: Rp ${t.harga}'),
-          ],
-        ),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Periode: ${t.bulanTahun}', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          Text('Status: ${t.statusPembayaran}'),
+          const SizedBox(height: 8),
+          Text('Jatuh Tempo: ${t.jatuhTempo.toLocal().toIso8601String().split('T').first}'),
+          const SizedBox(height: 8),
+          Text('Harga: Rp ${t.harga}'),
+          const SizedBox(height: 16),
+          if (t.statusPembayaran == 'belum_dibayar')
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(
+                    context,
+                    '/add_pembayaran_user',
+                    arguments: {
+                      'tagihanId': t.id,
+                      'bulanTahun': t.bulanTahun,
+                    },
+                  ).then((_) => setState(() => _future = _loadTagihan()));
+                },
+                child: const Text('Bayar Tagihan'),
+                style: ElevatedButton.styleFrom(backgroundColor: Utils.mainThemeColor),
+              ),
+            ),
+        ]),
       ),
     );
   }
@@ -90,8 +96,7 @@ class _TagihanPageState extends State<TagihanUserPage> {
               final t = list[i];
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 child: ListTile(
                   title: Text(t.bulanTahun),
                   subtitle: Text('Rp ${t.harga} • ${t.statusPembayaran}'),
