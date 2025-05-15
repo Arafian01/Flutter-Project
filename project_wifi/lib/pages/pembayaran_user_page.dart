@@ -73,10 +73,5 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> {
         );
       },
     ),
-    floatingActionButton: FloatingActionButton(
-      backgroundColor: Utils.mainThemeColor,
-      onPressed: ()=>Navigator.pushNamed(context,'/add_pembayaran_user').then((_)=>setState(_load)),
-      child: const Icon(Icons.add),
-    ),
   );
 }
