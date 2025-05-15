@@ -70,6 +70,14 @@ class _LoginPageState extends State<LoginPage> {
               key: 'pelanggan_id',
               value: pelanggan.id.toString(),
             );
+            await _storage.write(key: 'name', value: pelanggan.name);
+            await _storage.write(key: 'email', value: pelanggan.email);
+            await _storage.write(key: 'telepon', value: pelanggan.telepon);
+            await _storage.write(key: 'alamat', value: pelanggan.alamat);
+            await _storage.write(key: 'namaPaket', value: pelanggan.namaPaket);
+            await _storage.write(key: 'status', value: pelanggan.status);
+            await _storage.write(key: 'tanggalAktif', value: pelanggan.tanggalAktif.toString());
+            await _storage.write(key: 'tanggalLangganan', value: pelanggan.tanggalLangganan.toString());
           } catch (_) {
             // ignore if no pelanggan record found
           }
