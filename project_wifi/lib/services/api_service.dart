@@ -7,6 +7,9 @@ import '../models/pelanggan.dart';
 import '../models/dashboard.dart';
 import '../models/tagihan.dart';
 import '../models/pembayaran.dart';
+import '../models/report_item.dart';
+import '../models/dashboard_user.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Header JSON dan optional Authorization
 Map<String, String> _headers([String? token]) {
@@ -262,5 +265,36 @@ class PembayaranService {
     if (res.statusCode < 200 || res.statusCode >= 300) {
       throw Exception('Create pembayaran user failed (${res.statusCode})');
     }
+  }
+}
+
+class DashboardUserService {
+  static Future<DashboardUser> fetchDashboardUser(int pelangganId) async {
+    final uri = Uri.parse('$baseUrl/dashboard_user/$pelangganId');
+    final resp = await http.get(uri).timeout(const Duration(seconds: 10));
+    if (resp.statusCode == 200) {
+      return DashboardUser.fromJson(jsonDecode(resp.body));
+    }
+    throw Exception('Failed to load dashboard user (${resp.statusCode})');
+  }
+}
+
+class ReportService {
+  /// GET /report?from=MM-YYYY&to=MM-YYYY
+  static Future<Map<String, dynamic>> fetchReport({
+    required String from,
+    required String to,
+  }) async {
+    final uri = Uri.parse('$baseUrl/report?from=$from&to=$to');
+    final resp = await http.get(uri).timeout(const Duration(seconds: 10));
+    if (resp.statusCode != 200) {
+      throw Exception('Gagal memuat laporan (${resp.statusCode})');
+    }
+    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final months = List<String>.from(body['months'] as List);
+    final data = (body['data'] as List)
+        .map((e) => ReportItem.fromJson(e as Map<String, dynamic>, months))
+        .toList();
+    return {'months': months, 'data': data};
   }
 }
