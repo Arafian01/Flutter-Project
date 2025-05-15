@@ -75,7 +75,7 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> {
         DropdownButtonFormField<Tagihan>(
           decoration: const InputDecoration(labelText: 'Pilih Tagihan'),
           items: _tagihans
-              .map((t) => DropdownMenuItem(value: t, child: Text('${t.bulanTahun} • Rp ${t.harga}')))
+              .map((t) => DropdownMenuItem(value: t, child: Text('${t.bulanTahun} • Rp ${t.pelangganName}')))
               .toList(),
           onChanged: (v) => setState(() => _selected = v),
           validator: (v) => v == null ? 'Harus memilih tagihan' : null,
