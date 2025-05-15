@@ -8,6 +8,7 @@ import '../pages/admin/pembayaran/pembayaran_page.dart';
 import '../pages/tagihan_user_page.dart';
 import '../pages/profil_page.dart';
 import '../pages/pembayaran_user_page.dart';
+import '../pages/report_page.dart';
 import 'top_navbar.dart';
 
 class MainLayout extends StatefulWidget {
@@ -33,6 +34,7 @@ class _MainLayoutState extends State<MainLayout> {
         PelangganPage(),
         TagihanPage(),
         PembayaranPage(),
+        ReportPage(),
       ];
       _items = [
         BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
@@ -40,6 +42,7 @@ class _MainLayoutState extends State<MainLayout> {
         BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Pelanggan'),
         BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Tagihan'),
         BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'Pembayaran'),
+        BottomNavigationBarItem(icon: Icon(Icons.report), label: 'Report'),
       ];
     } else if (widget.role == 'pelanggan'){
 
@@ -55,8 +58,15 @@ class _MainLayoutState extends State<MainLayout> {
         BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'Pembayaran'),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
       ];
-    } else {
-
+    } else if(widget.role == 'owner'){
+      _pages = [
+        DashboardAdminPage(),
+        ReportPage(),
+      ];
+      _items = [
+        BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+        BottomNavigationBarItem(icon: Icon(Icons.report), label: 'Report'),
+      ];
     }
   }
 
