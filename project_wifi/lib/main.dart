@@ -1,9 +1,9 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:project_wifi/models/paket.dart';
 import 'package:project_wifi/models/pelanggan.dart';
 import 'package:project_wifi/models/pembayaran.dart';
 import 'package:project_wifi/models/tagihan.dart';
+import 'package:project_wifi/utils/utils.dart'; // Impor utils.dart
 import 'widgets/main_layout.dart';
 import 'pages/splash_page.dart';
 import 'pages/login_page.dart';
@@ -18,23 +18,19 @@ import 'pages/admin/pembayaran/add_pembayaran_page.dart';
 import 'pages/admin/pembayaran/edit_pembayaran_page.dart';
 import 'pages/add_pembayaran_user_page.dart';
 
-
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Strong WiFi Manager',
-      theme: ThemeData(
-        primarySwatch: Colors.red,
-        fontFamily: 'Poppins',
-      ),
+      theme: AppTheme.theme, // Gunakan tema dari utils.dart
       debugShowCheckedModeBanner: false,
       initialRoute: '/splash',
       routes: {
@@ -46,13 +42,13 @@ class MyApp extends StatelessWidget {
           final paket = ModalRoute.of(context)!.settings.arguments as Paket;
           return EditPaketPage(paket: paket);
         },
-        '/add_pelanggan' : (context) => const AddPelangganPage(),
-        '/edit_pelanggan' : (context) {
+        '/add_pelanggan': (context) => const AddPelangganPage(),
+        '/edit_pelanggan': (context) {
           final pelanggan = ModalRoute.of(context)!.settings.arguments as Pelanggan;
           return EditPelangganPage(pelanggan: pelanggan);
         },
-        '/add_tagihan' : (context) => const AddTagihanPage(),
-        '/edit_tagihan' : (context) {
+        '/add_tagihan': (context) => const AddTagihanPage(),
+        '/edit_tagihan': (context) {
           final tagihan = ModalRoute.of(context)!.settings.arguments as Tagihan;
           return EditTagihanPage(tagihan: tagihan);
         },
@@ -61,7 +57,7 @@ class MyApp extends StatelessWidget {
           final pembayaran = ModalRoute.of(ctx)!.settings.arguments as Pembayaran;
           return EditPembayaranPage(pembayaran: pembayaran);
         },
-        '/add_pembayaran_user' : (_) => AddPembayaranUserPage(),
+        '/add_pembayaran_user': (_) => AddPembayaranUserPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/main') {
