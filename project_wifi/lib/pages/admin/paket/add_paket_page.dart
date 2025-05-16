@@ -1,9 +1,7 @@
-// lib/pages/add_paket_page.dart
 import 'package:flutter/material.dart';
 import '../../../utils/utils.dart';
-import '../../../widgets/strong_main_button.dart';
 import '../../../models/paket.dart';
-import '../../../services/api_service.dart'; // or import the functions createPaket
+import '../../../services/api_service.dart';
 
 class AddPaketPage extends StatefulWidget {
   const AddPaketPage({Key? key}) : super(key: key);
@@ -41,7 +39,7 @@ class _AddPaketPageState extends State<AddPaketPage> {
       Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menyimpan paket: \$e')),
+        SnackBar(content: Text('Gagal menyimpan paket: $e')),
       );
     } finally {
       setState(() => _isSaving = false);
@@ -50,52 +48,137 @@ class _AddPaketPageState extends State<AddPaketPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text('Tambah Paket'),
         backgroundColor: Utils.mainThemeColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              Utils.generateInputField(
-                hintText: 'Nama Paket',
-                iconData: Icons.label,
-                controller: _nameController,
-                isPassword: false,
-                onChanged: (_) {},
+      body: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          padding: const EdgeInsets.all(20.0),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Buat Paket Baru',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Utils.mainThemeColor,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: _nameController,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Nama paket wajib diisi';
+                      }
+                      return null;
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'Nama Paket',
+                      hintText: 'Masukkan nama paket',
+                      prefixIcon: Icon(Icons.label, color: Utils.mainThemeColor),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _descController,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Deskripsi wajib diisi';
+                      }
+                      return null;
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'Deskripsi',
+                      hintText: 'Masukkan deskripsi paket',
+                      prefixIcon: Icon(Icons.description, color: Utils.mainThemeColor),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                    maxLines: 3,
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _priceController,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Harga wajib diisi';
+                      }
+                      if (int.tryParse(value.trim()) == null || int.parse(value.trim()) <= 0) {
+                        return 'Masukkan harga yang valid';
+                      }
+                      return null;
+                    },
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Harga',
+                      hintText: 'Masukkan harga paket',
+                      prefixIcon: Icon(Icons.attach_money, color: Utils.mainThemeColor),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                    textInputAction: TextInputAction.done,
+                  ),
+                  const SizedBox(height: 32),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: _isSaving
+                        ? const Center(child: CircularProgressIndicator())
+                        : SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Utils.mainThemeColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 2,
+                        ),
+                        onPressed: _save,
+                        child: const Text(
+                          'Simpan',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Utils.generateInputField(
-                hintText: 'Deskripsi',
-                iconData: Icons.description,
-                controller: _descController,
-                isPassword: false,
-                onChanged: (_) {},
-              ),
-              const SizedBox(height: 12),
-              Utils.generateInputField(
-                hintText: 'Harga',
-                iconData: Icons.attach_money,
-                controller: _priceController,
-                isPassword: false,
-                onChanged: (_) {},
-              ),
-              const Spacer(),
-              _isSaving
-                  ? const CircularProgressIndicator()
-                  : StrongMainButton(
-                label: 'Simpan',
-                onTap: _save,
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 }
-
