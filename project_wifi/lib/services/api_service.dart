@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import '../utils/constants.dart';
+import '../utils/constants.dart'; // Perbaiki impor dari ../utils/constants.dart
 import '../models/paket.dart';
 import '../models/pelanggan.dart';
 import '../models/dashboard.dart';
@@ -20,7 +20,7 @@ Map<String, String> _headers([String? token]) {
 
 /// Generic GET list dengan timeout
 Future<List<Map<String, dynamic>>> fetchData(String endpoint) async {
-  final url = Uri.parse('$baseUrl/$endpoint');
+  final url = Uri.parse('${AppConstants.baseUrl}/$endpoint');
   final resp = await http.get(url, headers: _headers()).timeout(const Duration(seconds: 10));
   if (resp.statusCode == 200) {
     return (jsonDecode(resp.body) as List).cast<Map<String, dynamic>>();
@@ -34,7 +34,7 @@ Future<void> sendData(
     String endpoint, {
       Map<String, dynamic>? body,
     }) async {
-  final url = Uri.parse('$baseUrl/$endpoint');
+  final url = Uri.parse('${AppConstants.baseUrl}/$endpoint');
   final encoded = body == null ? null : jsonEncode(body);
   late http.Response resp;
   switch (method) {
@@ -84,7 +84,7 @@ Future<void> deletePaket(int id) async => sendData('DELETE', 'paket/$id');
 
 /// Fetch dashboard data
 Future<Dashboard> fetchDashboard() async {
-  final url = Uri.parse('$baseUrl/dashboard');
+  final url = Uri.parse('${AppConstants.baseUrl}/dashboard');
   final resp = await http.get(url, headers: _headers()).timeout(const Duration(seconds: 10));
   if (resp.statusCode == 200) {
     return Dashboard.fromJson(jsonDecode(resp.body) as Map<String, dynamic>);
@@ -111,7 +111,7 @@ Future<void> deletePelanggan(int id) async => sendData('DELETE', 'pelanggan/$id'
 class TagihanService {
   /// GET /tagihan
   static Future<List<Tagihan>> fetchTagihans() async {
-    final url = Uri.parse('$baseUrl/tagihan');
+    final url = Uri.parse('${AppConstants.baseUrl}/tagihan');
     final resp = await http.get(url).timeout(const Duration(seconds: 10));
     if (resp.statusCode == 200) {
       final List data = jsonDecode(resp.body) as List;
@@ -121,7 +121,7 @@ class TagihanService {
   }
 
   static Future<List<Tagihan>> fetchTagihansByPelanggan(int pelangganId) async {
-    final uri = Uri.parse('$baseUrl/tagihan/pelanggan/$pelangganId');
+    final uri = Uri.parse('${AppConstants.baseUrl}/tagihan/pelanggan/$pelangganId');
     final resp = await http.get(uri).timeout(Duration(seconds: 10));
     if (resp.statusCode == 200) {
       final List data = jsonDecode(resp.body) as List;
@@ -136,7 +136,7 @@ class TagihanService {
     required String bulanTahun,
     required String statusPembayaran,
   }) async {
-    final url = Uri.parse('$baseUrl/tagihan');
+    final url = Uri.parse('${AppConstants.baseUrl}/tagihan');
     final body = {
       'pelanggan_id': pelangganId,
       'bulan_tahun': bulanTahun,
@@ -160,7 +160,7 @@ class TagihanService {
         required String bulanTahun,
         required String statusPembayaran,
       }) async {
-    final url = Uri.parse('$baseUrl/tagihan/$id');
+    final url = Uri.parse('${AppConstants.baseUrl}/tagihan/$id');
     final body = {
       'pelanggan_id': pelangganId,
       'bulan_tahun': bulanTahun,
@@ -176,7 +176,7 @@ class TagihanService {
 
   /// DELETE /tagihan/:id
   static Future<void> deleteTagihan(int id) async {
-    final url = Uri.parse('$baseUrl/tagihan/$id');
+    final url = Uri.parse('${AppConstants.baseUrl}/tagihan/$id');
     final resp = await http.delete(url).timeout(const Duration(seconds: 10));
     if (resp.statusCode != 200) throw Exception('Delete tagihan failed');
   }
@@ -185,7 +185,7 @@ class TagihanService {
 class PembayaranService {
   /// Ambil semua pembayaran (admin)
   static Future<List<Pembayaran>> fetchPembayarans() async {
-    final resp = await http.get(Uri.parse('$baseUrl/pembayaran'))
+    final resp = await http.get(Uri.parse('${AppConstants.baseUrl}/pembayaran'))
         .timeout(const Duration(seconds: 10));
     if (resp.statusCode == 200) {
       final list = jsonDecode(resp.body) as List;
@@ -196,7 +196,7 @@ class PembayaranService {
 
   /// Ambil semua pembayaran untuk pelanggan (user)
   static Future<List<Pembayaran>> fetchPembayaransByPelanggan(int pid) async {
-    final resp = await http.get(Uri.parse('$baseUrl/pembayaran/pelanggan/$pid'))
+    final resp = await http.get(Uri.parse('${AppConstants.baseUrl}/pembayaran/pelanggan/$pid'))
         .timeout(const Duration(seconds: 10));
     if (resp.statusCode == 200) {
       final list = jsonDecode(resp.body) as List;
@@ -211,7 +211,7 @@ class PembayaranService {
     required String statusVerifikasi,
     required File imageFile,
   }) async {
-    final uri = Uri.parse('$baseUrl/pembayaran');
+    final uri = Uri.parse('${AppConstants.baseUrl}/pembayaran');
     final req = http.MultipartRequest('POST', uri)
       ..fields['tagihan_id'] = tagihanId.toString()
       ..fields['status_verifikasi'] = statusVerifikasi
@@ -228,7 +228,7 @@ class PembayaranService {
     required String statusVerifikasi,
     File? imageFile,
   }) async {
-    final uri = Uri.parse('$baseUrl/pembayaran/$id');
+    final uri = Uri.parse('${AppConstants.baseUrl}/pembayaran/$id');
     final req = http.MultipartRequest('PUT', uri)
       ..fields['status_verifikasi'] = statusVerifikasi;
     if (imageFile != null) {
@@ -242,11 +242,9 @@ class PembayaranService {
 
   /// Hapus pembayaran
   static Future<void> deletePembayaran(int id) async {
-    final resp = await http.delete(Uri.parse('$baseUrl/pembayaran/$id'))
+    final resp = await http.delete(Uri.parse('${AppConstants.baseUrl}/pembayaran/$id'))
         .timeout(const Duration(seconds: 10));
-    if (resp.statusCode != 200) {
-      throw Exception('Delete pembayaran failed (${resp.statusCode})');
-    }
+    if(resp.statusCode != 200) throw Exception('Delete pembayaran failed (${resp.statusCode})');
   }
 
   /// Tambah pembayaran (user)
@@ -256,7 +254,7 @@ class PembayaranService {
     required String statusVerifikasi,
     required File imageFile,
   }) async {
-    final uri = Uri.parse('$baseUrl/pembayaran/pelanggan/$pelangganId');
+    final uri = Uri.parse('${AppConstants.baseUrl}/pembayaran/pelanggan/$pelangganId');
     final req = http.MultipartRequest('POST', uri)
       ..fields['bulan_tahun'] = bulanTahun
       ..fields['status_verifikasi'] = statusVerifikasi
@@ -270,7 +268,7 @@ class PembayaranService {
 
 class DashboardUserService {
   static Future<DashboardUser> fetchDashboardUser(int pelangganId) async {
-    final uri = Uri.parse('$baseUrl/dashboard_user/$pelangganId');
+    final uri = Uri.parse('${AppConstants.baseUrl}/dashboard_user/$pelangganId');
     final resp = await http.get(uri).timeout(const Duration(seconds: 10));
     if (resp.statusCode == 200) {
       return DashboardUser.fromJson(jsonDecode(resp.body));
@@ -285,7 +283,7 @@ class ReportService {
     required String from,
     required String to,
   }) async {
-    final uri = Uri.parse('$baseUrl/report?from=$from&to=$to');
+    final uri = Uri.parse('${AppConstants.baseUrl}/report?from=$from&to=$to');
     final resp = await http.get(uri).timeout(const Duration(seconds: 10));
     if (resp.statusCode != 200) {
       throw Exception('Gagal memuat laporan (${resp.statusCode})');
