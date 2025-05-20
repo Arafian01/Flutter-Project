@@ -1,5 +1,3 @@
-// lib/pages/report_page.dart
-
 import 'package:flutter/material.dart';
 import '../models/report_item.dart';
 import '../services/api_service.dart';
@@ -50,6 +48,12 @@ class _ReportPageState extends State<ReportPage> {
     }
   }
 
+  void _printReport() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Fungsi cetak belum diimplementasikan')),
+    );
+  }
+
   Widget _buildDropdown<T>({
     required String label,
     required List<T> items,
@@ -73,7 +77,7 @@ class _ReportPageState extends State<ReportPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Laporan Pembayaran'),
-        backgroundColor: Utils.mainThemeColor,
+        backgroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -121,28 +125,43 @@ class _ReportPageState extends State<ReportPage> {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: _items.isEmpty
-                  ? const Center(child: Text('Belum ada data'))
-                  : SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  headingRowColor: MaterialStateProperty.all(Colors.grey[200]),
-                  columns: [
-                    const DataColumn(label: Text('No')),
-                    const DataColumn(label: Text('Nama')),
-                    for (final m in _monthsList)
-                      DataColumn(label: Text(m)),
-                  ],
-                  rows: List.generate(_items.length, (i) {
-                    final item = _items[i];
-                    return DataRow(cells: [
-                      DataCell(Text('${i + 1}')),
-                      DataCell(Text(item.nama)),
-                      for (final m in _monthsList)
-                        DataCell(Text(item.statusByMonth[m]!)),
-                    ]);
-                  }),
-                ),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: _items.isEmpty
+                        ? const Center(child: Text('Belum ada data'))
+                        : SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: DataTable(
+                        headingRowColor:
+                        MaterialStateProperty.all(Colors.grey[200]),
+                        columns: [
+                          const DataColumn(label: Text('No')),
+                          const DataColumn(label: Text('Nama')),
+                          for (final m in _monthsList)
+                            DataColumn(label: Text(m)),
+                        ],
+                        rows: List.generate(_items.length, (i) {
+                          final item = _items[i];
+                          return DataRow(cells: [
+                            DataCell(Text('${i + 1}')),
+                            DataCell(Text(item.nama)),
+                            for (final m in _monthsList)
+                              DataCell(Text(item.statusByMonth[m]!)),
+                          ]);
+                        }),
+                      ),
+                    ),
+                  ),
+                  if (_items.isNotEmpty)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: StrongMainButton(
+                        label: 'Cetak Laporan',
+                        onTap: _printReport,
+                      ),
+                    ),
+                ],
               ),
             ),
           ],
