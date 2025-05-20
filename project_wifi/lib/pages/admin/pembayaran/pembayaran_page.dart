@@ -67,7 +67,7 @@ class _PembayaranPageState extends State<PembayaranPage> {
 
   @override
   Widget build(BuildContext c) => Scaffold(
-    appBar: AppBar(title: const Text('Manajemen Pembayaran'), backgroundColor: Utils.mainThemeColor),
+    appBar: AppBar(title: const Text('Manajemen Pembayaran'), backgroundColor: AppColors.primaryRed),
     body: FutureBuilder<List<Pembayaran>>(
       future: _future,
       builder: (ctx, snap) {
@@ -93,7 +93,7 @@ class _PembayaranPageState extends State<PembayaranPage> {
       },
     ),
     floatingActionButton: FloatingActionButton(
-      backgroundColor: Utils.mainThemeColor,
+      backgroundColor: AppColors.primaryRed,
       child: const Icon(Icons.add),
       onPressed: () => Navigator.pushNamed(context, '/add_pembayaran').then((_) => setState(_load)),
     ),
