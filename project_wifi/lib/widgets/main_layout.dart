@@ -5,9 +5,9 @@ import '../pages/admin/paket/paket_page.dart';
 import '../pages/admin/pelanggan/pelanggan_page.dart';
 import '../pages/admin/tagihan/tagihan_page.dart';
 import '../pages/admin/pembayaran/pembayaran_page.dart';
-import '../pages/tagihan_user_page.dart';
-import '../pages/profil_page.dart';
-import '../pages/pembayaran_user_page.dart';
+import '../pages/user/tagihan/tagihan_user_page.dart';
+import '../pages/user/profil_page.dart';
+import '../pages/user/pembayaran/pembayaran_user_page.dart';
 import '../pages/report_page.dart';
 import '../utils/utils.dart'; // Impor utils.dart
 
