@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import '../utils/constants.dart'; // Perbaiki impor dari ../utils/constants.dart
+import '../utils/constants.dart';
 import '../models/paket.dart';
 import '../models/pelanggan.dart';
 import '../models/dashboard.dart';
@@ -244,7 +244,9 @@ class PembayaranService {
   static Future<void> deletePembayaran(int id) async {
     final resp = await http.delete(Uri.parse('${AppConstants.baseUrl}/pembayaran/$id'))
         .timeout(const Duration(seconds: 10));
-    if(resp.statusCode != 200) throw Exception('Delete pembayaran failed (${resp.statusCode})');
+    if (resp.statusCode != 200) {
+      throw Exception('Delete pembayaran failed (${resp.statusCode})');
+    }
   }
 
   /// Tambah pembayaran (user)
