@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../services/api_service.dart';
-import '../../../models/tagihan.dart';
-import '../widgets/strong_main_button.dart';
-import '../utils/utils.dart';
+import '../../../services/api_service.dart';
+import '../../../../../models/tagihan.dart';
+import '../../../widgets/strong_main_button.dart';
+import '../../../utils/utils.dart';
 
 class AddPembayaranUserPage extends StatefulWidget {
   const AddPembayaranUserPage({Key? key}) : super(key: key);
@@ -84,7 +84,7 @@ class _AddPembayaranUserPageState extends State<AddPembayaranUserPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Bayar Tagihan'),
-        backgroundColor: Utils.mainThemeColor,
+        backgroundColor: AppColors.primaryRed,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

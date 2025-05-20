@@ -1,7 +1,7 @@
 // lib/pages/profil_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../utils/utils.dart';
+import '../../utils/utils.dart';
 
 class ProfilPage extends StatefulWidget {
   const ProfilPage({Key? key}) : super(key: key);
@@ -51,7 +51,7 @@ class _ProfilPageState extends State<ProfilPage> {
 
   Widget _buildInfoTile(IconData icon, String label, String? value) {
     return ListTile(
-      leading: Icon(icon, color: Utils.mainThemeColor),
+      leading: Icon(icon, color: AppColors.primaryRed),
       title: Text(label),
       subtitle: Text(value ?? '-'),
     );
@@ -62,7 +62,7 @@ class _ProfilPageState extends State<ProfilPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profil Saya'),
-        backgroundColor: Utils.mainThemeColor,
+        backgroundColor: AppColors.primaryRed,
         centerTitle: true,
       ),
       body: _name == null
@@ -74,8 +74,8 @@ class _ProfilPageState extends State<ProfilPage> {
             const SizedBox(height: 16),
             CircleAvatar(
               radius: 48,
-              backgroundColor: Utils.mainThemeColor.withOpacity(0.2),
-              child: Icon(Icons.person, size: 48, color: Utils.mainThemeColor),
+              backgroundColor: AppColors.primaryRed.withOpacity(0.2),
+              child: Icon(Icons.person, size: 48, color: AppColors.primaryRed),
             ),
             const SizedBox(height: 16),
             Text(
@@ -100,7 +100,7 @@ class _ProfilPageState extends State<ProfilPage> {
               child: ElevatedButton(
                 onPressed: _logout,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Utils.mainThemeColor,
+                  backgroundColor: AppColors.primaryRed,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: const Text('Logout', style: TextStyle(fontSize: 16)),
