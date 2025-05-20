@@ -1,7 +1,6 @@
-// lib/pages/edit_paket_page.dart
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../utils/utils.dart';
-import '../../../widgets/strong_main_button.dart';
 import '../../../models/paket.dart';
 import '../../../services/api_service.dart';
 
@@ -62,36 +61,14 @@ class _EditPaketPageState extends State<EditPaketPage> with SingleTickerProvider
         harga: int.parse(_priceController.text.trim()),
       );
       await updatePaket(paket.id, paket);
-      _showSuccessDialog('Paket berhasil diperbarui');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('success_message', 'Paket berhasil diperbarui');
       Navigator.pop(context, true);
     } catch (e) {
       _showErrorDialog('Gagal memperbarui paket: $e');
     } finally {
       setState(() => _isSaving = false);
     }
-  }
-
-  void _showSuccessDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-        title: Row(
-          children: [
-            Icon(Icons.check_circle, color: AppColors.primaryRed),
-            const SizedBox(width: AppSizes.paddingSmall),
-            const Text('Berhasil'),
-          ],
-        ),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: TextStyle(color: AppColors.primaryRed)),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showErrorDialog(String message) {
@@ -128,12 +105,16 @@ class _EditPaketPageState extends State<EditPaketPage> with SingleTickerProvider
         title: const Text('Edit Paket'),
         foregroundColor: AppColors.white,
         centerTitle: true,
-        leading: const Icon(
-          Icons.wifi,
-          color: AppColors.white,
-          size: AppSizes.iconSizeMedium,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: AppColors.white,
+            size: AppSizes.iconSizeMedium,
+          ),
+          onPressed: () => Navigator.pop(context),
+          tooltip: 'Kembali',
         ),
-        elevation: 0,
+        elevation: 2,
       ),
       body: Center(
         child: Container(
@@ -166,10 +147,32 @@ class _EditPaketPageState extends State<EditPaketPage> with SingleTickerProvider
                           }
                           return null;
                         },
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Nama Paket',
                           hintText: 'Masukkan nama paket',
-                          prefixIcon: Icon(Icons.label, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Icons.label, color: AppColors.primaryRed),
+                          filled: true,
+                          fillColor: AppColors.white.withOpacity(0.1),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
                         ),
                         textInputAction: TextInputAction.next,
                       ),
@@ -182,10 +185,32 @@ class _EditPaketPageState extends State<EditPaketPage> with SingleTickerProvider
                           }
                           return null;
                         },
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Deskripsi',
                           hintText: 'Masukkan deskripsi paket',
-                          prefixIcon: Icon(Icons.description, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Icons.description, color: AppColors.primaryRed),
+                          filled: true,
+                          fillColor: AppColors.white.withOpacity(0.1),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
                         ),
                         maxLines: 3,
                         textInputAction: TextInputAction.next,
@@ -204,10 +229,32 @@ class _EditPaketPageState extends State<EditPaketPage> with SingleTickerProvider
                           return null;
                         },
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Harga',
                           hintText: 'Masukkan harga paket',
-                          prefixIcon: Icon(Icons.attach_money, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Icons.attach_money, color: AppColors.primaryRed),
+                          filled: true,
+                          fillColor: AppColors.white.withOpacity(0.1),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
                         ),
                         textInputAction: TextInputAction.done,
                       ),
@@ -216,9 +263,27 @@ class _EditPaketPageState extends State<EditPaketPage> with SingleTickerProvider
                         duration: const Duration(milliseconds: 300),
                         child: _isSaving
                             ? const Center(child: CircularProgressIndicator())
-                            : StrongMainButton(
-                          label: 'Update',
-                          onTap: _update,
+                            : SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingMedium),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                              ),
+                              backgroundColor: AppColors.primaryRed,
+                              foregroundColor: AppColors.white,
+                              elevation: 2,
+                            ),
+                            onPressed: _isSaving ? null : _update,
+                            child: const Text(
+                              'Update',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ],
