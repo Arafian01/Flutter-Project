@@ -5,19 +5,39 @@ import '../../../services/api_service.dart';
 import '../../../utils/utils.dart';
 
 class PelangganPage extends StatefulWidget {
-  const PelangganPage({Key? key}) : super(key: key);
+  const PelangganPage({super.key});
 
   @override
   State<PelangganPage> createState() => _PelangganPageState();
 }
 
-class _PelangganPageState extends State<PelangganPage> {
+class _PelangganPageState extends State<PelangganPage> with SingleTickerProviderStateMixin {
   late Future<List<Pelanggan>> _future;
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   void _load() => _future = fetchPelanggans();
@@ -25,34 +45,89 @@ class _PelangganPageState extends State<PelangganPage> {
   void _showDetail(Pelanggan p) {
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppSizes.radiusMedium)),
+      ),
+      backgroundColor: AppColors.backgroundLight,
       builder: (_) => Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSizes.paddingLarge),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(p.name, style: Theme.of(context).textTheme.titleLarge),
-            Text(p.email),
-            Text('Paket: ${p.namaPaket}'),
-            Text('Status: ${p.status}'),
-            Text('Alamat: ${p.alamat}'),
-            Text('Telepon: ${p.telepon}'),
-            ButtonBar(
+            Row(
               children: [
-                TextButton(
+                Icon(Icons.wifi, color: AppColors.primaryRed, size: AppSizes.iconSizeMedium),
+                const SizedBox(width: AppSizes.paddingSmall),
+                Expanded(
+                  child: Text(
+                    p.name,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppColors.primaryRed,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSizes.paddingMedium),
+            Text(
+              p.email,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            ),
+            Text(
+              'Paket: ${p.namaPaket}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            ),
+            Text(
+              'Status: ${p.status}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            ),
+            Text(
+              'Alamat: ${p.alamat}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            ),
+            Text(
+              'Telepon: ${p.telepon}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: AppSizes.paddingLarge),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.textSecondary,
+                    foregroundColor: AppColors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                    ),
+                  ),
                   onPressed: () {
                     Navigator.pop(context);
-                    Navigator.pushNamed(context, '/edit_pelanggan', arguments: p).then((r) => setState(_load));
+                    Navigator.pushNamed(context, '/edit_pelanggan', arguments: p).then((r) {
+                      if (r == true) {
+                        setState(_load);
+                        _showSuccessDialog('Pelanggan berhasil diperbarui');
+                      }
+                    });
                   },
-                  child: Text('Edit'),
+                  child: const Text('Edit'),
                 ),
-                TextButton(
+                const SizedBox(width: AppSizes.paddingMedium),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryRed,
+                    foregroundColor: AppColors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                    ),
+                  ),
                   onPressed: () {
                     Navigator.pop(context);
                     _confirmDelete(p.id);
                   },
-                  child: Text('Hapus', style: TextStyle(color: Colors.red)),
+                  child: const Text('Hapus'),
                 ),
               ],
             ),
@@ -66,17 +141,78 @@ class _PelangganPageState extends State<PelangganPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Hapus Pelanggan'),
-        content: Text('Yakin ingin hapus?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber, color: AppColors.primaryRed),
+            const SizedBox(width: AppSizes.paddingSmall),
+            const Text('Hapus Pelanggan'),
+          ],
+        ),
+        content: const Text('Yakin ingin menghapus pelanggan ini?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text('Batal')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Batal', style: TextStyle(color: AppColors.textSecondary)),
+          ),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              await deletePelanggan(id);
-              setState(_load);
+              try {
+                await deletePelanggan(id);
+                setState(_load);
+                _showSuccessDialog('Pelanggan berhasil dihapus');
+              } catch (e) {
+                _showErrorDialog('Gagal menghapus pelanggan: $e');
+              }
             },
-            child: Text('Hapus', style: TextStyle(color: Colors.red)),
+            child: Text('Hapus', style: TextStyle(color: AppColors.primaryRed)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+        title: Row(
+          children: [
+            Icon(Icons.check_circle, color: AppColors.primaryRed),
+            const SizedBox(width: AppSizes.paddingSmall),
+            const Text('Berhasil'),
+          ],
+        ),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK', style: TextStyle(color: AppColors.primaryRed)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+        title: Row(
+          children: [
+            Icon(Icons.error, color: AppColors.primaryRed),
+            const SizedBox(width: AppSizes.paddingSmall),
+            const Text('Gagal'),
+          ],
+        ),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK', style: TextStyle(color: AppColors.primaryRed)),
           ),
         ],
       ),
@@ -86,40 +222,165 @@ class _PelangganPageState extends State<PelangganPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FutureBuilder<List<Pelanggan>>(
-        future: _future,
-        builder: (ctx, snap) {
-          if (snap.connectionState == ConnectionState.waiting) return
-            Center(child: CircularProgressIndicator()
-            );
-          if (snap.hasError)
-            return Center(
-
-                child: Text('Error: ${snap.error}')
-            );
-          final list = snap.data!;
-          return ListView.builder(
-            padding: EdgeInsets.all(16),
-            itemCount: list.length,
-            itemBuilder: (_, i) {
-              final p = list[i];
-              return Card(
-                margin: EdgeInsets.only(bottom:12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: ListTile(
-                  title: Text(p.name),
-                  subtitle: Text('${p.email} • ${p.namaPaket}'),
-                  onTap: () => _showDetail(p),
-                ),
-              );
-            },
-          );
-        },
+      backgroundColor: AppColors.backgroundLight,
+      body: Column(
+        children: [
+          _buildHeader(),
+          Expanded(
+            child: FutureBuilder<List<Pelanggan>>(
+              future: _future,
+              builder: (ctx, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snap.hasError) {
+                  return Center(
+                    child: Text(
+                      'Gagal memuat pelanggan: ${snap.error}',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  );
+                }
+                final list = snap.data!;
+                return ListView.builder(
+                  padding: const EdgeInsets.all(AppSizes.paddingMedium),
+                  itemCount: list.length,
+                  itemBuilder: (_, i) {
+                    final p = list[i];
+                    return _buildPelangganCard(p);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Utils.mainThemeColor,
-        onPressed: () => Navigator.pushNamed(context, '/add_pelanggan').then((r) => setState(_load)),
-        child: Icon(Icons.add),
+        backgroundColor: AppColors.primaryRed,
+        foregroundColor: AppColors.white,
+        onPressed: () async {
+          final result = await Navigator.pushNamed(context, '/add_pelanggan');
+          if (result == true) {
+            setState(_load);
+            _showSuccessDialog('Pelanggan berhasil ditambahkan');
+          }
+        },
+        child: const Icon(Icons.add),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        vertical: AppSizes.paddingMedium,
+        horizontal: AppSizes.paddingLarge,
+      ),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.primaryRed, AppColors.secondaryRed],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      margin: const EdgeInsets.all(AppSizes.paddingMedium),
+      child: Row(
+        children: [
+          Icon(
+            Icons.wifi,
+            size: AppSizes.iconSizeMedium,
+            color: AppColors.white,
+          ),
+          const SizedBox(width: AppSizes.paddingSmall),
+          Text(
+            'Daftar Pelanggan',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              color: AppColors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPelangganCard(Pelanggan p) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: InkWell(
+          onTap: () => _showDetail(p),
+          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.primaryRed, AppColors.secondaryRed],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSizes.paddingMedium),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: AppColors.white.withOpacity(0.2),
+                    child: Icon(
+                      Icons.wifi,
+                      size: AppSizes.iconSizeMedium,
+                      color: AppColors.white,
+                    ),
+                  ),
+                  const SizedBox(width: AppSizes.paddingMedium),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          p.name,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: AppSizes.paddingSmall),
+                        Text(
+                          '${p.email} • ${p.namaPaket}',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.white.withOpacity(0.9),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
