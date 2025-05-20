@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:project_wifi/models/paket.dart';
 import 'package:project_wifi/models/pelanggan.dart';
 import 'package:project_wifi/models/pembayaran.dart';
 import 'package:project_wifi/models/tagihan.dart';
-import 'package:project_wifi/utils/utils.dart'; // Impor utils.dart
 import 'widgets/main_layout.dart';
 import 'pages/splash_page.dart';
 import 'pages/login_page.dart';
@@ -16,7 +16,7 @@ import 'pages/admin/tagihan/add_tagihan_page.dart';
 import 'pages/admin/tagihan/edit_tagihan_page.dart';
 import 'pages/admin/pembayaran/add_pembayaran_page.dart';
 import 'pages/admin/pembayaran/edit_pembayaran_page.dart';
-import 'pages/add_pembayaran_user_page.dart';
+import 'pages/user/pembayaran/add_pembayaran_user_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,13 +24,16 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Strong WiFi Manager',
-      theme: AppTheme.theme, // Gunakan tema dari utils.dart
+      theme: ThemeData(
+        primarySwatch: Colors.red,
+        fontFamily: 'Poppins',
+      ),
       debugShowCheckedModeBanner: false,
       initialRoute: '/splash',
       routes: {
@@ -61,7 +64,7 @@ class MyApp extends StatelessWidget {
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/main') {
-          final role = settings.arguments as String? ?? 'user';
+          final role = settings.arguments as String? ?? 'pelanggan';
           return MaterialPageRoute(
             builder: (_) => MainLayout(role: role),
           );
