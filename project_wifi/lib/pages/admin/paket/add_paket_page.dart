@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../utils/utils.dart';
 import '../../../models/paket.dart';
 import '../../../services/api_service.dart';
@@ -56,10 +57,10 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
         harga: int.parse(_priceController.text.trim()),
       );
       await createPaket(paket);
-      await _showSuccessDialog('Paket berhasil disimpan');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('success_message', 'Paket berhasil ditambahkan');
       if (mounted) {
-        Navigator.pop(context);
-        // Navigator.pushNamed(context, '/paket');
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -70,30 +71,6 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
         setState(() => _isSaving = false);
       }
     }
-  }
-
-  Future<void> _showSuccessDialog(String message) async {
-    return showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-        title: Row(
-          children: [
-            Icon(Icons.check_circle, color: AppColors.primaryRed, size: AppSizes.iconSizeMedium),
-            const SizedBox(width: AppSizes.paddingSmall),
-            const Text('Berhasil'),
-          ],
-        ),
-        content: Text(message, style: Theme.of(context).textTheme.bodyMedium),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: TextStyle(color: AppColors.primaryRed)),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showErrorDialog(String message) {
@@ -136,10 +113,8 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
             color: AppColors.white,
             size: AppSizes.iconSizeMedium,
           ),
-          onPressed: () {
-            Navigator.pushNamed(context, '/paket');
-          },
-          tooltip: 'Kembali ke Paket',
+          onPressed: () => Navigator.pop(context),
+          tooltip: 'Kembali',
         ),
         elevation: 2,
       ),
@@ -177,13 +152,28 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
                         decoration: InputDecoration(
                           labelText: 'Nama Paket',
                           hintText: 'Masukkan nama paket',
-                          prefixIcon: const Icon(Icons.label, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Icons.label, color: AppColors.primaryRed),
+                          filled: true,
+                          fillColor: AppColors.white.withOpacity(0.1),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
                             borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
                           ),
                         ),
                         textInputAction: TextInputAction.next,
@@ -200,13 +190,28 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
                         decoration: InputDecoration(
                           labelText: 'Deskripsi',
                           hintText: 'Masukkan deskripsi paket',
-                          prefixIcon: const Icon(Icons.description, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Icons.description, color: AppColors.primaryRed),
+                          filled: true,
+                          fillColor: AppColors.white.withOpacity(0.1),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
                             borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
                           ),
                         ),
                         maxLines: 3,
@@ -229,13 +234,28 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
                         decoration: InputDecoration(
                           labelText: 'Harga',
                           hintText: 'Masukkan harga paket',
-                          prefixIcon: const Icon(Icons.attach_money, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Icons.attach_money, color: AppColors.primaryRed),
+                          filled: true,
+                          fillColor: AppColors.white.withOpacity(0.1),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
                             borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
                           ),
                         ),
                         textInputAction: TextInputAction.done,
