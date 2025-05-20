@@ -7,6 +7,7 @@ import '../utils/constants.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../widgets/main_layout.dart';
 import '../services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -51,32 +52,30 @@ class _LoginPageState extends State<LoginPage> {
           final body = jsonDecode(response.body) as Map<String, dynamic>;
           final user = body['user'] as Map<String, dynamic>;
           final role = user['role'] as String;
-          final token = body['token'] as String?;
+          // final token = body['token'] as String?;
           final userId = user['id'] as int;
 
-          if (token != null) {
-            await _storage.write(key: 'token', value: token);
-          }
-          await _storage.write(key: 'role', value: role);
-          await _storage.write(key: 'user_id', value: userId.toString());
+          // Simpan data ke SharedPreferences
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('role', role);
+          await prefs.setInt('user_id', userId);
 
           if (role == 'pelanggan') {
             try {
               final pelanggan = await fetchPelangganByUserId(userId);
-              await _storage.write(
-                key: 'pelanggan_id',
-                value: pelanggan.id.toString(),
-              );
-              await _storage.write(key: 'name', value: pelanggan.name);
-              await _storage.write(key: 'email', value: pelanggan.email);
-              await _storage.write(key: 'telepon', value: pelanggan.telepon);
-              await _storage.write(key: 'alamat', value: pelanggan.alamat);
-              await _storage.write(key: 'namaPaket', value: pelanggan.namaPaket);
-              await _storage.write(key: 'status', value: pelanggan.status);
-              await _storage.write(
-                  key: 'tanggalAktif', value: pelanggan.tanggalAktif.toString());
-              await _storage.write(
-                  key: 'tanggalLangganan', value: pelanggan.tanggalLangganan.toString());
+              // Simpan sebagai JSON untuk efisiensi
+              final pelangganData = jsonEncode({
+                'pelanggan_id': pelanggan.id,
+                'name': pelanggan.name,
+                'email': pelanggan.email,
+                'telepon': pelanggan.telepon,
+                'alamat': pelanggan.alamat,
+                'namaPaket': pelanggan.namaPaket,
+                'status': pelanggan.status,
+                'tanggalAktif': pelanggan.tanggalAktif.toString(),
+                'tanggalLangganan': pelanggan.tanggalLangganan.toString(),
+              });
+              await prefs.setString('pelanggan_data', pelangganData);
             } catch (_) {
               // ignore if no pelanggan record found
             }
