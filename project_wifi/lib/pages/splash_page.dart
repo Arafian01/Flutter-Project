@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../utils/utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashPage extends StatefulWidget {
-  const SplashPage({super.key});
+  SplashPage({Key? key}) : super(key: key);
 
   @override
-  State<SplashPage> createState() => _SplashPageState();
+  _SplashPageState createState() => _SplashPageState();
 }
 
 class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateMixin {
@@ -16,6 +17,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
+    _checkLoginStatus();
     // Inisialisasi AnimationController
     _controller = AnimationController(
       vsync: this,
@@ -47,6 +49,28 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
         Navigator.pushReplacementNamed(context, '/login');
       }
     });
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('role');
+    // Tambahan pengecekan user_id untuk memastikan login valid
+    final userId = prefs.getInt('user_id');
+
+    // Tunggu 2 detik untuk efek splash screen
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (role != null && userId != null) {
+      // Jika sudah login, arahkan ke MainLayout dengan role
+      Navigator.pushReplacementNamed(
+        context,
+        '/main',
+        arguments: role,
+      );
+    } else {
+      // Jika belum login, arahkan ke LoginPage
+      Navigator.pushReplacementNamed(context, '/login');
+    }
   }
 
   @override
