@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/paket.dart';
 import '../../../services/api_service.dart';
 import '../../../utils/utils.dart';
@@ -15,11 +16,13 @@ class _PaketPageState extends State<PaketPage> with SingleTickerProviderStateMix
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  String? _successMessage;
 
   @override
   void initState() {
     super.initState();
     _loadPakets();
+    _checkSuccessMessage();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -40,7 +43,18 @@ class _PaketPageState extends State<PaketPage> with SingleTickerProviderStateMix
   }
 
   void _loadPakets() {
-    _futurePakets = fetchPakets();
+    setState(() {
+      _futurePakets = fetchPakets();
+    });
+  }
+
+  Future<void> _checkSuccessMessage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final message = prefs.getString('success_message');
+    if (message != null) {
+      _showSuccessDialog(message);
+      await prefs.remove('success_message');
+    }
   }
 
   void _showDetailModal(Paket paket) {
@@ -103,8 +117,8 @@ class _PaketPageState extends State<PaketPage> with SingleTickerProviderStateMix
                       Navigator.pop(context);
                       Navigator.pushNamed(context, '/edit_paket', arguments: paket).then((refresh) {
                         if (refresh == true) {
-                          setState(_loadPakets);
-                          _showSuccessDialog('Paket berhasil diperbarui');
+                          _loadPakets();
+                          _checkSuccessMessage();
                         }
                       });
                     },
@@ -158,7 +172,7 @@ class _PaketPageState extends State<PaketPage> with SingleTickerProviderStateMix
                 Navigator.pop(context);
                 try {
                   await deletePaket(id);
-                  setState(_loadPakets);
+                  _loadPakets();
                   _showSuccessDialog('Paket berhasil dihapus');
                 } catch (e) {
                   _showErrorDialog('Gagal menghapus paket: $e');
@@ -197,24 +211,24 @@ class _PaketPageState extends State<PaketPage> with SingleTickerProviderStateMix
 
   void _showErrorDialog(String message) {
     showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-            title: Row(
-              children: [
-                Icon(Icons.error, color: AppColors.primaryRed),
-                const SizedBox(width: AppSizes.paddingSmall),
-                const Text('Gagal'),
-              ],
-            ),
-            content: Text(message),
-            actions: [
-            TextButton(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+        title: Row(
+          children: [
+            Icon(Icons.error, color: AppColors.primaryRed),
+            const SizedBox(width: AppSizes.paddingSmall),
+            const Text('Gagal'),
+          ],
+        ),
+        content: Text(message),
+        actions: [
+          TextButton(
             onPressed: () => Navigator.pop(context),
-    child: Text('OK', style: TextStyle(color: AppColors.primaryRed)),
-    ),
-    ],
-        )
+            child: Text('OK', style: TextStyle(color: AppColors.primaryRed)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -224,9 +238,20 @@ class _PaketPageState extends State<PaketPage> with SingleTickerProviderStateMix
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
+      appBar: AppBar(
+        backgroundColor: AppColors.primaryRed,
+        title: const Text('Daftar Paket'),
+        foregroundColor: AppColors.white,
+        centerTitle: true,
+        leading: Icon(
+          Icons.wifi,
+          color: AppColors.white,
+          size: AppSizes.iconSizeMedium,
+        ),
+        elevation: 2,
+      ),
       body: Column(
         children: [
-          _buildHeader(),
           Expanded(
             child: FutureBuilder<List<Paket>>(
               future: _futurePakets,
@@ -242,22 +267,8 @@ class _PaketPageState extends State<PaketPage> with SingleTickerProviderStateMix
                   );
                 }
                 final pakets = snapshot.data!;
-                return isSmallScreen
-                    ? ListView.builder(
+                return ListView.builder(
                   padding: const EdgeInsets.all(AppSizes.paddingMedium),
-                  itemCount: pakets.length,
-                  itemBuilder: (context, index) {
-                    return _buildPaketCard(pakets[index]);
-                  },
-                )
-                    : GridView.builder(
-                  padding: const EdgeInsets.all(AppSizes.paddingMedium),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: AppSizes.paddingMedium,
-                    mainAxisSpacing: AppSizes.paddingMedium,
-                    childAspectRatio: 4 / 3,
-                  ),
                   itemCount: pakets.length,
                   itemBuilder: (context, index) {
                     return _buildPaketCard(pakets[index]);
@@ -274,54 +285,12 @@ class _PaketPageState extends State<PaketPage> with SingleTickerProviderStateMix
         onPressed: () async {
           final result = await Navigator.pushNamed(context, '/add_paket');
           if (result == true) {
-            setState(_loadPakets);
-            _showSuccessDialog('Paket berhasil ditambahkan');
+            _loadPakets();
+            _checkSuccessMessage();
           }
         },
         child: const Icon(Icons.add),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: AppSizes.paddingMedium,
-        horizontal: AppSizes.paddingLarge,
-      ),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primaryRed, AppColors.secondaryRed],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      margin: const EdgeInsets.all(AppSizes.paddingMedium),
-      child: Row(
-        children: [
-          Icon(
-            Icons.wifi,
-            size: AppSizes.iconSizeMedium,
-            color: AppColors.white,
-          ),
-          const SizedBox(width: AppSizes.paddingSmall),
-          Text(
-            'Daftar Paket',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: AppColors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -335,6 +304,7 @@ class _PaketPageState extends State<PaketPage> with SingleTickerProviderStateMix
           onTap: () => _showDetailModal(paket),
           borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
           child: Container(
+            margin: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [AppColors.primaryRed, AppColors.secondaryRed],
