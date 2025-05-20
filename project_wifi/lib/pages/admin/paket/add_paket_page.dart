@@ -56,28 +56,36 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
         harga: int.parse(_priceController.text.trim()),
       );
       await createPaket(paket);
-      _showSuccessDialog('Paket berhasil disimpan');
-      Navigator.pop(context, true);
+      await _showSuccessDialog('Paket berhasil disimpan');
+      if (mounted) {
+        Navigator.pop(context);
+        // Navigator.pushNamed(context, '/paket');
+      }
     } catch (e) {
-      _showErrorDialog('Gagal menyimpan paket: $e');
+      if (mounted) {
+        _showErrorDialog('Gagal menyimpan paket: $e');
+      }
     } finally {
-      setState(() => _isSaving = false);
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 
-  void _showSuccessDialog(String message) {
-    showDialog(
+  Future<void> _showSuccessDialog(String message) async {
+    return showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
         title: Row(
           children: [
-            Icon(Icons.check_circle, color: AppColors.primaryRed),
+            Icon(Icons.check_circle, color: AppColors.primaryRed, size: AppSizes.iconSizeMedium),
             const SizedBox(width: AppSizes.paddingSmall),
             const Text('Berhasil'),
           ],
         ),
-        content: Text(message),
+        content: Text(message, style: Theme.of(context).textTheme.bodyMedium),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -90,24 +98,24 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
 
   void _showErrorDialog(String message) {
     showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-            title: Row(
-              children: [
-                Icon(Icons.error, color: AppColors.primaryRed),
-                const SizedBox(width: AppSizes.paddingSmall),
-                const Text('Gagal'),
-              ],
-            ),
-            content: Text(message),
-            actions: [
-            TextButton(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+        title: Row(
+          children: [
+            Icon(Icons.error, color: AppColors.primaryRed, size: AppSizes.iconSizeMedium),
+            const SizedBox(width: AppSizes.paddingSmall),
+            const Text('Gagal'),
+          ],
+        ),
+        content: Text(message, style: Theme.of(context).textTheme.bodyMedium),
+        actions: [
+          TextButton(
             onPressed: () => Navigator.pop(context),
-    child: Text('OK', style: TextStyle(color: AppColors.primaryRed)),
-            )
-    ],
-    ),
+            child: Text('OK', style: TextStyle(color: AppColors.primaryRed)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -122,12 +130,18 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
         title: const Text('Tambah Paket'),
         foregroundColor: AppColors.white,
         centerTitle: true,
-        leading: const Icon(
-          Icons.wifi,
-          color: AppColors.white,
-          size: AppSizes.iconSizeMedium,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: AppColors.white,
+            size: AppSizes.iconSizeMedium,
+          ),
+          onPressed: () {
+            Navigator.pushNamed(context, '/paket');
+          },
+          tooltip: 'Kembali ke Paket',
         ),
-        elevation: 0,
+        elevation: 2,
       ),
       body: Center(
         child: Container(
@@ -160,10 +174,17 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
                           }
                           return null;
                         },
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Nama Paket',
                           hintText: 'Masukkan nama paket',
-                          prefixIcon: Icon(Icons.label, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Icons.label, color: AppColors.textSecondary),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                          ),
                         ),
                         textInputAction: TextInputAction.next,
                       ),
@@ -176,10 +197,17 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
                           }
                           return null;
                         },
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Deskripsi',
                           hintText: 'Masukkan deskripsi paket',
-                          prefixIcon: Icon(Icons.description, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Icons.description, color: AppColors.textSecondary),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                          ),
                         ),
                         maxLines: 3,
                         textInputAction: TextInputAction.next,
@@ -198,10 +226,17 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
                           return null;
                         },
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Harga',
                           hintText: 'Masukkan harga paket',
-                          prefixIcon: Icon(Icons.attach_money, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Icons.attach_money, color: AppColors.textSecondary),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                          ),
                         ),
                         textInputAction: TextInputAction.done,
                       ),
@@ -209,7 +244,11 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
                         child: _isSaving
-                            ? const Center(child: CircularProgressIndicator())
+                            ? const Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryRed),
+                          ),
+                        )
                             : SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -218,8 +257,11 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                               ),
+                              backgroundColor: AppColors.primaryRed,
+                              foregroundColor: AppColors.white,
+                              elevation: 2,
                             ),
-                            onPressed: _save,
+                            onPressed: _isSaving ? null : _save,
                             child: const Text(
                               'Simpan',
                               style: TextStyle(
