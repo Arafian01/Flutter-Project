@@ -1,11 +1,11 @@
-// lib/pages/edit_pembayaran_page.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/pembayaran.dart';
 import '../../../services/api_service.dart';
 import '../../../utils/utils.dart';
-import '../../../widgets/strong_main_button.dart';
 
 class EditPembayaranPage extends StatefulWidget {
   final Pembayaran pembayaran;
@@ -23,6 +23,7 @@ class _EditPembayaranPageState extends State<EditPembayaranPage> with SingleTick
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  final _formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
   @override
   void initState() {
@@ -47,6 +48,19 @@ class _EditPembayaranPageState extends State<EditPembayaranPage> with SingleTick
     super.dispose();
   }
 
+  String _formatBulanTahun(String bulanTahun) {
+    try {
+      final parts = bulanTahun.split('-');
+      if (parts.length != 2) return bulanTahun;
+      final month = int.parse(parts[0]);
+      final year = parts[1];
+      final date = DateTime(int.parse(year), month);
+      return DateFormat('MMMM-yyyy', 'id_ID').format(date);
+    } catch (e) {
+      return bulanTahun;
+    }
+  }
+
   Future<void> _pickImage() async {
     final f = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (f != null) setState(() => _image = File(f.path));
@@ -61,7 +75,8 @@ class _EditPembayaranPageState extends State<EditPembayaranPage> with SingleTick
         statusVerifikasi: _status,
         imageFile: _image,
       );
-      _showSuccessDialog('Pembayaran berhasil diperbarui');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('success_message', 'Pembayaran berhasil diperbarui');
       Navigator.pop(context, true);
     } catch (e) {
       _showErrorDialog('Gagal memperbarui pembayaran: $e');
@@ -125,12 +140,16 @@ class _EditPembayaranPageState extends State<EditPembayaranPage> with SingleTick
         title: const Text('Edit Pembayaran'),
         foregroundColor: AppColors.white,
         centerTitle: true,
-        leading: const Icon(
-          Icons.wifi,
-          color: AppColors.white,
-          size: AppSizes.iconSizeMedium,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: AppColors.white,
+            size: AppSizes.iconSizeMedium,
+          ),
+          onPressed: () => Navigator.pop(context),
+          tooltip: 'Kembali',
         ),
-        elevation: 0,
+        elevation: 2,
       ),
       body: Center(
         child: Container(
@@ -155,13 +174,48 @@ class _EditPembayaranPageState extends State<EditPembayaranPage> with SingleTick
                         ),
                       ),
                       const SizedBox(height: AppSizes.paddingLarge),
+                      Text(
+                        'Periode: ${_formatBulanTahun(widget.pembayaran.bulanTahun)}',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+                      ),
+                      Text(
+                        'Pelanggan: ${widget.pembayaran.pelangganName}',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+                      ),
+                      Text(
+                        'Harga: ${_formatter.format(widget.pembayaran.harga)}',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+                      ),
+                      const SizedBox(height: AppSizes.paddingMedium),
                       DropdownButtonFormField<String>(
                         value: _status,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Status Verifikasi',
-                          prefixIcon: Icon(Icons.verified, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Icons.verified, color: AppColors.primaryRed),
+                          filled: true,
+                          fillColor: AppColors.white.withOpacity(0.1),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
                         ),
-                        items: ['menunggu verifikasi', 'diterima', 'ditolak']
+                        items: ['menunggu_verifikasi', 'diterima', 'ditolak']
                             .map((s) => DropdownMenuItem(
                           value: s,
                           child: Text(s.replaceAll('_', ' ').toUpperCase()),
@@ -174,13 +228,35 @@ class _EditPembayaranPageState extends State<EditPembayaranPage> with SingleTick
                       InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Bukti Pembayaran',
-                          prefixIcon: Icon(Icons.image, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Icons.image, color: AppColors.primaryRed),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
                           ),
                         ),
                         child: Column(
                           children: [
+                            if (widget.pembayaran.image != null && _image == null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: AppSizes.paddingSmall),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                                  child: Image.network(
+                                    widget.pembayaran.image!,
+                                    height: 150,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => const Icon(Icons.error, color: Colors.red),
+                                  ),
+                                ),
+                              ),
                             if (_image != null)
                               Padding(
                                 padding: const EdgeInsets.only(bottom: AppSizes.paddingSmall),
@@ -188,8 +264,8 @@ class _EditPembayaranPageState extends State<EditPembayaranPage> with SingleTick
                                   borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                                   child: Image.file(
                                     _image!,
-                                    height: 100,
-                                    width: 100,
+                                    height: 150,
+                                    width: double.infinity,
                                     fit: BoxFit.cover,
                                   ),
                                 ),
@@ -197,7 +273,7 @@ class _EditPembayaranPageState extends State<EditPembayaranPage> with SingleTick
                             ElevatedButton.icon(
                               onPressed: _pickImage,
                               icon: const Icon(Icons.upload_file, size: AppSizes.iconSizeSmall),
-                              label: Text(_image == null ? 'Pilih Bukti' : 'Ganti Bukti'),
+                              label: Text(_image == null && widget.pembayaran.image == null ? 'Pilih Bukti' : 'Ganti Bukti'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primaryRed,
                                 foregroundColor: AppColors.white,
@@ -214,9 +290,27 @@ class _EditPembayaranPageState extends State<EditPembayaranPage> with SingleTick
                         duration: const Duration(milliseconds: 300),
                         child: _saving
                             ? const Center(child: CircularProgressIndicator())
-                            : StrongMainButton(
-                          label: 'Update',
-                          onTap: _update,
+                            : SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingMedium),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                              ),
+                              backgroundColor: AppColors.primaryRed,
+                              foregroundColor: AppColors.white,
+                              elevation: 2,
+                            ),
+                            onPressed: _saving ? null : _update,
+                            child: const Text(
+                              'Update',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ],
