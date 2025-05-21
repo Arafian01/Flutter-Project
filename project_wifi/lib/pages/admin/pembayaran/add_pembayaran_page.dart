@@ -1,12 +1,11 @@
-// lib/pages/add_pembayaran_page.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/tagihan.dart';
 import '../../../services/api_service.dart';
 import '../../../utils/utils.dart';
-import '../../../widgets/strong_main_button.dart';
 
 class AddPembayaranPage extends StatefulWidget {
   const AddPembayaranPage({super.key});
@@ -19,7 +18,7 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
   final _formKey = GlobalKey<FormState>();
   List<Tagihan> _tagihans = [];
   Tagihan? _selected;
-  String _status = 'menunggu verifikasi';
+  String _status = 'menunggu_verifikasi';
   File? _image;
   bool _saving = false;
   late AnimationController _controller;
@@ -48,6 +47,19 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  String _formatBulanTahun(String bulanTahun) {
+    try {
+      final parts = bulanTahun.split('-');
+      if (parts.length != 2) return bulanTahun;
+      final month = int.parse(parts[0]);
+      final year = parts[1];
+      final date = DateTime(int.parse(year), month);
+      return DateFormat('MMMM-yyyy', 'id_ID').format(date);
+    } catch (e) {
+      return bulanTahun;
+    }
   }
 
   Future<void> _loadTagihans() async {
@@ -83,7 +95,8 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
         statusVerifikasi: _status,
         imageFile: _image!,
       );
-      _showSuccessDialog('Pembayaran berhasil disimpan');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('success_message', 'Pembayaran berhasil disimpan');
       Navigator.pop(context, true);
     } catch (e) {
       if (e.toString().contains('409')) {
@@ -151,12 +164,16 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
         title: const Text('Tambah Pembayaran'),
         foregroundColor: AppColors.white,
         centerTitle: true,
-        leading: const Icon(
-          Icons.wifi,
-          color: AppColors.white,
-          size: AppSizes.iconSizeMedium,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: AppColors.white,
+            size: AppSizes.iconSizeMedium,
+          ),
+          onPressed: () => Navigator.pop(context),
+          tooltip: 'Kembali',
         ),
-        elevation: 0,
+        elevation: 2,
       ),
       body: Center(
         child: Container(
@@ -183,14 +200,36 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
                       const SizedBox(height: AppSizes.paddingLarge),
                       DropdownButtonFormField<Tagihan>(
                         value: _selected,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Pilih Tagihan',
-                          prefixIcon: Icon(Icons.receipt, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Icons.receipt, color: AppColors.primaryRed),
+                          filled: true,
+                          fillColor: AppColors.white.withOpacity(0.1),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
                         ),
                         items: _tagihans.map((t) {
                           return DropdownMenuItem(
                             value: t,
-                            child: Text('${t.bulanTahun} • ${_formatter.format(t.harga)} • ${t.pelangganName}'),
+                            child: Text('${_formatBulanTahun(t.bulanTahun)} • ${_formatter.format(t.harga)} • ${t.pelangganName}'),
                           );
                         }).toList(),
                         onChanged: (v) => setState(() => _selected = v),
@@ -199,14 +238,36 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
                       const SizedBox(height: AppSizes.paddingMedium),
                       DropdownButtonFormField<String>(
                         value: _status,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Status Verifikasi',
-                          prefixIcon: Icon(Icons.verified, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Icons.verified, color: AppColors.primaryRed),
+                          filled: true,
+                          fillColor: AppColors.white.withOpacity(0.1),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
                         ),
-                        items: ['menunggu verifikasi', 'diterima', 'ditolak']
+                        items: ['menunggu_verifikasi', 'diterima', 'ditolak']
                             .map((s) => DropdownMenuItem(
                           value: s,
-                          child: Text(s.replaceAll(' ', '_').toUpperCase().replaceAll('_', ' ')),
+                          child: Text(s.replaceAll('_', ' ').toUpperCase()),
                         ))
                             .toList(),
                         onChanged: (v) => setState(() => _status = v!),
@@ -216,9 +277,17 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
                       InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Bukti Pembayaran',
-                          prefixIcon: Icon(Icons.image, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Icons.image, color: AppColors.primaryRed),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
                           ),
                         ),
                         child: Column(
@@ -230,8 +299,8 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
                                   borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                                   child: Image.file(
                                     _image!,
-                                    height: 100,
-                                    width: 100,
+                                    height: 150,
+                                    width: double.infinity,
                                     fit: BoxFit.cover,
                                   ),
                                 ),
@@ -256,9 +325,27 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
                         duration: const Duration(milliseconds: 300),
                         child: _saving
                             ? const Center(child: CircularProgressIndicator())
-                            : StrongMainButton(
-                          label: 'Simpan',
-                          onTap: _save,
+                            : SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingMedium),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                              ),
+                              backgroundColor: AppColors.primaryRed,
+                              foregroundColor: AppColors.white,
+                              elevation: 2,
+                            ),
+                            onPressed: _saving ? null : _save,
+                            child: const Text(
+                              'Simpan',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ],
