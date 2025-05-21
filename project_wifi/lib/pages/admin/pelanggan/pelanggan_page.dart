@@ -1,5 +1,5 @@
-// lib/pages/pelanggan_page.dart
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/pelanggan.dart';
 import '../../../services/api_service.dart';
 import '../../../utils/utils.dart';
@@ -16,11 +16,13 @@ class _PelangganPageState extends State<PelangganPage> with SingleTickerProvider
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  String? _successMessage;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _checkSuccessMessage();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -40,7 +42,20 @@ class _PelangganPageState extends State<PelangganPage> with SingleTickerProvider
     super.dispose();
   }
 
-  void _load() => _future = fetchPelanggans();
+  void _load() {
+    setState(() {
+      _future = fetchPelanggans();
+    });
+  }
+
+  Future<void> _checkSuccessMessage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final message = prefs.getString('success_message');
+    if (message != null) {
+      _showSuccessDialog(message);
+      await prefs.remove('success_message');
+    }
+  }
 
   void _showDetail(Pelanggan p) {
     showModalBottomSheet(
@@ -57,7 +72,7 @@ class _PelangganPageState extends State<PelangganPage> with SingleTickerProvider
           children: [
             Row(
               children: [
-                Icon(Icons.wifi, color: AppColors.primaryRed, size: AppSizes.iconSizeMedium),
+                Icon(Icons.person, color: AppColors.primaryRed, size: AppSizes.iconSizeMedium),
                 const SizedBox(width: AppSizes.paddingSmall),
                 Expanded(
                   child: Text(
@@ -72,7 +87,7 @@ class _PelangganPageState extends State<PelangganPage> with SingleTickerProvider
             ),
             const SizedBox(height: AppSizes.paddingMedium),
             Text(
-              p.email,
+              'Email: ${p.email}',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             ),
             Text(
@@ -107,8 +122,8 @@ class _PelangganPageState extends State<PelangganPage> with SingleTickerProvider
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/edit_pelanggan', arguments: p).then((r) {
                       if (r == true) {
-                        setState(_load);
-                        _showSuccessDialog('Pelanggan berhasil diperbarui');
+                        _load();
+                        _checkSuccessMessage();
                       }
                     });
                   },
@@ -160,7 +175,7 @@ class _PelangganPageState extends State<PelangganPage> with SingleTickerProvider
               Navigator.pop(context);
               try {
                 await deletePelanggan(id);
-                setState(_load);
+                _load();
                 _showSuccessDialog('Pelanggan berhasil dihapus');
               } catch (e) {
                 _showErrorDialog('Gagal menghapus pelanggan: $e');
@@ -223,9 +238,20 @@ class _PelangganPageState extends State<PelangganPage> with SingleTickerProvider
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
+      appBar: AppBar(
+        backgroundColor: AppColors.primaryRed,
+        title: const Text('Daftar Pelanggan'),
+        foregroundColor: AppColors.white,
+        centerTitle: true,
+        leading: Icon(
+          Icons.person,
+          color: AppColors.white,
+          size: AppSizes.iconSizeMedium,
+        ),
+        elevation: 2,
+      ),
       body: Column(
         children: [
-          _buildHeader(),
           Expanded(
             child: FutureBuilder<List<Pelanggan>>(
               future: _future,
@@ -261,54 +287,12 @@ class _PelangganPageState extends State<PelangganPage> with SingleTickerProvider
         onPressed: () async {
           final result = await Navigator.pushNamed(context, '/add_pelanggan');
           if (result == true) {
-            setState(_load);
-            _showSuccessDialog('Pelanggan berhasil ditambahkan');
+            _load();
+            _checkSuccessMessage();
           }
         },
         child: const Icon(Icons.add),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: AppSizes.paddingMedium,
-        horizontal: AppSizes.paddingLarge,
-      ),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primaryRed, AppColors.secondaryRed],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      margin: const EdgeInsets.all(AppSizes.paddingMedium),
-      child: Row(
-        children: [
-          Icon(
-            Icons.wifi,
-            size: AppSizes.iconSizeMedium,
-            color: AppColors.white,
-          ),
-          const SizedBox(width: AppSizes.paddingSmall),
-          Text(
-            'Daftar Pelanggan',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: AppColors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -346,7 +330,7 @@ class _PelangganPageState extends State<PelangganPage> with SingleTickerProvider
                     radius: 24,
                     backgroundColor: AppColors.white.withOpacity(0.2),
                     child: Icon(
-                      Icons.wifi,
+                      Icons.person,
                       size: AppSizes.iconSizeMedium,
                       color: AppColors.white,
                     ),
