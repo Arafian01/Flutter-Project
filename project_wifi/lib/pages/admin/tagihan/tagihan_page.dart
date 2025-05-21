@@ -1,6 +1,6 @@
-// lib/pages/tagihan_page.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/tagihan.dart';
 import '../../../services/api_service.dart';
 import '../../../utils/utils.dart';
@@ -23,6 +23,7 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
   void initState() {
     super.initState();
     _load();
+    _checkSuccessMessage();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -42,7 +43,33 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
     super.dispose();
   }
 
-  void _load() => _future = TagihanService.fetchTagihans();
+  void _load() {
+    setState(() {
+      _future = TagihanService.fetchTagihans();
+    });
+  }
+
+  Future<void> _checkSuccessMessage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final message = prefs.getString('success_message');
+    if (message != null) {
+      _showSuccessDialog(message);
+      await prefs.remove('success_message');
+    }
+  }
+
+  String _formatBulanTahun(String bulanTahun) {
+    try {
+      final parts = bulanTahun.split('-');
+      if (parts.length != 2) return bulanTahun;
+      final month = int.parse(parts[0]);
+      final year = parts[1];
+      final date = DateTime(int.parse(year), month);
+      return DateFormat('MMMM-yyyy', 'id_ID').format(date);
+    } catch (e) {
+      return bulanTahun;
+    }
+  }
 
   void _showDetail(Tagihan t) {
     showModalBottomSheet(
@@ -59,7 +86,7 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
           children: [
             Row(
               children: [
-                Icon(Icons.wifi, color: AppColors.primaryRed, size: AppSizes.iconSizeMedium),
+                Icon(Icons.receipt, color: AppColors.primaryRed, size: AppSizes.iconSizeMedium),
                 const SizedBox(width: AppSizes.paddingSmall),
                 Expanded(
                   child: Text(
@@ -74,11 +101,11 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
             ),
             const SizedBox(height: AppSizes.paddingMedium),
             Text(
-              'Periode: ${t.bulanTahun}',
+              'Periode: ${_formatBulanTahun(t.bulanTahun)}',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             ),
             Text(
-              'Status: ${t.statusPembayaran}',
+              'Status: ${t.statusPembayaran.replaceAll('_', ' ').toUpperCase()}',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             ),
             Text(
@@ -105,8 +132,8 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
                     Navigator.pop(context);
                     Navigator.pushNamed(context, '/edit_tagihan', arguments: t).then((r) {
                       if (r == true) {
-                        setState(_load);
-                        _showSuccessDialog('Tagihan berhasil diperbarui');
+                        _load();
+                        _checkSuccessMessage();
                       }
                     });
                   },
@@ -158,7 +185,7 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
               Navigator.pop(context);
               try {
                 await TagihanService.deleteTagihan(id);
-                setState(_load);
+                _load();
                 _showSuccessDialog('Tagihan berhasil dihapus');
               } catch (e) {
                 _showErrorDialog('Gagal menghapus tagihan: $e');
@@ -221,9 +248,20 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
+      appBar: AppBar(
+        backgroundColor: AppColors.primaryRed,
+        title: const Text('Daftar Tagihan'),
+        foregroundColor: AppColors.white,
+        centerTitle: true,
+        leading: Icon(
+          Icons.receipt,
+          color: AppColors.white,
+          size: AppSizes.iconSizeMedium,
+        ),
+        elevation: 2,
+      ),
       body: Column(
         children: [
-          _buildHeader(),
           Expanded(
             child: FutureBuilder<List<Tagihan>>(
               future: _future,
@@ -259,54 +297,12 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
         onPressed: () async {
           final result = await Navigator.pushNamed(context, '/add_tagihan');
           if (result == true) {
-            setState(_load);
-            _showSuccessDialog('Tagihan berhasil ditambahkan');
+            _load();
+            _checkSuccessMessage();
           }
         },
         child: const Icon(Icons.add),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: AppSizes.paddingMedium,
-        horizontal: AppSizes.paddingLarge,
-      ),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primaryRed, AppColors.secondaryRed],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      margin: const EdgeInsets.all(AppSizes.paddingMedium),
-      child: Row(
-        children: [
-          Icon(
-            Icons.wifi,
-            size: AppSizes.iconSizeMedium,
-            color: AppColors.white,
-          ),
-          const SizedBox(width: AppSizes.paddingSmall),
-          Text(
-            'Daftar Tagihan',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: AppColors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -344,7 +340,7 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
                     radius: 24,
                     backgroundColor: AppColors.white.withOpacity(0.2),
                     child: Icon(
-                      Icons.wifi,
+                      Icons.receipt,
                       size: AppSizes.iconSizeMedium,
                       color: AppColors.white,
                     ),
@@ -356,7 +352,7 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          '${t.bulanTahun} - ${t.pelangganName}',
+                          '${_formatBulanTahun(t.bulanTahun)} - ${t.pelangganName}',
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             color: AppColors.white,
                             fontWeight: FontWeight.bold,
@@ -364,7 +360,7 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
                         ),
                         const SizedBox(height: AppSizes.paddingSmall),
                         Text(
-                          'Status: ${t.statusPembayaran} • ${_formatter.format(t.harga)}',
+                          'Status: ${t.statusPembayaran.replaceAll('_', ' ').toUpperCase()} • ${_formatter.format(t.harga)}',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppColors.white.withOpacity(0.9),
                           ),
