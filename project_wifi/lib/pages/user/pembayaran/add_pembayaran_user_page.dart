@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../services/api_service.dart';
 import '../../../../../models/tagihan.dart';
-import '../../../widgets/strong_main_button.dart';
 import '../../../utils/utils.dart';
 
 class AddPembayaranUserPage extends StatefulWidget {
@@ -116,9 +115,6 @@ class _AddPembayaranUserPageState extends State<AddPembayaranUserPage> {
               ),
             ),
             const SizedBox(height: 24),
-            _saving
-                ? const Center(child: CircularProgressIndicator())
-                : StrongMainButton(label: 'Kirim Pembayaran', onTap: _save),
           ],
         ),
       ),
