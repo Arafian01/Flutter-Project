@@ -280,21 +280,16 @@ class DashboardUserService {
 }
 
 class ReportService {
-  /// GET /report?from=MM-YYYY&to=MM-YYYY
+  /// GET /report?year=YYYY
   static Future<Map<String, dynamic>> fetchReport({
-    required String from,
-    required String to,
+    required int year,
   }) async {
-    final uri = Uri.parse('${AppConstants.baseUrl}/report?from=$from&to=$to');
+    final uri = Uri.parse('${AppConstants.baseUrl}/report?year=$year');
     final resp = await http.get(uri).timeout(const Duration(seconds: 10));
     if (resp.statusCode != 200) {
       throw Exception('Gagal memuat laporan (${resp.statusCode})');
     }
     final body = jsonDecode(resp.body) as Map<String, dynamic>;
-    final months = List<String>.from(body['months'] as List);
-    final data = (body['data'] as List)
-        .map((e) => ReportItem.fromJson(e as Map<String, dynamic>, months))
-        .toList();
-    return {'months': months, 'data': data};
+    return body; // Kembalikan data mentah tanpa pemetaan ke ReportItem
   }
 }
