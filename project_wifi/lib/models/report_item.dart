@@ -1,4 +1,3 @@
-// lib/models/report_item.dart
 class ReportItem {
   final int pelangganId;
   final String nama;
@@ -10,16 +9,15 @@ class ReportItem {
     required this.statusByMonth,
   });
 
-  factory ReportItem.fromJson(
-      Map<String, dynamic> json, List<String> months) {
-    final map = <String, String>{};
-    for (final m in months) {
-      map[m] = json[m] as String? ?? '-';
+  factory ReportItem.fromJson(Map<String, dynamic> json, List<String> months) {
+    final statusByMonth = <String, String>{};
+    for (final month in months) {
+      statusByMonth[month] = json[month] as String? ?? '-';
     }
     return ReportItem(
       pelangganId: json['pelanggan_id'] as int,
       nama: json['nama'] as String,
-      statusByMonth: map,
+      statusByMonth: statusByMonth,
     );
   }
 }
