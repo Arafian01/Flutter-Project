@@ -1,11 +1,10 @@
-// lib/pages/edit_tagihan_page.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/pelanggan.dart';
 import '../../../models/tagihan.dart';
 import '../../../services/api_service.dart';
 import '../../../utils/utils.dart';
-import '../../../widgets/strong_main_button.dart';
+import 'package:intl/intl.dart';
 
 class EditTagihanPage extends StatefulWidget {
   final Tagihan tagihan;
@@ -19,17 +18,37 @@ class _EditTagihanPageState extends State<EditTagihanPage> with SingleTickerProv
   final _formKey = GlobalKey<FormState>();
   List<Pelanggan> _pelanggans = [];
   Pelanggan? _selected;
-  late TextEditingController _bulanCtrl;
+  int? _selectedMonth;
+  int? _selectedYear;
   String _status = '';
   bool _saving = false;
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
 
+  final List<Map<String, dynamic>> _months = [
+    {'name': 'Januari', 'value': 1},
+    {'name': 'Februari', 'value': 2},
+    {'name': 'Maret', 'value': 3},
+    {'name': 'April', 'value': 4},
+    {'name': 'Mei', 'value': 5},
+    {'name': 'Juni', 'value': 6},
+    {'name': 'Juli', 'value': 7},
+    {'name': 'Agustus', 'value': 8},
+    {'name': 'September', 'value': 9},
+    {'name': 'Oktober', 'value': 10},
+    {'name': 'November', 'value': 11},
+    {'name': 'Desember', 'value': 12},
+  ];
+  final _currentYear = DateTime.now().year;
+  final List<int> _years = List.generate(11, (i) => DateTime.now().year - 5 + i);
+
   @override
   void initState() {
     super.initState();
-    _bulanCtrl = TextEditingController(text: widget.tagihan.bulanTahun);
+    final parts = widget.tagihan.bulanTahun.split('-');
+    _selectedMonth = int.parse(parts[0]);
+    _selectedYear = int.parse(parts[1]);
     _status = widget.tagihan.statusPembayaran;
     _loadPelanggans();
     _controller = AnimationController(
@@ -47,7 +66,6 @@ class _EditTagihanPageState extends State<EditTagihanPage> with SingleTickerProv
 
   @override
   void dispose() {
-    _bulanCtrl.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -72,21 +90,27 @@ class _EditTagihanPageState extends State<EditTagihanPage> with SingleTickerProv
   }
 
   Future<void> _update() async {
-    if (!_formKey.currentState!.validate() || _selected == null) {
+    if (!_formKey.currentState!.validate() || _selected == null || _selectedMonth == null || _selectedYear == null) {
       if (_selected == null) {
         _showErrorDialog('Pilih pelanggan terlebih dahulu');
+      } else if (_selectedMonth == null) {
+        _showErrorDialog('Pilih bulan terlebih dahulu');
+      } else if (_selectedYear == null) {
+        _showErrorDialog('Pilih tahun terlebih dahulu');
       }
       return;
     }
     setState(() => _saving = true);
     try {
+      final bulanTahun = '${_selectedMonth.toString().padLeft(2, '0')}-$_selectedYear';
       await TagihanService.updateTagihan(
         widget.tagihan.id,
         pelangganId: _selected!.id,
-        bulanTahun: _bulanCtrl.text.trim(),
+        bulanTahun: bulanTahun,
         statusPembayaran: _status,
       );
-      _showSuccessDialog('Tagihan berhasil diperbarui');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('success_message', 'Tagihan berhasil diperbarui');
       Navigator.pop(context, true);
     } catch (e) {
       _showErrorDialog('Gagal memperbarui tagihan: $e');
@@ -150,12 +174,16 @@ class _EditTagihanPageState extends State<EditTagihanPage> with SingleTickerProv
         title: const Text('Edit Tagihan'),
         foregroundColor: AppColors.white,
         centerTitle: true,
-        leading: const Icon(
-          Icons.wifi,
-          color: AppColors.white,
-          size: AppSizes.iconSizeMedium,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: AppColors.white,
+            size: AppSizes.iconSizeMedium,
+          ),
+          onPressed: () => Navigator.pop(context),
+          tooltip: 'Kembali',
         ),
-        elevation: 0,
+        elevation: 2,
       ),
       body: Center(
         child: Container(
@@ -182,44 +210,130 @@ class _EditTagihanPageState extends State<EditTagihanPage> with SingleTickerProv
                       const SizedBox(height: AppSizes.paddingLarge),
                       DropdownButtonFormField<Pelanggan>(
                         value: _selected,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Pelanggan',
-                          prefixIcon: Icon(Icons.person, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Icons.person, color: AppColors.primaryRed),
+                          filled: true,
+                          fillColor: AppColors.white.withOpacity(0.1),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
                         ),
                         items: _pelanggans.map((p) => DropdownMenuItem(value: p, child: Text(p.name))).toList(),
                         onChanged: (v) => setState(() => _selected = v),
                         validator: (v) => v == null ? 'Pilih pelanggan' : null,
                       ),
                       const SizedBox(height: AppSizes.paddingMedium),
-                      TextFormField(
-                        controller: _bulanCtrl,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Bulan-tahun wajib diisi';
-                          }
-                          if (!RegExp(r'^(0[1-9]|1[0-2])-\d{4}$').hasMatch(value)) {
-                            return 'Format harus MM-YYYY (contoh: 01-2025)';
-                          }
-                          return null;
-                        },
-                        decoration: const InputDecoration(
-                          labelText: 'Bulan-Tahun',
-                          hintText: 'MM-YYYY (contoh: 01-2025)',
-                          prefixIcon: Icon(Icons.date_range, color: AppColors.textSecondary),
+                      DropdownButtonFormField<int>(
+                        value: _selectedMonth,
+                        decoration: InputDecoration(
+                          labelText: 'Bulan',
+                          prefixIcon: const Icon(Icons.calendar_today, color: AppColors.primaryRed),
+                          filled: true,
+                          fillColor: AppColors.white.withOpacity(0.1),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
                         ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'[0-1]?[0-9]?-?\d{0,4}')),
-                          LengthLimitingTextInputFormatter(7),
-                        ],
-                        textInputAction: TextInputAction.next,
+                        items: _months.map((m) => DropdownMenuItem<int>(value: m['value'] as int, child: Text(m['name'] as String))).toList(),
+                        onChanged: (v) => setState(() => _selectedMonth = v),
+                        validator: (v) => v == null ? 'Pilih bulan' : null,
+                      ),
+                      const SizedBox(height: AppSizes.paddingMedium),
+                      DropdownButtonFormField<int>(
+                        value: _selectedYear,
+                        decoration: InputDecoration(
+                          labelText: 'Tahun',
+                          prefixIcon: const Icon(Icons.calendar_today, color: AppColors.primaryRed),
+                          filled: true,
+                          fillColor: AppColors.white.withOpacity(0.1),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
+                        ),
+                        items: _years.map((y) => DropdownMenuItem(value: y, child: Text(y.toString()))).toList(),
+                        onChanged: (v) => setState(() => _selectedYear = v),
+                        validator: (v) => v == null ? 'Pilih tahun' : null,
                       ),
                       const SizedBox(height: AppSizes.paddingMedium),
                       DropdownButtonFormField<String>(
                         value: _status,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Status',
-                          prefixIcon: Icon(Icons.payment, color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Icons.payment, color: AppColors.primaryRed),
+                          filled: true,
+                          fillColor: AppColors.white.withOpacity(0.1),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                          ),
                         ),
                         items: ['belum_dibayar', 'menunggu_verifikasi', 'lunas']
                             .map((s) => DropdownMenuItem(value: s, child: Text(s.replaceAll('_', ' ').toUpperCase())))
@@ -232,9 +346,27 @@ class _EditTagihanPageState extends State<EditTagihanPage> with SingleTickerProv
                         duration: const Duration(milliseconds: 300),
                         child: _saving
                             ? const Center(child: CircularProgressIndicator())
-                            : StrongMainButton(
-                          label: 'Update',
-                          onTap: _update,
+                            : SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingMedium),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                              ),
+                              backgroundColor: AppColors.primaryRed,
+                              foregroundColor: AppColors.white,
+                              elevation: 2,
+                            ),
+                            onPressed: _saving ? null : _update,
+                            child: const Text(
+                              'Update',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ],
