@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:project_wifi/models/paket.dart';
 import 'package:project_wifi/models/pelanggan.dart';
@@ -15,11 +16,19 @@ import 'pages/admin/pelanggan/edit_pelanggan_page.dart';
 import 'pages/admin/tagihan/add_tagihan_page.dart';
 import 'pages/admin/tagihan/edit_tagihan_page.dart';
 import 'pages/admin/pembayaran/add_pembayaran_page.dart';
+import 'pages/admin/pembayaran/pembayaran_page.dart';
 import 'pages/admin/pembayaran/edit_pembayaran_page.dart';
 import 'pages/user/pembayaran/add_pembayaran_user_page.dart';
+import 'pages/user/pembayaran/detail_pembayaran_page.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await initializeDateFormatting('id_ID', null);
+    print('Date formatting initialized for id_ID');
+  } catch (e) {
+    print('Failed to initialize date formatting: $e');
+  }
   runApp(const MyApp());
 }
 
@@ -33,6 +42,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.red,
         fontFamily: 'Poppins',
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       debugShowCheckedModeBanner: false,
       initialRoute: '/splash',
@@ -55,12 +65,18 @@ class MyApp extends StatelessWidget {
           final tagihan = ModalRoute.of(context)!.settings.arguments as Tagihan;
           return EditTagihanPage(tagihan: tagihan);
         },
-        '/add_pembayaran': (_) => AddPembayaranPage(),
-        '/edit_pembayaran': (ctx) {
-          final pembayaran = ModalRoute.of(ctx)!.settings.arguments as Pembayaran;
+        '/pembayaran': (context) => const PembayaranPage(),
+        '/add_pembayaran': (context) => AddPembayaranPage(),
+        '/edit_pembayaran': (context) {
+          final pembayaran = ModalRoute.of(context)!.settings.arguments as Pembayaran;
           return EditPembayaranPage(pembayaran: pembayaran);
         },
         '/add_pembayaran_user': (_) => AddPembayaranUserPage(),
+        '/detail_pembayaran': (context) {
+          final pembayaran = ModalRoute.of(context)!.settings.arguments as Pembayaran;
+          return DetailPembayaranPage(pembayaran: pembayaran);
+        },
+        // '/detail_pembayaran': (context) => DetailPembayaranPage(pembayaran: pembayaran)
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/main') {
