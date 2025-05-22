@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../models/dashboard.dart';
 import '../../services/api_service.dart';
 import '../../utils/utils.dart';
@@ -48,7 +49,7 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> with SingleTick
 
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Hapus semua data login (token, role, dll.)
+    await prefs.clear();
     Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
   }
 
@@ -199,7 +200,7 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> with SingleTick
                     ],
                   ),
                   const SizedBox(height: AppSizes.paddingLarge),
-                  _buildSummaryCard(),
+                  _buildSummaryCard(data),
                 ],
               ),
             );
@@ -324,7 +325,13 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> with SingleTick
     );
   }
 
-  Widget _buildSummaryCard() {
+  Widget _buildSummaryCard(Dashboard data) {
+    final currencyFormat = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
+
     return FadeTransition(
       opacity: _fadeAnimation,
       child: ScaleTransition(
@@ -364,7 +371,7 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> with SingleTick
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Rp 12,345,678', // Dummy data
+                          currencyFormat.format(data.totalHargaLunas),
                           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             color: AppColors.white,
                             fontWeight: FontWeight.bold,
