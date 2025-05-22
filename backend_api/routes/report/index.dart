@@ -1,22 +1,10 @@
-// routes/report/index.dart
 import 'package:dart_frog/dart_frog.dart';
 import '../../lib/database.dart';
 
-DateTime _parseMonthYear(String s) {
-  final parts = s.split('-');
-  if (parts.length != 2) throw FormatException('Invalid format');
-  final month = int.parse(parts[0]);
-  final year = int.parse(parts[1]);
-  return DateTime(year, month);
-}
-
-List<String> _generateMonths(DateTime from, DateTime to) {
-  var cur = DateTime(from.year, from.month);
-  final end = DateTime(to.year, to.month);
+List<String> _generateMonths(int year) {
   final result = <String>[];
-  while (!cur.isAfter(end)) {
-    result.add('${cur.month.toString().padLeft(2,'0')}-${cur.year}');
-    cur = DateTime(cur.year, cur.month + 1);
+  for (var month = 1; month <= 12; month++) {
+    result.add('${month.toString().padLeft(2, '0')}-$year');
   }
   return result;
 }
@@ -26,36 +14,33 @@ Future<Response> onRequest(RequestContext context) async {
     return Response(statusCode: 405);
   }
   final qs = context.request.uri.queryParameters;
-  final fromStr = qs['from'];
-  final toStr = qs['to'];
-  if (fromStr == null || toStr == null) {
-    return Response.json(statusCode: 400, body: {'error': 'Missing from/to'});
+  final yearStr = qs['year'];
+  if (yearStr == null) {
+    return Response.json(statusCode: 400, body: {'error': 'Parameter tahun diperlukan'});
   }
-  late DateTime fromDt, toDt;
+  late int year;
   try {
-    fromDt = _parseMonthYear(fromStr);
-    toDt = _parseMonthYear(toStr);
+    year = int.parse(yearStr);
   } catch (e) {
-    return Response.json(statusCode: 400, body: {'error': 'Bad date format'});
+    return Response.json(statusCode: 400, body: {'error': 'Format tahun tidak valid'});
   }
-  final months = _generateMonths(fromDt, toDt);
+  final months = _generateMonths(year);
 
   final conn = await createConnection();
   try {
-    // ambil semua tagihan dalam rentang
+    // Ambil semua tagihan untuk tahun tertentu
     final rows = await conn.query('''
       SELECT p.id AS pelanggan_id, u.name AS nama,
              t.bulan_tahun, t.status_pembayaran
       FROM tagihans t
       JOIN pelanggans p ON t.pelanggan_id = p.id
-      JOIN users u       ON p.user_id = u.id
-      WHERE to_date(t.bulan_tahun, 'MM-YYYY') BETWEEN @from AND @to;
+      JOIN users u ON p.user_id = u.id
+      WHERE t.bulan_tahun LIKE @pattern;
     ''', substitutionValues: {
-      'from': fromDt.toIso8601String().split('T').first,
-      'to': toDt.toIso8601String().split('T').first,
+      'pattern': '%-$yearStr',
     });
 
-    // build map per pelanggan
+    // Buat peta per pelanggan
     final Map<int, Map<String, String>> statusMap = {};
     final Map<int, String> nameMap = {};
     for (final r in rows) {
