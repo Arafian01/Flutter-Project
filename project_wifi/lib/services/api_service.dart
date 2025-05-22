@@ -9,6 +9,8 @@ import '../models/tagihan.dart';
 import '../models/pembayaran.dart';
 import '../models/report_item.dart';
 import '../models/dashboard_user.dart';
+import '../models/total_income_report.dart';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Header JSON dan optional Authorization
@@ -282,16 +284,25 @@ class DashboardUserService {
 }
 
 class ReportService {
-  /// GET /report?year=YYYY
-  static Future<Map<String, dynamic>> fetchReport({
-    required int year,
-  }) async {
-    final uri = Uri.parse('${AppConstants.baseUrl}/report?year=$year');
-    final resp = await http.get(uri).timeout(const Duration(seconds: 10));
-    if (resp.statusCode != 200) {
-      throw Exception('Gagal memuat laporan (${resp.statusCode})');
+  static Future<Map<String, dynamic>> fetchReport({required int year}) async {
+    final response = await http.get(
+      Uri.parse('${AppConstants.baseUrl}/report?year=$year'),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
     }
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
-    return body; // Kembalikan data mentah tanpa pemetaan ke ReportItem
+    throw Exception('Gagal memuat laporan pembayaran: ${response.statusCode}');
+  }
+
+  static Future<List<TotalIncomeReport>> fetchTotalIncomeReport(int year) async {
+    final response = await http.get(
+      Uri.parse('${AppConstants.baseUrl}/report/total_income?year=$year'),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final List<dynamic> reportData = data['data'] as List<dynamic>;
+      return reportData.map((json) => TotalIncomeReport.fromJson(json)).toList();
+    }
+    throw Exception('Gagal memuat laporan penghasilan: ${response.statusCode}');
   }
 }
