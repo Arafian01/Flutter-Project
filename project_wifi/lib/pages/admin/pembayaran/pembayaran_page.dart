@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/pembayaran.dart';
 import '../../../services/api_service.dart';
+import '../../../utils/constants.dart';
 import '../../../utils/utils.dart';
 
 class PembayaranPage extends StatefulWidget {
@@ -18,6 +19,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
   final _formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+  final _dateFormatter = DateFormat('dd MMMM yyyy', 'id_ID');
 
   @override
   void initState() {
@@ -63,122 +65,16 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
       final parts = bulanTahun.split('-');
       if (parts.length != 2) return bulanTahun;
       final month = int.parse(parts[0]);
-      final year = parts[1];
-      final date = DateTime(int.parse(year), month);
-      return DateFormat('MMMM-yyyy', 'id_ID').format(date);
+      final year = int.parse(parts[1]);
+      final date = DateTime(year, month);
+      return DateFormat('MMMM yyyy', 'id_ID').format(date);
     } catch (e) {
       return bulanTahun;
     }
   }
 
-  void _showDetail(Pembayaran p) {
-    showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppSizes.radiusMedium)),
-      ),
-      backgroundColor: AppColors.backgroundLight,
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(AppSizes.paddingLarge),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.payment, color: AppColors.primaryRed, size: AppSizes.iconSizeMedium),
-                  const SizedBox(width: AppSizes.paddingSmall),
-                  Expanded(
-                    child: Text(
-                      'Pelanggan: ${p.pelangganName}',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.primaryRed,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSizes.paddingMedium),
-              Text(
-                'Periode: ${_formatBulanTahun(p.bulanTahun)}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-              ),
-              Text(
-                'Harga: ${_formatter.format(p.harga)}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-              ),
-              Text(
-                'Status: ${p.statusVerifikasi.replaceAll('_', ' ').toUpperCase()}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-              ),
-              Text(
-                'Dikirim: ${p.tanggalKirim.toLocal().toIso8601String().split('T')[0]}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-              ),
-              if (p.tanggalVerifikasi != null)
-                Text(
-                  'Verifikasi: ${p.tanggalVerifikasi!.toLocal().toIso8601String().split('T')[0]}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-                ),
-              const SizedBox(height: AppSizes.paddingMedium),
-              if (p.image != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                  child: Image.network(
-                    p.image!,
-                    height: 150,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.error, color: Colors.red),
-                  ),
-                ),
-              const SizedBox(height: AppSizes.paddingLarge),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.textSecondary,
-                      foregroundColor: AppColors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/edit_pembayaran', arguments: p).then((r) {
-                        if (r == true) {
-                          _load();
-                          _checkSuccessMessage();
-                        }
-                      });
-                    },
-                    child: const Text('Edit'),
-                  ),
-                  const SizedBox(width: AppSizes.paddingMedium),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryRed,
-                      foregroundColor: AppColors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _confirmDelete(p.id);
-                    },
-                    child: const Text('Hapus'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  String _formatStatus(String status) {
+    return status.replaceAll('_', ' ').toUpperCase();
   }
 
   void _confirmDelete(int id) {
@@ -321,71 +217,208 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
   }
 
   Widget _buildPembayaranCard(Pembayaran p) {
+    final imageUrl = p.image.isNotEmpty ? '${AppConstants.baseUrl}${p.image}' : null;
+    print('Image URL for ${p.id}: $imageUrl'); // Log untuk debugging
+
     return FadeTransition(
       opacity: _fadeAnimation,
       child: ScaleTransition(
         scale: _scaleAnimation,
-        child: InkWell(
-          onTap: () => _showDetail(p),
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primaryRed, AppColors.secondaryRed],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppColors.primaryRed, AppColors.secondaryRed],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
               ),
+            ],
+          ),
+          child: ExpansionTile(
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+            ),
+            collapsedShape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+            ),
+            backgroundColor: Colors.transparent,
+            collapsedBackgroundColor: Colors.transparent,
+            title: Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: AppColors.white.withOpacity(0.2),
+                  child: Icon(
+                    Icons.payment,
+                    size: AppSizes.iconSizeMedium,
+                    color: AppColors.white,
+                  ),
+                ),
+                const SizedBox(width: AppSizes.paddingMedium),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${_formatBulanTahun(p.bulanTahun)} - ${p.pelangganName}',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.paddingSmall),
+                      Text(
+                        'Status: ${_formatStatus(p.statusVerifikasi)} • ${_formatter.format(p.harga)}',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.white.withOpacity(0.9),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSizes.paddingMedium),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: AppColors.white.withOpacity(0.2),
-                    child: Icon(
-                      Icons.payment,
-                      size: AppSizes.iconSizeMedium,
-                      color: AppColors.white,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(AppSizes.paddingMedium),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Detail Pembayaran',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppSizes.paddingMedium),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '${_formatBulanTahun(p.bulanTahun)} - ${p.pelangganName}',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                    const SizedBox(height: AppSizes.paddingSmall),
+                    Text(
+                      'Tagihan ID: ${p.tagihanId}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.white.withOpacity(0.9),
+                      ),
+                    ),
+                    Text(
+                      'Pelanggan: ${p.pelangganName}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.white.withOpacity(0.9),
+                      ),
+                    ),
+                    Text(
+                      'Periode: ${_formatBulanTahun(p.bulanTahun)}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.white.withOpacity(0.9),
+                      ),
+                    ),
+                    Text(
+                      'Harga: ${_formatter.format(p.harga)}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.white.withOpacity(0.9),
+                      ),
+                    ),
+                    Text(
+                      'Status: ${_formatStatus(p.statusVerifikasi)}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.white.withOpacity(0.9),
+                      ),
+                    ),
+                    Text(
+                      'Dikirim: ${_dateFormatter.format(p.tanggalKirim.toLocal())}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.white.withOpacity(0.9),
+                      ),
+                    ),
+                    if (p.tanggalVerifikasi != null)
+                      Text(
+                        'Verifikasi: ${_dateFormatter.format(p.tanggalVerifikasi!.toLocal())}',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.white.withOpacity(0.9),
                         ),
-                        const SizedBox(height: AppSizes.paddingSmall),
-                        Text(
-                          'Status: ${p.statusVerifikasi.replaceAll('_', ' ').toUpperCase()} • ${_formatter.format(p.harga)}',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.white.withOpacity(0.9),
+                      ),
+                    const SizedBox(height: AppSizes.paddingMedium),
+                    const Text(
+                      'Bukti Pembayaran:',
+                      style: TextStyle(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.paddingSmall),
+                    imageUrl != null
+                        ? ClipRRect(
+                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                      child: Image.network(
+                        imageUrl,
+                        height: 150,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return const Center(child: CircularProgressIndicator());
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          print('Error loading image for ${p.id}: $error');
+                          return const Text(
+                            'Gagal memuat gambar',
+                            style: TextStyle(color: AppColors.white),
+                          );
+                        },
+                      ),
+                    )
+                        : const Text(
+                      'Gambar tidak tersedia',
+                      style: TextStyle(color: AppColors.white),
+                    ),
+                    const SizedBox(height: AppSizes.paddingLarge),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.textSecondary,
+                            foregroundColor: AppColors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/edit_pembayaran', arguments: p).then((r) {
+                              if (r == true) {
+                                _load();
+                                _checkSuccessMessage();
+                              }
+                            });
+                          },
+                          child: const Text('Edit'),
+                        ),
+                        const SizedBox(width: AppSizes.paddingMedium),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryRed,
+                            foregroundColor: AppColors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                            ),
+                          ),
+                          onPressed: () => _confirmDelete(p.id),
+                          child: const Text('Hapus'),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
