@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../../utils/utils.dart';
 
 class ProfilPage extends StatefulWidget {
@@ -10,7 +11,6 @@ class ProfilPage extends StatefulWidget {
 }
 
 class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateMixin {
-  final _storage = const FlutterSecureStorage();
   String? _name, _email, _telepon, _alamat;
   String? _namaPaket, _status, _tanggalAktif, _tanggalLangganan;
   late AnimationController _controller;
@@ -41,29 +41,27 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
   }
 
   Future<void> _loadProfile() async {
-    final name = await _storage.read(key: 'name') ?? '-';
-    final email = await _storage.read(key: 'email') ?? '-';
-    final telepon = await _storage.read(key: 'telepon') ?? '-';
-    final alamat = await _storage.read(key: 'alamat') ?? '-';
-    final namaPaket = await _storage.read(key: 'namaPaket') ?? '-';
-    final status = await _storage.read(key: 'status') ?? '-';
-    final tanggalAktif = await _storage.read(key: 'tanggalAktif') ?? '-';
-    final tanggalLangganan = await _storage.read(key: 'tanggalLangganan') ?? '-';
+    final prefs = await SharedPreferences.getInstance();
+    final pelangganData = prefs.getString('pelanggan_data');
 
-    setState(() {
-      _name = name;
-      _email = email;
-      _telepon = telepon;
-      _alamat = alamat;
-      _namaPaket = namaPaket;
-      _status = status;
-      _tanggalAktif = tanggalAktif;
-      _tanggalLangganan = tanggalLangganan;
-    });
+    if (pelangganData != null) {
+      final data = jsonDecode(pelangganData);
+      setState(() {
+        _name = data['name'] ?? '-';
+        _email = data['email'] ?? '-';
+        _telepon = data['telepon'] ?? '-';
+        _alamat = data['alamat'] ?? '-';
+        _namaPaket = data['namaPaket'] ?? '-';
+        _status = data['status'] ?? '-';
+        _tanggalAktif = data['tanggalAktif'] ?? '-';
+        _tanggalLangganan = data['tanggalLangganan'] ?? '-';
+      });
+    }
   }
 
   Future<void> _logout() async {
-    await _storage.deleteAll();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
     Navigator.pushReplacementNamed(context, '/login');
   }
 
@@ -94,12 +92,6 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
           ),
         ],
       ),
-    );
-  }
-
-  void _editProfile() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Fitur edit profil belum tersedia')),
     );
   }
 
@@ -302,51 +294,25 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
                 _buildInfoCard(Icons.check_circle, 'Tanggal Aktif', _tanggalAktif),
                 _buildInfoCard(Icons.calendar_today, 'Tanggal Langganan', _tanggalLangganan),
                 const SizedBox(height: AppSizes.paddingLarge),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _editProfile,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.white,
-                          foregroundColor: AppColors.primaryRed,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: AppSizes.paddingMedium,
-                            horizontal: AppSizes.paddingLarge,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                          ),
-                        ),
-                        child: const Text(
-                          'Edit Profil',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _showLogoutDialog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.white,
+                      foregroundColor: AppColors.primaryRed,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSizes.paddingMedium,
+                        horizontal: AppSizes.paddingLarge,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                       ),
                     ),
-                    const SizedBox(width: AppSizes.paddingMedium),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _showLogoutDialog,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.white,
-                          foregroundColor: AppColors.primaryRed,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: AppSizes.paddingMedium,
-                            horizontal: AppSizes.paddingLarge,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                          ),
-                        ),
-                        child: const Text(
-                          'Logout',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
+                    child: const Text(
+                      'Logout',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                  ],
+                  ),
                 ),
                 const SizedBox(height: AppSizes.paddingLarge),
               ],
