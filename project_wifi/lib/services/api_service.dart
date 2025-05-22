@@ -252,12 +252,14 @@ class PembayaranService {
   /// Tambah pembayaran (user)
   static Future<void> createPembayaranUser({
     required int pelangganId,
+    required int tagihanId,
     required String bulanTahun,
     required String statusVerifikasi,
     required File imageFile,
   }) async {
-    final uri = Uri.parse('${AppConstants.baseUrl}/pembayaran/pelanggan/$pelangganId');
+    final uri = Uri.parse('${AppConstants.baseUrl}/pembayaran');
     final req = http.MultipartRequest('POST', uri)
+      ..fields['tagihan_id'] = tagihanId.toString()
       ..fields['bulan_tahun'] = bulanTahun
       ..fields['status_verifikasi'] = statusVerifikasi
       ..files.add(await http.MultipartFile.fromPath('image', imageFile.path));
