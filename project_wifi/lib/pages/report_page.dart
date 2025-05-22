@@ -186,17 +186,7 @@ class _ReportPageState extends State<ReportPage> {
         title: const Text('Laporan Pembayaran'),
         foregroundColor: AppColors.white,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: AppColors.white,
-            size: AppSizes.iconSizeMedium,
-          ),
-          onPressed: () => Navigator.pop(context),
-          tooltip: 'Kembali',
         ),
-        elevation: 2,
-      ),
       body: Padding(
         padding: const EdgeInsets.all(AppSizes.paddingLarge),
         child: Column(
