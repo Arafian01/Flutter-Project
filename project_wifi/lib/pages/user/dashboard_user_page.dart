@@ -175,78 +175,78 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
     );
   }
 
-  Widget _buildSummaryCard() {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Container(
-          padding: const EdgeInsets.all(AppSizes.paddingMedium),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.primaryRed, AppColors.secondaryRed],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Tagihan Terbaru',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: AppSizes.paddingSmall),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Rp 150,000', // Dummy data
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          'Tagihan Mei 2025',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.white.withOpacity(0.9),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: AppColors.white.withOpacity(0.2),
-                    child: Icon(
-                      Icons.receipt_long,
-                      size: AppSizes.iconSizeMedium,
-                      color: AppColors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget _buildSummaryCard() {
+  //   return FadeTransition(
+  //     opacity: _fadeAnimation,
+  //     child: ScaleTransition(
+  //       scale: _scaleAnimation,
+  //       child: Container(
+  //         padding: const EdgeInsets.all(AppSizes.paddingMedium),
+  //         decoration: BoxDecoration(
+  //           gradient: const LinearGradient(
+  //             colors: [AppColors.primaryRed, AppColors.secondaryRed],
+  //             begin: Alignment.topLeft,
+  //             end: Alignment.bottomRight,
+  //           ),
+  //           borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+  //           boxShadow: [
+  //             BoxShadow(
+  //               color: Colors.black.withOpacity(0.2),
+  //               blurRadius: 8,
+  //               offset: const Offset(0, 4),
+  //             ),
+  //           ],
+  //         ),
+  //         child: Column(
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           children: [
+  //             Text(
+  //               'Tagihan Terbaru',
+  //               style: Theme.of(context).textTheme.titleMedium?.copyWith(
+  //                 color: AppColors.white,
+  //                 fontWeight: FontWeight.bold,
+  //               ),
+  //             ),
+  //             const SizedBox(height: AppSizes.paddingSmall),
+  //             Row(
+  //               children: [
+  //                 Expanded(
+  //                   child: Column(
+  //                     crossAxisAlignment: CrossAxisAlignment.start,
+  //                     children: [
+  //                       Text(
+  //                         'Rp 150,000', // Dummy data
+  //                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+  //                           color: AppColors.white,
+  //                           fontWeight: FontWeight.bold,
+  //                         ),
+  //                       ),
+  //                       Text(
+  //                         'Tagihan Mei 2025',
+  //                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+  //                           color: AppColors.white.withOpacity(0.9),
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ),
+  //                 CircleAvatar(
+  //                   radius: 24,
+  //                   backgroundColor: AppColors.white.withOpacity(0.2),
+  //                   child: Icon(
+  //                     Icons.receipt_long,
+  //                     size: AppSizes.iconSizeMedium,
+  //                     color: AppColors.white,
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -482,8 +482,8 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
                         ],
                       ),
                     ),
-                  const SizedBox(height: AppSizes.paddingLarge),
-                  _buildSummaryCard(),
+                  // const SizedBox(height: AppSizes.paddingLarge),
+                  // _buildSummaryCard(),
                 ],
               ),
             );
