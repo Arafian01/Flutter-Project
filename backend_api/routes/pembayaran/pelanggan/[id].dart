@@ -31,6 +31,7 @@ Future<Response> onRequest(RequestContext context, String id) async {
       JOIN pelanggans p     ON t.pelanggan_id  = p.id
       JOIN users u          ON p.user_id       = u.id
       JOIN pakets pk        ON p.paket_id      = pk.id
+      WHERE t.pelanggan_id = @pid
       ORDER BY pm.id;
       ''', substitutionValues: {'pid': pelangganId});
 
