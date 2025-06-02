@@ -1,10 +1,10 @@
 import 'package:dart_frog/dart_frog.dart';
 import '../../lib/database.dart';
 
-List<String> _generateMonths(int year) {
-  final result = <String>[];
+List<Map<String, dynamic>> _generateMonths(int year) {
+  final result = <Map<String, dynamic>>[];
   for (var month = 1; month <= 12; month++) {
-    result.add('${month.toString().padLeft(2, '0')}-$year');
+    result.add({'bulan': month, 'tahun': year});
   }
   return result;
 }
@@ -28,28 +28,25 @@ Future<Response> onRequest(RequestContext context) async {
 
   final conn = await createConnection();
   try {
-    // Ambil semua tagihan untuk tahun tertentu
     final rows = await conn.query('''
       SELECT p.id AS pelanggan_id, u.name AS nama,
-             t.bulan_tahun, t.status_pembayaran
+             t.bulan, t.tahun, t.status_pembayaran
       FROM tagihans t
       JOIN pelanggans p ON t.pelanggan_id = p.id
       JOIN users u ON p.user_id = u.id
-      WHERE t.bulan_tahun LIKE @pattern;
-    ''', substitutionValues: {
-      'pattern': '%-$yearStr',
-    });
+      WHERE t.tahun = @year;
+    ''', substitutionValues: {'year': year});
 
-    // Buat peta per pelanggan
     final Map<int, Map<String, String>> statusMap = {};
     final Map<int, String> nameMap = {};
     for (final r in rows) {
       final pid = r[0] as int;
       final nama = r[1] as String;
-      final bt = r[2] as String;
-      final st = r[3] as String;
+      final bulan = r[2] as int;
+      final tahun = r[3] as int;
+      final st = r[4] as String;
       nameMap[pid] = nama;
-      statusMap.putIfAbsent(pid, () => {})[bt] = st;
+      statusMap.putIfAbsent(pid, () => {})['$bulan-$tahun'] = st;
     }
 
     final report = <Map<String, dynamic>>[];
@@ -59,7 +56,8 @@ Future<Response> onRequest(RequestContext context) async {
         'nama': nameMap[pid],
       };
       for (final m in months) {
-        entry[m] = statusMap[pid]?[m] ?? '-';
+        final key = '${m['bulan']}-${m['tahun']}';
+        entry[key] = statusMap[pid]?[key] ?? '-';
       }
       report.add(entry);
     }
