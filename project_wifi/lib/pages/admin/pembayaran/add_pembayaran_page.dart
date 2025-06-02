@@ -229,7 +229,7 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
                         items: _tagihans.map((t) {
                           return DropdownMenuItem(
                             value: t,
-                            child: Text('${_formatBulanTahun(t.bulanTahun)} • ${_formatter.format(t.harga)} • ${t.pelangganName}'),
+                            child: Text('${t.bulan} • ${_formatter.format(t.harga)} • ${t.pelangganName}'),
                           );
                         }).toList(),
                         onChanged: (v) => setState(() => _selected = v),
