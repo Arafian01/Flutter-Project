@@ -9,7 +9,7 @@ import '../pages/user/tagihan/tagihan_user_page.dart';
 import '../pages/user/profil_page.dart';
 import '../pages/user/pembayaran/pembayaran_user_page.dart';
 import '../pages/report_page.dart';
-import '../utils/utils.dart'; // Impor utils.dart
+import '../utils/utils.dart';
 
 class MainLayout extends StatefulWidget {
   final String role;
@@ -29,77 +29,89 @@ class _MainLayoutState extends State<MainLayout> {
     super.initState();
     if (widget.role == 'admin') {
       _pages = [
-        DashboardAdminPage(),
-        PaketPage(),
-        PelangganPage(),
-        TagihanPage(),
-        PembayaranPage(),
-        ReportPage(),
+        const DashboardAdminPage(),
+        const PaketPage(),
+        const PelangganPage(),
+        const TagihanPage(),
+        const PembayaranPage(),
+        const ReportPage(),
       ];
       _items = [
         BottomNavigationBarItem(
-          icon: Icon(Icons.dashboard, size: AppSizes.iconSizeMedium),
+          icon: const Icon(Icons.dashboard, size: AppSizes.iconSizeMedium),
           label: 'Dashboard',
+          tooltip: 'Dashboard Admin',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.wifi, size: AppSizes.iconSizeMedium),
+          icon: const Icon(Icons.wifi, size: AppSizes.iconSizeMedium),
           label: 'Paket',
+          tooltip: 'Kelola Paket',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.people, size: AppSizes.iconSizeMedium),
+          icon: const Icon(Icons.people, size: AppSizes.iconSizeMedium),
           label: 'Pelanggan',
+          tooltip: 'Kelola Pelanggan',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.receipt, size: AppSizes.iconSizeMedium),
+          icon: const Icon(Icons.receipt, size: AppSizes.iconSizeMedium),
           label: 'Tagihan',
+          tooltip: 'Kelola Tagihan',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.payment, size: AppSizes.iconSizeMedium),
+          icon: const Icon(Icons.payment, size: AppSizes.iconSizeMedium),
           label: 'Pembayaran',
+          tooltip: 'Verifikasi Pembayaran',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.report, size: AppSizes.iconSizeMedium),
-          label: 'Report',
+          icon: const Icon(Icons.report, size: AppSizes.iconSizeMedium),
+          label: 'Laporan',
+          tooltip: 'Lihat Laporan',
         ),
       ];
     } else if (widget.role == 'pelanggan') {
       _pages = [
-        DashboardUserPage(),
-        TagihanUserPage(),
-        PembayaranUserPage(),
-        ProfilPage(),
+        const DashboardUserPage(),
+        const TagihanUserPage(),
+        const PembayaranUserPage(),
+        const ProfilPage(),
       ];
       _items = [
         BottomNavigationBarItem(
-          icon: Icon(Icons.dashboard, size: AppSizes.iconSizeMedium),
+          icon: const Icon(Icons.dashboard, size: AppSizes.iconSizeMedium),
           label: 'Dashboard',
+          tooltip: 'Ringkasan',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.receipt, size: AppSizes.iconSizeMedium),
-          label: 'Tagihan User',
+          icon: const Icon(Icons.receipt, size: AppSizes.iconSizeMedium),
+          label: 'Tagihan',
+          tooltip: 'Lihat Tagihan',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.payment, size: AppSizes.iconSizeMedium),
+          icon: const Icon(Icons.payment, size: AppSizes.iconSizeMedium),
           label: 'Pembayaran',
+          tooltip: 'Riwayat Pembayaran',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person, size: AppSizes.iconSizeMedium),
+          icon: const Icon(Icons.person, size: AppSizes.iconSizeMedium),
           label: 'Profil',
+          tooltip: 'Profil Pengguna',
         ),
       ];
     } else if (widget.role == 'owner') {
       _pages = [
-        DashboardAdminPage(),
-        ReportPage(),
+        const DashboardAdminPage(),
+        const ReportPage(),
       ];
       _items = [
         BottomNavigationBarItem(
-          icon: Icon(Icons.dashboard, size: AppSizes.iconSizeMedium),
+          icon: const Icon(Icons.dashboard, size: AppSizes.iconSizeMedium),
           label: 'Dashboard',
+          tooltip: 'Ringkasan',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.report, size: AppSizes.iconSizeMedium),
-          label: 'Report',
+          icon: const Icon(Icons.report, size: AppSizes.iconSizeMedium),
+          label: 'Laporan',
+          tooltip: 'Lihat Laporan',
         ),
       ];
     }
@@ -112,21 +124,22 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight, // Latar belakang abu-abu muda
+      backgroundColor: AppColors.backgroundLight,
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         items: _items,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: AppColors.primaryRed, // Merah untuk item terpilih
-        unselectedItemColor: AppColors.textSecondary, // Abu-abu untuk item tidak terpilih
-        backgroundColor: AppColors.white, // Latar belakang putih
-        elevation: 8.0, // Bayangan untuk kesan mengambang
+        selectedItemColor: AppColors.primaryBlue,
+        unselectedItemColor: AppColors.textSecondary,
+        backgroundColor: AppColors.white,
+        elevation: 10,
         type: BottomNavigationBarType.fixed,
-        selectedFontSize: 12.0, // Ukuran font label terpilih
-        unselectedFontSize: 10.0, // Ukuran font label tidak terpilih
+        selectedFontSize: 14,
+        unselectedFontSize: 12,
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
         unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w400),
+        showUnselectedLabels: true,
       ),
     );
   }
