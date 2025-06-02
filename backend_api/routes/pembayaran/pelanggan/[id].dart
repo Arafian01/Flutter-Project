@@ -1,7 +1,3 @@
-// routes/pembayaran/pelanggan/[id].dart
-
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:dart_frog/dart_frog.dart';
 import '../../../lib/database.dart';
 import '../../../lib/models/pembayaran.dart';
@@ -17,31 +13,37 @@ Future<Response> onRequest(RequestContext context, String id) async {
     if (context.request.method == HttpMethod.get) {
       final rows = await conn.query('''
         SELECT
-        pm.id,
-        pm.tagihan_id,
-        pm.image,
-        pm.tanggal_kirim,
-        pm.status_verifikasi,
-        pm.tanggal_verifikasi,
-        u.name            AS pelanggan_name,
-        t.bulan_tahun,
-        pk.harga
-      FROM pembayarans pm
-      JOIN tagihans t       ON pm.tagihan_id   = t.id
-      JOIN pelanggans p     ON t.pelanggan_id  = p.id
-      JOIN users u          ON p.user_id       = u.id
-      JOIN pakets pk        ON p.paket_id      = pk.id
-      WHERE t.pelanggan_id = @pid
-      ORDER BY pm.id;
+          pm.id,
+          pm.tagihan_id,
+          pm.image,
+          pm.tanggal_kirim,
+          pm.status_verifikasi,
+          pm.tanggal_verifikasi,
+          u.name AS pelanggan_name,
+          t.bulan,
+          t.tahun,
+          pk.harga
+        FROM pembayarans pm
+        JOIN tagihans t ON pm.tagihan_id = t.id
+        JOIN pelanggans p ON t.pelanggan_id = p.id
+        JOIN users u ON p.user_id = u.id
+        JOIN pakets pk ON p.paket_id = pk.id
+        WHERE t.pelanggan_id = @pid
+        ORDER BY 
+          CASE pm.status_verifikasi
+            WHEN 'menunggu_verifikasi' THEN 1
+            WHEN 'ditolak' THEN 2
+            WHEN 'diterima' THEN 3
+            ELSE 4
+          END,
+          t.tahun ASC,
+          t.bulan DESC;
       ''', substitutionValues: {'pid': pelangganId});
 
       return Response.json(
         body: rows.map((r) => Pembayaran.fromRow(r).toJson()).toList(),
       );
     }
-
-    // pelanggan tidak boleh POST di sini—pakai /pembayaran untuk admin,
-    // atau endpoint khusus untuk user jika memang diperlukan.
 
     return Response.json(statusCode: 405, body: {'error': 'Method Not Allowed'});
   } catch (e) {
