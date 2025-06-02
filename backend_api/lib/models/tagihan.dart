@@ -1,7 +1,7 @@
 class Tagihan {
   final int? id;
   final int pelangganId;
-  final String name;
+  final String name; // nama pelanggan
   final int bulan;
   final int tahun;
   final String statusPembayaran;
