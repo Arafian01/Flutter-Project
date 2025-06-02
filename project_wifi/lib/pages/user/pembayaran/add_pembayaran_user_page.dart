@@ -1,116 +1,84 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-import '../../../models/tagihan.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import '../../../services/api_service.dart';
+import '../../../models/tagihan.dart';
 import '../../../utils/utils.dart';
 
+String formatBulanTahunFromInt(int bulan, int tahun) {
+  initializeDateFormatting('id_ID');
+  try {
+    final date = DateTime(tahun, bulan);
+    return DateFormat('MMMM yyyy', 'id_ID').format(date);
+  } catch (e) {
+    return '$bulan-$tahun';
+  }
+}
+
 class AddPembayaranUserPage extends StatefulWidget {
-  const AddPembayaranUserPage({Key? key}) : super(key: key);
+  final Tagihan tagihan;
+  final int pelangganId;
+
+  const AddPembayaranUserPage({
+    Key? key,
+    required this.tagihan,
+    required this.pelangganId,
+  }) : super(key: key);
 
   @override
   State<AddPembayaranUserPage> createState() => _AddPembayaranUserPageState();
 }
 
-class _AddPembayaranUserPageState extends State<AddPembayaranUserPage> with SingleTickerProviderStateMixin {
-  File? _image;
+class _AddPembayaranUserPageState extends State<AddPembayaranUserPage> {
+  File? _imageFile;
   bool _isLoading = false;
-  final _picker = ImagePicker();
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   Future<void> _pickImage() async {
-    final picked = await _picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) setState(() => _image = File(picked.path));
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() => _imageFile = File(picked.path));
+    }
   }
 
-  Future<void> _submit(Tagihan tagihan) async {
-    if (_image == null) {
+  Future<void> _submitPembayaran() async {
+    if (_imageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pilih gambar bukti pembayaran')),
+        const SnackBar(content: Text('Pilih bukti pembayaran terlebih dahulu')),
       );
       return;
     }
 
     setState(() => _isLoading = true);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final pelangganData = prefs.getString('pelanggan_data');
-      if (pelangganData == null) throw Exception('Data pelanggan tidak ditemukan');
-
-      final data = jsonDecode(pelangganData) as Map<String, dynamic>;
-      final pelangganId = data['pelanggan_id'] as int?;
-      if (pelangganId == null) throw Exception('ID pelanggan tidak valid');
-
       await PembayaranService.createPembayaranUser(
-        pelangganId: pelangganId,
-        tagihanId: tagihan.id,
-        bulanTahun: tagihan.bulanTahun,
+        pelangganId: widget.pelangganId,
+        tagihanId: widget.tagihan.id,
+        bulan: widget.tagihan.bulan,
+        tahun: widget.tagihan.tahun,
         statusVerifikasi: 'menunggu_verifikasi',
-        imageFile: _image!,
+        imageFile: _imageFile!,
       );
-
+      Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pembayaran berhasil dikirim')),
       );
-      Navigator.pop(context, true);
     } catch (e) {
-      final errorMessage = e.toString().contains('409')
-          ? 'Tagihan ini sudah dibayar'
-          : 'Gagal mengirim pembayaran: $e';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  String formatBulanTahun(String bulanTahun) {
-    try {
-      final parts = bulanTahun.split('-');
-      if (parts.length != 2) return bulanTahun;
-      final month = int.parse(parts[0]);
-      final year = int.parse(parts[1]);
-      final date = DateTime(year, month);
-      return DateFormat('MMMM yyyy', 'id_ID').format(date);
-    } catch (e) {
-      return bulanTahun;
-    }
+  String _formatRupiah(int amount) {
+    final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    return formatter.format(amount);
   }
 
   @override
   Widget build(BuildContext context) {
-    final tagihan = ModalRoute.of(context)!.settings.arguments as Tagihan?;
-
-    if (tagihan == null) {
-      return const Scaffold(
-        body: Center(child: Text('Data tagihan tidak valid')),
-      );
-    }
-
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
@@ -118,107 +86,73 @@ class _AddPembayaranUserPageState extends State<AddPembayaranUserPage> with Sing
         title: const Text('Tambah Pembayaran'),
         foregroundColor: AppColors.white,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(AppSizes.paddingMedium),
-        child: FadeTransition(
-          opacity: _fadeAnimation,
+        padding: const EdgeInsets.all(AppSizes.paddingLarge),
+        child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(AppSizes.paddingMedium),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primaryRed, AppColors.secondaryRed],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Periode: ${formatBulanTahun(tagihan.bulanTahun)}',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.bold,
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSizes.paddingMedium),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Detail Tagihan',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: AppSizes.paddingSmall),
-                    Text(
-                      'Harga: Rp ${tagihan.harga}',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppColors.white,
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.paddingSmall),
-                    Text(
-                      'Status: ${tagihan.statusPembayaran}',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppColors.white,
-                      ),
-                    ),
-                  ],
+                      const SizedBox(height: AppSizes.paddingSmall),
+                      Text('Bulan: ${formatBulanTahunFromInt(widget.tagihan.bulan, widget.tagihan.tahun)}'), // Updated
+                      Text('Harga: ${_formatRupiah(widget.tagihan.harga)}'),
+                      Text('Status: ${widget.tagihan.statusPembayaran}'),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: AppSizes.paddingMedium),
-              Text(
+              const Text(
                 'Bukti Pembayaran',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               const SizedBox(height: AppSizes.paddingSmall),
               GestureDetector(
-                onTap: _isLoading ? null : _pickImage,
+                onTap: _pickImage,
                 child: Container(
-                  height: 150,
+                  height: 200,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: AppColors.white.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                    border: Border.all(color: AppColors.primaryRed),
+                    border: Border.all(color: AppColors.textSecondary.withOpacity(0.3)),
                   ),
-                  child: _image == null
-                      ? const Center(
-                    child: Icon(
-                      Icons.add_photo_alternate,
-                      size: 50,
-                      color: AppColors.primaryRed,
-                    ),
-                  )
-                      : Image.file(_image!, fit: BoxFit.cover),
+                  child: _imageFile == null
+                      ? const Center(child: Text('Ketuk untuk pilih gambar'))
+                      : Image.file(_imageFile!, fit: BoxFit.cover),
                 ),
               ),
-              const SizedBox(height: AppSizes.paddingMedium),
-              SizedBox(
+              const SizedBox(height: AppSizes.paddingLarge),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : () => _submit(tagihan),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryRed,
-                    foregroundColor: AppColors.white,
                     padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingMedium),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                     ),
                   ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: AppColors.white)
-                      : const Text('Kirim Pembayaran', style: TextStyle(fontSize: 16)),
+                  onPressed: _submitPembayaran,
+                  child: const Text('Kirim Pembayaran'),
                 ),
               ),
             ],
