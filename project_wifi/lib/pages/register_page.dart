@@ -81,7 +81,7 @@ class _RegisterPageState extends State<RegisterPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK', style: TextStyle(color: AppColors.primaryRed)),
+            child: const Text('OK', style: TextStyle(color: AppColors.accentRed)),
           ),
         ],
       ),
@@ -106,17 +106,11 @@ class _RegisterPageState extends State<RegisterPage> {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryRed,
-        title: const Text(
-          'Daftar Akun',
-          style: TextStyle(color: AppColors.white),
-        ),
+        backgroundColor: AppColors.primaryBlue,
+        title: const Text('Daftar Akun'),
+        foregroundColor: AppColors.white,
         centerTitle: true,
-        leading: const Icon(
-          Icons.wifi,
-          color: AppColors.white,
-          size: AppSizes.iconSizeMedium,
-        ),
+        leading: const Icon(Icons.wifi, size: AppSizes.iconSizeMedium),
       ),
       body: Center(
         child: isSmallScreen
@@ -227,7 +221,7 @@ class _FormContent extends StatelessWidget {
             Text(
               'StrongNet',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: AppColors.primaryRed,
+                color: AppColors.primaryBlue,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -250,9 +244,7 @@ class _FormContent extends StatelessWidget {
                 labelText: 'Pilih Paket',
                 prefixIcon: Icon(Icons.wifi, color: AppColors.textSecondary),
               ),
-              items: pakets
-                  .map((p) => DropdownMenuItem(value: p, child: Text(p.namaPaket)))
-                  .toList(),
+              items: pakets.map((p) => DropdownMenuItem(value: p, child: Text(p.namaPaket))).toList(),
               onChanged: onPaketChanged,
               validator: (v) => v == null ? 'Pilih paket' : null,
               value: selectedPaket,
@@ -346,22 +338,13 @@ class _FormContent extends StatelessWidget {
             ),
             const SizedBox(height: AppSizes.paddingLarge),
             if (isLoading)
-              const Center(child: CircularProgressIndicator())
+              const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed)))
             else
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.all(AppSizes.paddingSmall),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                    ),
-                  ),
                   onPressed: onRegister,
-                  child: const Text(
-                    'Daftar',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+                  child: const Text('Daftar'),
                 ),
               ),
           ],
