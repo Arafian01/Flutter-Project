@@ -1,4 +1,3 @@
-// routes/tagihan/[id].dart
 import 'dart:convert';
 import 'package:dart_frog/dart_frog.dart';
 import '../../lib/database.dart';
@@ -17,14 +16,15 @@ Future<Response> onRequest(RequestContext context, String id) async {
           SELECT t.id,
                  t.pelanggan_id,
                  u.name AS pelanggan_name,
-                 t.bulan_tahun,
+                 t.bulan,
+                 t.tahun,
                  t.status_pembayaran,
                  t.jatuh_tempo,
                  pk.harga
           FROM tagihans t
           JOIN pelanggans p ON t.pelanggan_id = p.id
-          JOIN users u      ON p.user_id     = u.id
-          JOIN pakets pk    ON p.paket_id     = pk.id
+          JOIN users u ON p.user_id = u.id
+          JOIN pakets pk ON p.paket_id = pk.id
           WHERE t.id = @id;
           ''',
           substitutionValues: {'id': tid},
@@ -42,33 +42,33 @@ Future<Response> onRequest(RequestContext context, String id) async {
           return Response.json(statusCode: 400, body: {'error': 'Invalid status_pembayaran'});
         }
 
-        // recompute jatuh_tempo
-        final bulanTahun = jsonMap['bulan_tahun'] as String;
-        final parts = bulanTahun.split('-');
-        final m = int.parse(parts[0]), y = int.parse(parts[1]);
-        final nm = m == 12 ? 1 : m + 1;
-        final ny = m == 12 ? y + 1 : y;
+        final bulan = jsonMap['bulan'] as int;
+        final tahun = jsonMap['tahun'] as int;
+        final nm = bulan == 12 ? 1 : bulan + 1;
+        final ny = bulan == 12 ? tahun + 1 : tahun;
         final jatuhTempo = DateTime(ny, nm, 5).toIso8601String().split('T')[0];
 
         await connection.query(
           '''
           UPDATE tagihans
-          SET pelanggan_id      = @pid,
-              bulan_tahun       = @bt,
+          SET pelanggan_id = @pid,
+              bulan = @bulan,
+              tahun = @tahun,
               status_pembayaran = @st,
-              jatuh_tempo       = @jt,
-              harga             = (
+              jatuh_tempo = @jt,
+              harga = (
                 SELECT pk.harga
-                  FROM pelanggans pl
-                  JOIN pakets pk ON pl.paket_id = pk.id
-                 WHERE pl.id = @pid
+                FROM pelanggans pl
+                JOIN pakets pk ON pl.paket_id = pk.id
+                WHERE pl.id = @pid
               )
           WHERE id = @id;
           ''',
           substitutionValues: {
             'id': tid,
             'pid': jsonMap['pelanggan_id'],
-            'bt': bulanTahun,
+            'bulan': bulan,
+            'tahun': tahun,
             'st': status,
             'jt': jatuhTempo,
           },
@@ -77,7 +77,9 @@ Future<Response> onRequest(RequestContext context, String id) async {
 
       case HttpMethod.delete:
         await connection.query(
-          'DELETE FROM tagihans WHERE id = @id;', substitutionValues: {'id': tid});
+          'DELETE FROM tagihans WHERE id = @id',
+          substitutionValues: {'id': tid},
+        );
         return Response.json(body: {'message': 'Tagihan deleted'});
 
       default:
