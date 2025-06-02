@@ -1,7 +1,8 @@
 class Pembayaran {
   final int id;
   final int tagihanId;             // sekarang wajib
-  final String bulanTahun;
+  final int bulan; // Ganti dari bulanTahun
+  final int tahun;
   final String image;
   final DateTime tanggalKirim;
   final String statusVerifikasi;
@@ -12,7 +13,8 @@ class Pembayaran {
   Pembayaran({
     required this.id,
     required this.tagihanId,
-    required this.bulanTahun,
+    required this.bulan,
+    required this.tahun,
     required this.image,
     required this.tanggalKirim,
     required this.statusVerifikasi,
@@ -28,7 +30,8 @@ class Pembayaran {
     return Pembayaran(
       id: json['id'] as int,
       tagihanId: json['tagihan_id'] as int,                  // non-null
-      bulanTahun: json['bulan_tahun'] as String? ?? '',
+      bulan: json['bulan'] as int,
+      tahun: json['tahun'] as int,
       image: json['image'] as String? ?? '',
       tanggalKirim: DateTime.parse(json['tanggal_kirim'] as String),
       statusVerifikasi: json['status_verifikasi'] as String? ?? '',
