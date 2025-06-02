@@ -1,25 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import '../../../models/pembayaran.dart';
 import '../../../utils/utils.dart';
 import '../../../utils/constants.dart';
+
+String formatBulanTahunFromInt(int bulan, int tahun) {
+  initializeDateFormatting('id_ID');
+  try {
+    final date = DateTime(tahun, bulan);
+    return DateFormat('MMMM yyyy', 'id_ID').format(date);
+  } catch (e) {
+    return '$bulan-$tahun';
+  }
+}
 
 class DetailPembayaranPage extends StatelessWidget {
   final Pembayaran pembayaran;
 
   const DetailPembayaranPage({Key? key, required this.pembayaran}) : super(key: key);
 
-  String formatBulanTahun(String bulanTahun) {
-    try {
-      final parts = bulanTahun.split('-');
-      if (parts.length != 2) return bulanTahun;
-      final month = int.parse(parts[0]);
-      final year = int.parse(parts[1]);
-      final date = DateTime(year, month);
-      return DateFormat('MMMM yyyy', 'id_ID').format(date);
-    } catch (e) {
-      return bulanTahun;
-    }
+  String _formatRupiah(int amount) {
+    final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    return formatter.format(amount);
   }
 
   @override
@@ -62,7 +65,7 @@ class DetailPembayaranPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Periode: ${formatBulanTahun(pembayaran.bulanTahun)}',
+                    'Periode: ${formatBulanTahunFromInt(pembayaran.bulan, pembayaran.tahun)}',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: AppColors.white,
                       fontWeight: FontWeight.bold,
@@ -70,7 +73,7 @@ class DetailPembayaranPage extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSizes.paddingSmall),
                   Text(
-                    'Harga: Rp ${pembayaran.harga}',
+                    'Harga: ${_formatRupiah(pembayaran.harga)}',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: AppColors.white,
                     ),
@@ -101,14 +104,14 @@ class DetailPembayaranPage extends StatelessWidget {
                         color: AppColors.white,
                       ),
                     ),
-                  if (pembayaran.pelangganName != null)
-                    Text(
-                      'Pelanggan: ${pembayaran.pelangganName}',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppColors.white,
-                      ),
+                  const SizedBox(height: AppSizes.paddingSmall),
+                  Text(
+                    'Pelanggan ID: ${pembayaran.id}',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppColors.white,
                     ),
-                  if (pembayaran.image != null && pembayaran.image!.isNotEmpty) ...[
+                  ),
+                  if (pembayaran.image.isNotEmpty) ...[
                     const SizedBox(height: AppSizes.paddingMedium),
                     Image.network(
                       '${AppConstants.baseUrl}${pembayaran.image}',
