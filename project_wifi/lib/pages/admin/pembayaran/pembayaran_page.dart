@@ -268,7 +268,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        '${_formatBulanTahun(p.bulanTahun)} - ${p.pelangganName}',
+                        '${p.bulan} - ${p.pelangganName}',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: AppColors.white,
                           fontWeight: FontWeight.bold,
@@ -315,7 +315,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
                       ),
                     ),
                     Text(
-                      'Periode: ${_formatBulanTahun(p.bulanTahun)}',
+                      'Periode: ${p.bulan}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.white.withOpacity(0.9),
                       ),
