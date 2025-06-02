@@ -6,7 +6,8 @@ class Pembayaran {
   final String statusVerifikasi;
   final DateTime? tanggalVerifikasi;
   final String pelangganName;
-  final String bulanTahun;
+  final int bulan;
+  final int tahun;
   final int harga;
 
   Pembayaran({
@@ -17,7 +18,8 @@ class Pembayaran {
     required this.statusVerifikasi,
     this.tanggalVerifikasi,
     required this.pelangganName,
-    required this.bulanTahun,
+    required this.bulan,
+    required this.tahun,
     required this.harga,
   });
 
@@ -31,10 +33,11 @@ class Pembayaran {
       image: row[2] as String,
       tanggalKirim: parseDate(row[3]),
       statusVerifikasi: row[4] as String,
-      tanggalVerifikasi:row[5] != null ? parseDate(row[5]) : null,
+      tanggalVerifikasi: row[5] != null ? parseDate(row[5]) : null,
       pelangganName: row[6] as String,
-      bulanTahun: row[7] as String,
-      harga: row[8] as int,
+      bulan: row[7] as int,
+      tahun: row[8] as int,
+      harga: row[9] as int,
     );
   }
 
@@ -47,7 +50,8 @@ class Pembayaran {
         if (tanggalVerifikasi != null)
           'tanggal_verifikasi': tanggalVerifikasi!.toIso8601String(),
         'pelanggan_name': pelangganName,
-        'bulan_tahun': bulanTahun,
+        'bulan': bulan,
+        'tahun': tahun,
         'harga': harga,
       };
 }
