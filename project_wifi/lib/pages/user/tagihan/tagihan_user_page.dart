@@ -7,6 +7,16 @@ import '../../../models/tagihan.dart';
 import '../../../services/api_service.dart';
 import '../../../utils/utils.dart';
 
+String formatBulanTahunFromInt(int bulan, int tahun) {
+  initializeDateFormatting('id_ID');
+  try {
+    final date = DateTime(tahun, bulan);
+    return DateFormat('MMMM yyyy', 'id_ID').format(date);
+  } catch (e) {
+    return '$bulan-$tahun';
+  }
+}
+
 class TagihanUserPage extends StatefulWidget {
   const TagihanUserPage({Key? key}) : super(key: key);
 
@@ -57,19 +67,6 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
     final pid = data['pelanggan_id'] as int?;
     if (pid == null) return [];
     return await TagihanService.fetchTagihansByPelanggan(pid);
-  }
-
-  String formatBulanTahun(String bulanTahun) {
-    try {
-      final parts = bulanTahun.split('-');
-      if (parts.length != 2) return bulanTahun;
-      final month = int.parse(parts[0]);
-      final year = int.parse(parts[1]);
-      final date = DateTime(year, month);
-      return DateFormat('MMMM yyyy', 'id_ID').format(date);
-    } catch (e) {
-      return bulanTahun;
-    }
   }
 
   Widget _buildTagihanCard(Tagihan t, int index) {
@@ -137,7 +134,7 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
               ),
             ),
             title: Text(
-              formatBulanTahun(t.bulanTahun),
+              formatBulanTahunFromInt(t.bulan, t.tahun), // Updated
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: AppColors.white,
