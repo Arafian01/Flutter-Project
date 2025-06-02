@@ -71,7 +71,12 @@ class MyApp extends StatelessWidget {
           final pembayaran = ModalRoute.of(context)!.settings.arguments as Pembayaran;
           return EditPembayaranPage(pembayaran: pembayaran);
         },
-        '/add_pembayaran_user': (_) => AddPembayaranUserPage(),
+        '/add_pembayaran_user': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          final tagihan = args['tagihan'] as Tagihan;
+          final pelangganId = args['pelangganId'] as int;
+          return AddPembayaranUserPage(tagihan: tagihan, pelangganId: pelangganId);
+        },
         '/detail_pembayaran': (context) {
           final pembayaran = ModalRoute.of(context)!.settings.arguments as Pembayaran;
           return DetailPembayaranPage(pembayaran: pembayaran);
