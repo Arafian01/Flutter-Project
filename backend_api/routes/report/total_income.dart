@@ -1,10 +1,10 @@
 import 'package:dart_frog/dart_frog.dart';
 import '../../lib/database.dart';
 
-List<String> _generateMonths(int year) {
-  final result = <String>[];
+List<Map<String, dynamic>> _generateMonths(int year) {
+  final result = <Map<String, dynamic>>[];
   for (var month = 1; month <= 12; month++) {
-    result.add('${month.toString().padLeft(2, '0')}-$year');
+    result.add({'bulan': month, 'tahun': year});
   }
   return result;
 }
@@ -36,22 +36,21 @@ Future<Response> onRequest(RequestContext context) async {
   final conn = await createConnection();
   try {
     final rows = await conn.query('''
-      SELECT bulan_tahun, COALESCE(SUM(harga), 0) as total_harga
+      SELECT bulan, tahun, COALESCE(SUM(harga), 0) as total_harga
       FROM tagihans
-      WHERE status_pembayaran = 'lunas' AND bulan_tahun LIKE @pattern
-      GROUP BY bulan_tahun
-      ORDER BY bulan_tahun
-    ''', substitutionValues: {
-      'pattern': '%-$yearStr',
-    });
+      WHERE status_pembayaran = 'lunas' AND tahun = @year
+      GROUP BY bulan, tahun
+      ORDER BY tahun, bulan
+    ''', substitutionValues: {'year': year});
 
-    final totalMap = { for (var row in rows) row[0] as String : row[1] as int };
+    final totalMap = {for (var row in rows) '${row[0]}-${row[1]}': row[2] as int};
     final report = <Map<String, dynamic>>[];
-    
+
     for (var i = 0; i < months.length; i++) {
+      final key = '${months[i]['bulan']}-${months[i]['tahun']}';
       report.add({
-        'month': '${monthNames[i]} $year',
-        'total_harga': totalMap[months[i]] ?? 0,
+        'month': '${monthNames[i]} ${months[i]['tahun']}',
+        'total_harga': totalMap[key] ?? 0,
       });
     }
 
