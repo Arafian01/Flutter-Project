@@ -52,10 +52,7 @@ class _LoginPageState extends State<LoginPage> {
           final body = jsonDecode(response.body) as Map<String, dynamic>;
           final user = body['user'] as Map<String, dynamic>;
           final role = user['role'] as String;
-          // final token = body['token'] as String?;
           final userId = user['id'] as int;
-
-          // Simpan data ke SharedPreferences
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('role', role);
           await prefs.setInt('user_id', userId);
@@ -63,7 +60,6 @@ class _LoginPageState extends State<LoginPage> {
           if (role == 'pelanggan') {
             try {
               final pelanggan = await fetchPelangganByUserId(userId);
-              // Simpan sebagai JSON untuk efisiensi
               final pelangganData = jsonEncode({
                 'pelanggan_id': pelanggan.id,
                 'name': pelanggan.name,
@@ -76,9 +72,7 @@ class _LoginPageState extends State<LoginPage> {
                 'tanggalLangganan': pelanggan.tanggalLangganan.toString(),
               });
               await prefs.setString('pelanggan_data', pelangganData);
-            } catch (_) {
-              // ignore if no pelanggan record found
-            }
+            } catch (_) {}
           }
 
           Navigator.pushReplacement(
@@ -112,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK', style: TextStyle(color: AppColors.primaryRed)),
+            child: const Text('OK', style: TextStyle(color: AppColors.accentRed)),
           ),
         ],
       ),
@@ -138,14 +132,10 @@ class _LoginPageState extends State<LoginPage> {
               isPasswordVisible: _isPasswordVisible,
               rememberMe: _rememberMe,
               onPasswordVisibilityToggle: () {
-                setState(() {
-                  _isPasswordVisible = !_isPasswordVisible;
-                });
+                setState(() => _isPasswordVisible = !_isPasswordVisible);
               },
               onRememberMeChanged: (value) {
-                setState(() {
-                  _rememberMe = value ?? false;
-                });
+                setState(() => _rememberMe = value ?? false);
               },
               onLogin: _login,
               isLoading: _isLoading,
@@ -167,14 +157,10 @@ class _LoginPageState extends State<LoginPage> {
                     isPasswordVisible: _isPasswordVisible,
                     rememberMe: _rememberMe,
                     onPasswordVisibilityToggle: () {
-                      setState(() {
-                        _isPasswordVisible = !_isPasswordVisible;
-                      });
+                      setState(() => _isPasswordVisible = !_isPasswordVisible);
                     },
                     onRememberMeChanged: (value) {
-                      setState(() {
-                        _rememberMe = value ?? false;
-                      });
+                      setState(() => _rememberMe = value ?? false);
                     },
                     onLogin: _login,
                     isLoading: _isLoading,
@@ -204,7 +190,7 @@ class _Logo extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: const LinearGradient(
-              colors: [AppColors.primaryRed, AppColors.secondaryRed],
+              colors: [AppColors.primaryBlue, AppColors.secondaryBlue],
             ),
           ),
           child: Icon(
@@ -219,7 +205,7 @@ class _Logo extends StatelessWidget {
             "StrongNet",
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: AppColors.primaryRed,
+              color: AppColors.primaryBlue,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -265,40 +251,32 @@ class _FormContent extends StatelessWidget {
             TextFormField(
               controller: emailController,
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Email wajib diisi';
-                }
+                if (value == null || value.isEmpty) return 'Email wajib diisi';
                 bool emailValid = RegExp(
                     r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
                     .hasMatch(value);
-                if (!emailValid) {
-                  return 'Masukkan email yang valid';
-                }
+                if (!emailValid) return 'Masukkan email yang valid';
                 return null;
               },
               decoration: const InputDecoration(
                 labelText: 'Email',
                 hintText: 'Masukkan email Anda',
-                prefixIcon: Icon(Icons.email_outlined),
+                prefixIcon: Icon(Icons.email_outlined, color: AppColors.textSecondary),
               ),
             ),
             const SizedBox(height: AppSizes.paddingMedium),
             TextFormField(
               controller: passwordController,
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Password wajib diisi';
-                }
-                if (value.length < 6) {
-                  return 'Password minimal 6 karakter';
-                }
+                if (value == null || value.isEmpty) return 'Password wajib diisi';
+                if (value.length < 6) return 'Password minimal 6 karakter';
                 return null;
               },
               obscureText: !isPasswordVisible,
               decoration: InputDecoration(
                 labelText: 'Password',
                 hintText: 'Masukkan password Anda',
-                prefixIcon: const Icon(Icons.lock_outline_rounded),
+                prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.textSecondary),
                 suffixIcon: IconButton(
                   icon: Icon(
                     isPasswordVisible ? Icons.visibility_off : Icons.visibility,
@@ -319,37 +297,26 @@ class _FormContent extends StatelessWidget {
               controlAffinity: ListTileControlAffinity.leading,
               dense: true,
               contentPadding: const EdgeInsets.all(0),
-              activeColor: AppColors.primaryRed,
+              activeColor: AppColors.accentRed,
             ),
             const SizedBox(height: AppSizes.paddingMedium),
             if (isLoading)
-              const Center(child: CircularProgressIndicator())
+              const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed)))
             else
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.all(AppSizes.paddingSmall),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                    ),
-                  ),
                   onPressed: onLogin,
-                  child: const Text(
-                    'Sign in',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+                  child: const Text('Sign in'),
                 ),
               ),
             const SizedBox(height: AppSizes.paddingMedium),
             Center(
               child: TextButton(
-                onPressed: isLoading
-                    ? null
-                    : () => Navigator.of(context).pushNamed('/register'),
+                onPressed: isLoading ? null : () => Navigator.of(context).pushNamed('/register'),
                 child: Text(
                   'Belum punya akun? Register di sini',
-                  style: TextStyle(color: AppColors.primaryRed),
+                  style: TextStyle(color: AppColors.accentRed),
                 ),
               ),
             ),
