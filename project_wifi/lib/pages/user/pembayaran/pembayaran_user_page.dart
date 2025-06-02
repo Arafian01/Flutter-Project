@@ -7,17 +7,13 @@ import '../../../models/pembayaran.dart';
 import '../../../services/api_service.dart';
 import '../../../utils/utils.dart';
 
-String formatBulanTahun(String bulanTahun) {
+String formatBulanTahunFromInt(int bulan, int tahun) {
   initializeDateFormatting('id_ID');
   try {
-    final parts = bulanTahun.split('-');
-    if (parts.length != 2) return bulanTahun;
-    final month = int.parse(parts[0]);
-    final year = int.parse(parts[1]);
-    final date = DateTime(year, month);
+    final date = DateTime(tahun, bulan);
     return DateFormat('MMMM yyyy', 'id_ID').format(date);
   } catch (e) {
-    return bulanTahun;
+    return '$bulan-$tahun';
   }
 }
 
@@ -165,7 +161,7 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
                 ),
               ),
               title: Text(
-                formatBulanTahun(p.bulanTahun),
+                formatBulanTahunFromInt(p.bulan, p.tahun), // Updated
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: AppColors.white,
