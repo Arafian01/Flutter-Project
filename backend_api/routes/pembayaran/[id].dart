@@ -1,7 +1,4 @@
-// routes/pembayaran/[id].dart
-
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:dart_frog/dart_frog.dart';
 import '../../lib/database.dart';
 import '../../lib/models/pembayaran.dart';
@@ -17,21 +14,22 @@ Future<Response> onRequest(RequestContext context, String id) async {
       case HttpMethod.get:
         final rows = await conn.query('''
           SELECT
-        pm.id,
-        pm.tagihan_id,
-        pm.image,
-        pm.tanggal_kirim,
-        pm.status_verifikasi,
-        pm.tanggal_verifikasi,
-        u.name            AS pelanggan_name,
-        t.bulan_tahun,
-        pk.harga
-      FROM pembayarans pm
-      JOIN tagihans t       ON pm.tagihan_id   = t.id
-      JOIN pelanggans p     ON t.pelanggan_id  = p.id
-      JOIN users u          ON p.user_id       = u.id
-      JOIN pakets pk        ON p.paket_id      = pk.id
-      ORDER BY pm.id;
+            pm.id,
+            pm.tagihan_id,
+            pm.image,
+            pm.tanggal_kirim,
+            pm.status_verifikasi,
+            pm.tanggal_verifikasi,
+            u.name AS pelanggan_name,
+            t.bulan,
+            t.tahun,
+            pk.harga
+          FROM pembayarans pm
+          JOIN tagihans t ON pm.tagihan_id = t.id
+          JOIN pelanggans p ON t.pelanggan_id = p.id
+          JOIN users u ON p.user_id = u.id
+          JOIN pakets pk ON p.paket_id = pk.id
+          WHERE pm.id = @id;
         ''', substitutionValues: {'id': pid});
         if (rows.isEmpty) {
           return Response.json(statusCode: 404, body: {'error': 'Not found'});
@@ -69,7 +67,7 @@ Future<Response> onRequest(RequestContext context, String id) async {
           final ext = filePart.name.split('.').last;
           newImg = 'img_${DateTime.now().millisecondsSinceEpoch}.$ext';
           await Directory('uploads').create(recursive: true);
-          await File('uploads/$newImg').writeAsBytes(bts);
+          await File('Uploads/$newImg').writeAsBytes(bts);
         }
 
         await conn.transaction((ctx) async {
@@ -82,11 +80,10 @@ Future<Response> onRequest(RequestContext context, String id) async {
           ''', substitutionValues: {
             'st': st,
             'tv': tv,
-            if (newImg != null) 'img': '/uploads/$newImg',
+            if (newImg != null) 'img': '/Uploads/$newImg',
             'id': pid,
           });
 
-          // perbarui status tagihan
           final tid = (await ctx.query(
             'SELECT tagihan_id FROM pembayarans WHERE id = @id',
             substitutionValues: {'id': pid},
