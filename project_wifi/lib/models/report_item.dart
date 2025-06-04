@@ -1,23 +1,22 @@
 class ReportItem {
-  final int pelangganId;
   final String nama;
-  final Map<String, String> statusByMonth;
+  final Map<int, String> statusByMonth;
 
   ReportItem({
-    required this.pelangganId,
     required this.nama,
     required this.statusByMonth,
   });
 
-  factory ReportItem.fromJson(Map<String, dynamic> json, List<String> months) {
-    final statusByMonth = <String, String>{};
-    for (final month in months) {
-      statusByMonth[month] = json[month] as String? ?? '-';
+  factory ReportItem.fromJson(Map<String, dynamic> json, List<String> monthsList) {
+    final statusMap = <int, String>{};
+    final data = json['data'] as Map<String, dynamic>;
+    for (int i = 0; i < monthsList.length; i++) {
+      final month = i + 1;
+      statusMap[month] = data[month.toString()] ?? '-';
     }
     return ReportItem(
-      pelangganId: json['pelanggan_id'] as int,
       nama: json['nama'] as String,
-      statusByMonth: statusByMonth,
+      statusByMonth: statusMap,
     );
   }
 }
