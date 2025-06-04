@@ -18,7 +18,7 @@ String formatBulanTahunFromInt(int bulan, int tahun) {
 }
 
 class PembayaranUserPage extends StatefulWidget {
-  const PembayaranUserPage({Key? key}) : super(key: key);
+  const PembayaranUserPage({super.key});
 
   @override
   State<PembayaranUserPage> createState() => _PembayaranUserPageState();
@@ -82,7 +82,7 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
         title: Row(
           children: [
-            Icon(Icons.logout, color: AppColors.primaryRed),
+            const Icon(Icons.logout, color: AppColors.accentRed),
             const SizedBox(width: AppSizes.paddingSmall),
             const Text('Konfirmasi Logout'),
           ],
@@ -91,14 +91,14 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Batal', style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text('Batal', style: TextStyle(color: AppColors.textSecondaryBlue)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               _logout();
             },
-            child: Text('Logout', style: TextStyle(color: AppColors.primaryRed)),
+            child: const Text('Logout', style: TextStyle(color: AppColors.accentRed)),
           ),
         ],
       ),
@@ -107,75 +107,68 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
 
   Widget _buildPembayaranCard(Pembayaran p, int index) {
     IconData statusIcon;
+    Color statusColor;
     switch (p.statusVerifikasi) {
       case 'menunggu_verifikasi':
         statusIcon = Icons.hourglass_empty;
+        statusColor = AppColors.secondaryBlue;
         break;
       case 'diterima':
         statusIcon = Icons.check_circle;
+        statusColor = Colors.green;
         break;
       case 'ditolak':
         statusIcon = Icons.cancel;
+        statusColor = AppColors.accentRed;
         break;
       default:
         statusIcon = Icons.help;
+        statusColor = AppColors.textSecondaryBlue;
     }
 
     return FadeTransition(
       opacity: _fadeAnimation,
       child: ScaleTransition(
         scale: _scaleAnimation,
-        child: InkWell(
-          onTap: () => Navigator.pushNamed(
-            context,
-            '/detail_pembayaran',
-            arguments: p,
-          ),
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primaryRed, AppColors.secondaryRed],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+          color: AppColors.white,
+          margin: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
+          child: InkWell(
+            onTap: () => Navigator.pushNamed(
+              context,
+              '/detail_pembayaran',
+              arguments: p,
             ),
+            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
             child: ListTile(
               contentPadding: const EdgeInsets.all(AppSizes.paddingMedium),
               leading: CircleAvatar(
                 radius: 24,
-                backgroundColor: AppColors.white.withOpacity(0.2),
+                backgroundColor: AppColors.secondaryBlue.withOpacity(0.2),
                 child: Icon(
                   statusIcon,
-                  color: AppColors.white,
+                  color: statusColor,
                   size: AppSizes.iconSizeMedium,
                 ),
               ),
               title: Text(
-                formatBulanTahunFromInt(p.bulan, p.tahun), // Updated
+                formatBulanTahunFromInt(p.bulan, p.tahun),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.white,
+                  color: AppColors.primaryBlue,
                 ),
               ),
               subtitle: Text(
-                'Rp ${p.harga} • ${p.statusVerifikasi}',
+                'Rp ${p.harga} • ${p.statusVerifikasi.replaceAll('_', ' ').toUpperCase()}',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.white.withOpacity(0.9),
+                  color: AppColors.textSecondaryBlue,
                 ),
               ),
               trailing: Icon(
                 Icons.arrow_forward_ios,
-                color: AppColors.white.withOpacity(0.7),
+                color: AppColors.textSecondaryBlue,
                 size: AppSizes.iconSizeSmall,
               ),
             ),
@@ -190,7 +183,7 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryRed,
+        backgroundColor: AppColors.primaryBlue,
         title: const Text('Manajemen Pembayaran'),
         foregroundColor: AppColors.white,
         centerTitle: true,
@@ -199,7 +192,6 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
           color: AppColors.white,
           size: AppSizes.iconSizeMedium,
         ),
-        elevation: 2,
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(
@@ -217,14 +209,14 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
                 value: 'logout',
                 child: Row(
                   children: [
-                    Icon(Icons.logout, color: AppColors.primaryRed),
+                    Icon(Icons.logout, color: AppColors.accentRed),
                     SizedBox(width: AppSizes.paddingSmall),
                     Text('Logout'),
                   ],
                 ),
               ),
             ],
-            color: AppColors.backgroundLight,
+            color: AppColors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
             ),
@@ -245,42 +237,29 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(
-                vertical: AppSizes.paddingMedium,
-                horizontal: AppSizes.paddingLarge,
-              ),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primaryRed, AppColors.secondaryRed],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.payment,
-                    size: AppSizes.iconSizeMedium,
-                    color: AppColors.white,
-                  ),
-                  const SizedBox(width: AppSizes.paddingSmall),
-                  Text(
-                    'Ringkasan Pembayaran',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.bold,
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+              color: AppColors.white,
+              child: Padding(
+                padding: const EdgeInsets.all(AppSizes.paddingLarge),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.payment,
+                      size: AppSizes.iconSizeMedium,
+                      color: AppColors.primaryBlue,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: AppSizes.paddingSmall),
+                    Text(
+                      'Ringkasan Pembayaran',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: AppColors.primaryBlue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: AppSizes.paddingMedium),
@@ -289,13 +268,19 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
                 future: _future,
                 builder: (ctx, snap) {
                   if (snap.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
+                      ),
+                    );
                   }
                   if (snap.hasError) {
                     return Center(
                       child: Text(
                         'Gagal memuat pembayaran: ${snap.error}',
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondaryBlue,
+                        ),
                       ),
                     );
                   }
@@ -304,7 +289,7 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
                     return const Center(
                       child: Text(
                         'Belum ada pembayaran',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textSecondaryBlue),
                       ),
                     );
                   }
