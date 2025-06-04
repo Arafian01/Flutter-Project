@@ -84,7 +84,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
         title: Row(
           children: [
-            Icon(Icons.warning_amber, color: AppColors.primaryRed),
+            const Icon(Icons.warning_amber, color: AppColors.accentRed),
             const SizedBox(width: AppSizes.paddingSmall),
             const Text('Hapus Pembayaran'),
           ],
@@ -93,7 +93,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Batal', style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text('Batal', style: TextStyle(color: AppColors.textSecondaryBlue)),
           ),
           TextButton(
             onPressed: () async {
@@ -106,7 +106,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
                 _showErrorDialog('Gagal menghapus pembayaran: $e');
               }
             },
-            child: Text('Hapus', style: TextStyle(color: AppColors.primaryRed)),
+            child: const Text('Hapus', style: TextStyle(color: AppColors.accentRed)),
           ),
         ],
       ),
@@ -120,7 +120,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
         title: Row(
           children: [
-            Icon(Icons.check_circle, color: AppColors.primaryRed),
+            const Icon(Icons.check_circle, color: AppColors.primaryBlue),
             const SizedBox(width: AppSizes.paddingSmall),
             const Text('Berhasil'),
           ],
@@ -129,7 +129,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: TextStyle(color: AppColors.primaryRed)),
+            child: const Text('OK', style: TextStyle(color: AppColors.primaryBlue)),
           ),
         ],
       ),
@@ -143,7 +143,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
         title: Row(
           children: [
-            Icon(Icons.error, color: AppColors.primaryRed),
+            const Icon(Icons.error, color: AppColors.accentRed),
             const SizedBox(width: AppSizes.paddingSmall),
             const Text('Gagal'),
           ],
@@ -152,7 +152,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: TextStyle(color: AppColors.primaryRed)),
+            child: const Text('OK', style: TextStyle(color: AppColors.accentRed)),
           ),
         ],
       ),
@@ -164,22 +164,25 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryRed,
+        backgroundColor: AppColors.primaryBlue,
         title: const Text('Manajemen Pembayaran'),
         foregroundColor: AppColors.white,
         centerTitle: true,
-        leading: Icon(
+        leading: const Icon(
           Icons.payment,
           color: AppColors.white,
           size: AppSizes.iconSizeMedium,
         ),
-        elevation: 2,
       ),
       body: FutureBuilder<List<Pembayaran>>(
         future: _future,
         builder: (ctx, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
+              ),
+            );
           }
           if (snap.hasError) {
             return Center(
@@ -190,6 +193,9 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
             );
           }
           final list = snap.data!;
+          if (list.isEmpty) {
+            return const Center(child: Text('Belum ada pembayaran'));
+          }
           return ListView.builder(
             padding: const EdgeInsets.all(AppSizes.paddingMedium),
             itemCount: list.length,
@@ -201,7 +207,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
         },
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.primaryRed,
+        backgroundColor: AppColors.accentRed,
         foregroundColor: AppColors.white,
         onPressed: () async {
           final result = await Navigator.pushNamed(context, '/add_pembayaran');
@@ -211,54 +217,36 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
           }
         },
         child: const Icon(Icons.add),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+        tooltip: 'Tambah Pembayaran',
       ),
     );
   }
 
   Widget _buildPembayaranCard(Pembayaran p) {
     final imageUrl = p.image.isNotEmpty ? '${AppConstants.baseUrl}${p.image}' : null;
-    print('Image URL for ${p.id}: $imageUrl'); // Log untuk debugging
 
     return FadeTransition(
       opacity: _fadeAnimation,
       child: ScaleTransition(
         scale: _scaleAnimation,
-        child: Container(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
           margin: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.primaryRed, AppColors.secondaryRed],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
           child: ExpansionTile(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-            ),
-            collapsedShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-            ),
-            backgroundColor: Colors.transparent,
-            collapsedBackgroundColor: Colors.transparent,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+            collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+            backgroundColor: AppColors.white,
+            collapsedBackgroundColor: AppColors.white,
             title: Row(
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: AppColors.white.withOpacity(0.2),
-                  child: Icon(
+                  backgroundColor: AppColors.secondaryBlue.withOpacity(0.2),
+                  child: const Icon(
                     Icons.payment,
                     size: AppSizes.iconSizeMedium,
-                    color: AppColors.white,
+                    color: AppColors.primaryBlue,
                   ),
                 ),
                 const SizedBox(width: AppSizes.paddingMedium),
@@ -270,7 +258,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
                       Text(
                         '${p.bulan} - ${p.pelangganName}',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppColors.white,
+                          color: AppColors.primaryBlue,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -278,7 +266,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
                       Text(
                         'Status: ${_formatStatus(p.statusVerifikasi)} • ${_formatter.format(p.harga)}',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.white.withOpacity(0.9),
+                          color: AppColors.textSecondaryBlue,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -297,7 +285,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
                     Text(
                       'Detail Pembayaran',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.white,
+                        color: AppColors.primaryBlue,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -305,51 +293,51 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
                     Text(
                       'Tagihan ID: ${p.tagihanId}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.white.withOpacity(0.9),
+                        color: AppColors.textSecondaryBlue,
                       ),
                     ),
                     Text(
                       'Pelanggan: ${p.pelangganName}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.white.withOpacity(0.9),
+                        color: AppColors.textSecondaryBlue,
                       ),
                     ),
                     Text(
                       'Periode: ${p.bulan}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.white.withOpacity(0.9),
+                        color: AppColors.textSecondaryBlue,
                       ),
                     ),
                     Text(
                       'Harga: ${_formatter.format(p.harga)}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.white.withOpacity(0.9),
+                        color: AppColors.textSecondaryBlue,
                       ),
                     ),
                     Text(
                       'Status: ${_formatStatus(p.statusVerifikasi)}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.white.withOpacity(0.9),
+                        color: AppColors.textSecondaryBlue,
                       ),
                     ),
                     Text(
                       'Dikirim: ${_dateFormatter.format(p.tanggalKirim.toLocal())}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.white.withOpacity(0.9),
+                        color: AppColors.textSecondaryBlue,
                       ),
                     ),
                     if (p.tanggalVerifikasi != null)
                       Text(
                         'Verifikasi: ${_dateFormatter.format(p.tanggalVerifikasi!.toLocal())}',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.white.withOpacity(0.9),
+                          color: AppColors.textSecondaryBlue,
                         ),
                       ),
                     const SizedBox(height: AppSizes.paddingMedium),
                     const Text(
                       'Bukti Pembayaran:',
                       style: TextStyle(
-                        color: AppColors.white,
+                        color: AppColors.primaryBlue,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -364,20 +352,23 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
                         fit: BoxFit.cover,
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
-                          return const Center(child: CircularProgressIndicator());
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
+                            ),
+                          );
                         },
                         errorBuilder: (context, error, stackTrace) {
-                          print('Error loading image for ${p.id}: $error');
                           return const Text(
                             'Gagal memuat gambar',
-                            style: TextStyle(color: AppColors.white),
+                            style: TextStyle(color: AppColors.textSecondaryBlue),
                           );
                         },
                       ),
                     )
                         : const Text(
                       'Gambar tidak tersedia',
-                      style: TextStyle(color: AppColors.white),
+                      style: TextStyle(color: AppColors.textSecondaryBlue),
                     ),
                     const SizedBox(height: AppSizes.paddingLarge),
                     Row(
@@ -385,7 +376,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
                       children: [
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.textSecondary,
+                            backgroundColor: AppColors.secondaryBlue,
                             foregroundColor: AppColors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
@@ -404,7 +395,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
                         const SizedBox(width: AppSizes.paddingMedium),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryRed,
+                            backgroundColor: AppColors.accentRed,
                             foregroundColor: AppColors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
