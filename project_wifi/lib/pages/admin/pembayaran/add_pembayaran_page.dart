@@ -21,6 +21,7 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
   String _status = 'menunggu_verifikasi';
   File? _image;
   bool _saving = false;
+  bool _isLoadingTagihans = true;
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
@@ -49,27 +50,18 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
     super.dispose();
   }
 
-  String _formatBulanTahun(String bulanTahun) {
-    try {
-      final parts = bulanTahun.split('-');
-      if (parts.length != 2) return bulanTahun;
-      final month = int.parse(parts[0]);
-      final year = parts[1];
-      final date = DateTime(int.parse(year), month);
-      return DateFormat('MMMM-yyyy', 'id_ID').format(date);
-    } catch (e) {
-      return bulanTahun;
-    }
-  }
-
   Future<void> _loadTagihans() async {
     try {
-      _tagihans = await TagihanService.fetchTagihans();
-      setState(() {});
+      final tagihans = await TagihanService.fetchTagihans();
+      setState(() {
+        _tagihans = tagihans.where((t) => t.statusPembayaran != 'lunas').toList();
+        _isLoadingTagihans = false;
+      });
       if (_tagihans.isEmpty) {
-        _showErrorDialog('Tidak ada tagihan tersedia');
+        _showErrorDialog('Tidak ada tagihan yang belum lunas tersedia');
       }
     } catch (e) {
+      setState(() => _isLoadingTagihans = false);
       _showErrorDialog('Gagal memuat tagihan: $e');
     }
   }
@@ -97,7 +89,9 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
       );
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('success_message', 'Pembayaran berhasil disimpan');
-      Navigator.pop(context, true);
+      if (mounted) {
+        Navigator.pop(context, true);
+      }
     } catch (e) {
       if (e.toString().contains('409')) {
         _showErrorDialog('Tagihan ini sudah pernah dibayar');
@@ -105,31 +99,10 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
         _showErrorDialog('Gagal menambah pembayaran: $e');
       }
     } finally {
-      setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
-  }
-
-  void _showSuccessDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-        title: Row(
-          children: [
-            Icon(Icons.check_circle, color: AppColors.primaryRed),
-            const SizedBox(width: AppSizes.paddingSmall),
-            const Text('Berhasil'),
-          ],
-        ),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: TextStyle(color: AppColors.primaryRed)),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showErrorDialog(String message) {
@@ -139,7 +112,7 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
         title: Row(
           children: [
-            Icon(Icons.error, color: AppColors.primaryRed),
+            const Icon(Icons.error, color: AppColors.accentRed),
             const SizedBox(width: AppSizes.paddingSmall),
             const Text('Gagal'),
           ],
@@ -148,7 +121,7 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: TextStyle(color: AppColors.primaryRed)),
+            child: const Text('OK', style: TextStyle(color: AppColors.accentRed)),
           ),
         ],
       ),
@@ -160,7 +133,7 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryRed,
+        backgroundColor: AppColors.primaryBlue,
         title: const Text('Tambah Pembayaran'),
         foregroundColor: AppColors.white,
         centerTitle: true,
@@ -173,9 +146,14 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
           onPressed: () => Navigator.pop(context),
           tooltip: 'Kembali',
         ),
-        elevation: 2,
       ),
-      body: Center(
+      body: _isLoadingTagihans
+          ? const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
+        ),
+      )
+          : Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 400),
           padding: const EdgeInsets.all(AppSizes.paddingLarge),
@@ -192,8 +170,8 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
                     children: [
                       Text(
                         'Buat Pembayaran Baru',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: AppColors.primaryRed,
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: AppColors.primaryBlue,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -202,34 +180,27 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
                         value: _selected,
                         decoration: InputDecoration(
                           labelText: 'Pilih Tagihan',
-                          prefixIcon: const Icon(Icons.receipt, color: AppColors.primaryRed),
-                          filled: true,
-                          fillColor: AppColors.white.withOpacity(0.1),
+                          prefixIcon: const Icon(Icons.receipt, color: AppColors.textSecondaryBlue),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide.none,
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                            borderSide: const BorderSide(color: AppColors.textSecondaryBlue),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                            borderSide: const BorderSide(color: AppColors.primaryBlue, width: 2),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                            borderSide: const BorderSide(color: AppColors.accentRed, width: 2),
                           ),
                         ),
                         items: _tagihans.map((t) {
                           return DropdownMenuItem(
                             value: t,
-                            child: Text('${t.bulan} • ${_formatter.format(t.harga)} • ${t.pelangganName}'),
+                            child: Text('${t.bulan}-${t.tahun} • ${_formatter.format(t.harga)} • ${t.pelangganName}'),
                           );
                         }).toList(),
                         onChanged: (v) => setState(() => _selected = v),
@@ -240,28 +211,21 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
                         value: _status,
                         decoration: InputDecoration(
                           labelText: 'Status Verifikasi',
-                          prefixIcon: const Icon(Icons.verified, color: AppColors.primaryRed),
-                          filled: true,
-                          fillColor: AppColors.white.withOpacity(0.1),
+                          prefixIcon: const Icon(Icons.verified, color: AppColors.textSecondaryBlue),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide.none,
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                            borderSide: const BorderSide(color: AppColors.textSecondaryBlue),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                            borderSide: const BorderSide(color: AppColors.primaryBlue, width: 2),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
+                            borderSide: const BorderSide(color: AppColors.accentRed, width: 2),
                           ),
                         ),
                         items: ['menunggu_verifikasi', 'diterima', 'ditolak']
@@ -277,17 +241,17 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
                       InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Bukti Pembayaran',
-                          prefixIcon: const Icon(Icons.image, color: AppColors.primaryRed),
+                          prefixIcon: const Icon(Icons.image, color: AppColors.textSecondaryBlue),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                            borderSide: const BorderSide(color: AppColors.textSecondaryBlue),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                            borderSide: const BorderSide(color: AppColors.primaryBlue, width: 2),
                           ),
                         ),
                         child: Column(
@@ -310,7 +274,7 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
                               icon: const Icon(Icons.upload_file, size: AppSizes.iconSizeSmall),
                               label: Text(_image == null ? 'Pilih Bukti' : 'Ganti Bukti'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primaryRed,
+                                backgroundColor: AppColors.secondaryBlue,
                                 foregroundColor: AppColors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
@@ -324,27 +288,23 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
                         child: _saving
-                            ? const Center(child: CircularProgressIndicator())
+                            ? const Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
+                          ),
+                        )
                             : SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
+                            onPressed: _save,
                             style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingMedium),
+                              backgroundColor: AppColors.primaryBlue,
+                              foregroundColor: AppColors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                               ),
-                              backgroundColor: AppColors.primaryRed,
-                              foregroundColor: AppColors.white,
-                              elevation: 2,
                             ),
-                            onPressed: _saving ? null : _save,
-                            child: const Text(
-                              'Simpan',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            child: const Text('Simpan'),
                           ),
                         ),
                       ),
