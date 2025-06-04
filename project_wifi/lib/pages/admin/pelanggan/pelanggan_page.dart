@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../../../models/pelanggan.dart';
 import '../../../services/api_service.dart';
-import '/utils/utils.dart';
+import '../../../utils/utils.dart';
 
 class PelangganPage extends StatefulWidget {
   const PelangganPage({super.key});
@@ -56,7 +56,7 @@ class _PelangganPageState extends State<PelangganPage> with SingleTickerProvider
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
+            child: const Text('Batal', style: TextStyle(color: AppColors.textSecondaryBlue)),
           ),
           TextButton(
             onPressed: () async {
@@ -65,11 +65,17 @@ class _PelangganPageState extends State<PelangganPage> with SingleTickerProvider
                 await deletePelanggan(pelanggan.id);
                 setState(_loadPelanggan);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Pelanggan dihapus')),
+                  SnackBar(
+                    content: const Text('Pelanggan dihapus'),
+                    backgroundColor: AppColors.primaryBlue,
+                  ),
                 );
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Gagal menghapus: $e')),
+                  SnackBar(
+                    content: Text('Gagal menghapus: $e'),
+                    backgroundColor: AppColors.accentRed,
+                  ),
                 );
               }
             },
@@ -133,13 +139,13 @@ class _PelangganPageState extends State<PelangganPage> with SingleTickerProvider
                         Text(
                           pelanggan.email,
                           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: AppColors.textSecondaryBlue,
                           ),
                         ),
                         Text(
                           pelanggan.namaPaket,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: AppColors.textSecondaryBlue,
                           ),
                         ),
                       ],
@@ -168,7 +174,6 @@ class _PelangganPageState extends State<PelangganPage> with SingleTickerProvider
         title: const Text('Kelola Pelanggan'),
         foregroundColor: AppColors.white,
         centerTitle: true,
-        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -181,7 +186,7 @@ class _PelangganPageState extends State<PelangganPage> with SingleTickerProvider
         future: _pelangganFuture,
         builder: (ctx, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed)));
           }
           if (snap.hasError) {
             return Center(child: Text('Error: ${snap.error}'));
@@ -204,6 +209,8 @@ class _PelangganPageState extends State<PelangganPage> with SingleTickerProvider
           final result = await Navigator.pushNamed(context, '/add_pelanggan');
           if (result == true) setState(_loadPelanggan);
         },
+        backgroundColor: AppColors.accentRed,
+        foregroundColor: AppColors.white,
         child: const Icon(Icons.add),
         tooltip: 'Tambah Pelanggan',
       ),
