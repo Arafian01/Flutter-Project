@@ -80,7 +80,7 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
         title: Row(
           children: [
-            Icon(Icons.error, color: AppColors.primaryRed, size: AppSizes.iconSizeMedium),
+            Icon(Icons.error, color: AppColors.accentRed, size: AppSizes.iconSizeMedium),
             const SizedBox(width: AppSizes.paddingSmall),
             const Text('Gagal'),
           ],
@@ -89,7 +89,7 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: TextStyle(color: AppColors.primaryRed)),
+            child: const Text('OK', style: TextStyle(color: AppColors.accentRed)),
           ),
         ],
       ),
@@ -103,20 +103,15 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryRed,
+        backgroundColor: AppColors.primaryBlue,
         title: const Text('Tambah Paket'),
         foregroundColor: AppColors.white,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: AppColors.white,
-            size: AppSizes.iconSizeMedium,
-          ),
+          icon: const Icon(Icons.arrow_back, size: AppSizes.iconSizeMedium),
           onPressed: () => Navigator.pop(context),
           tooltip: 'Kembali',
         ),
-        elevation: 2,
       ),
       body: Center(
         child: Container(
@@ -136,7 +131,7 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
                       Text(
                         'Buat Paket Baru',
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: AppColors.primaryRed,
+                          color: AppColors.primaryBlue,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -144,37 +139,13 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
                       TextFormField(
                         controller: _nameController,
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Nama paket wajib diisi';
-                          }
+                          if (value == null || value.trim().isEmpty) return 'Nama paket wajib diisi';
                           return null;
                         },
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Nama Paket',
                           hintText: 'Masukkan nama paket',
-                          prefixIcon: const Icon(Icons.label, color: AppColors.primaryRed),
-                          filled: true,
-                          fillColor: AppColors.white.withOpacity(0.1),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
+                          prefixIcon: Icon(Icons.label, color: AppColors.textSecondary),
                         ),
                         textInputAction: TextInputAction.next,
                       ),
@@ -182,37 +153,13 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
                       TextFormField(
                         controller: _descController,
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Deskripsi wajib diisi';
-                          }
+                          if (value == null || value.trim().isEmpty) return 'Deskripsi wajib diisi';
                           return null;
                         },
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Deskripsi',
                           hintText: 'Masukkan deskripsi paket',
-                          prefixIcon: const Icon(Icons.description, color: AppColors.primaryRed),
-                          filled: true,
-                          fillColor: AppColors.white.withOpacity(0.1),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
+                          prefixIcon: Icon(Icons.description, color: AppColors.textSecondary),
                         ),
                         maxLines: 3,
                         textInputAction: TextInputAction.next,
@@ -221,42 +168,16 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
                       TextFormField(
                         controller: _priceController,
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Harga wajib diisi';
-                          }
+                          if (value == null || value.trim().isEmpty) return 'Harga wajib diisi';
                           final parsed = int.tryParse(value.trim());
-                          if (parsed == null || parsed <= 0) {
-                            return 'Masukkan harga yang valid';
-                          }
+                          if (parsed == null || parsed <= 0) return 'Masukkan harga yang valid';
                           return null;
                         },
                         keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Harga',
                           hintText: 'Masukkan harga paket',
-                          prefixIcon: const Icon(Icons.attach_money, color: AppColors.primaryRed),
-                          filled: true,
-                          fillColor: AppColors.white.withOpacity(0.1),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
+                          prefixIcon: Icon(Icons.attach_money, color: AppColors.textSecondary),
                         ),
                         textInputAction: TextInputAction.done,
                       ),
@@ -264,31 +185,12 @@ class _AddPaketPageState extends State<AddPaketPage> with SingleTickerProviderSt
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
                         child: _isSaving
-                            ? const Center(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryRed),
-                          ),
-                        )
+                            ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed)))
                             : SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingMedium),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                              ),
-                              backgroundColor: AppColors.primaryRed,
-                              foregroundColor: AppColors.white,
-                              elevation: 2,
-                            ),
-                            onPressed: _isSaving ? null : _save,
-                            child: const Text(
-                              'Simpan',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            onPressed: _save,
+                            child: const Text('Simpan'),
                           ),
                         ),
                       ),
