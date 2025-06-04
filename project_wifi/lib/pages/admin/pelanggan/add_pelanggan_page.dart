@@ -115,46 +115,41 @@ class _AddPelangganPageState extends State<AddPelangganPage> with SingleTickerPr
 
   void _showErrorDialog(String message) {
     showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-        title: Row(
-          children: [
-            Icon(Icons.error, color: AppColors.primaryRed),
-            const SizedBox(width: AppSizes.paddingSmall),
-            const Text('Gagal'),
-          ],
-        ),
-        content: Text(message),
-        actions: [
-          TextButton(
+        context: context,
+        builder: (_) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+            title: Row(
+              children: [
+                Icon(Icons.error, color: AppColors.accentRed, size: AppSizes.iconSizeMedium),
+                const SizedBox(width: AppSizes.paddingSmall),
+                const Text('Gagal'),
+              ],
+            ),
+            content: Text(message),
+            actions: [
+            TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: TextStyle(color: AppColors.primaryRed)),
-          ),
-        ],
-      ),
+    child: const Text('OK', style: TextStyle(color: AppColors.accentRed)),
+            )
+    ],
+    ),
     );
-  }
+    }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryRed,
+        backgroundColor: AppColors.primaryBlue,
         title: const Text('Tambah Pelanggan'),
         foregroundColor: AppColors.white,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: AppColors.white,
-            size: AppSizes.iconSizeMedium,
-          ),
+          icon: const Icon(Icons.arrow_back, size: AppSizes.iconSizeMedium),
           onPressed: () => Navigator.pop(context),
           tooltip: 'Kembali',
         ),
-        elevation: 2,
       ),
       body: Center(
         child: Container(
@@ -174,7 +169,7 @@ class _AddPelangganPageState extends State<AddPelangganPage> with SingleTickerPr
                       Text(
                         'Buat Pelanggan Baru',
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: AppColors.primaryRed,
+                          color: AppColors.primaryBlue,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -182,37 +177,13 @@ class _AddPelangganPageState extends State<AddPelangganPage> with SingleTickerPr
                       TextFormField(
                         controller: _name,
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Nama wajib diisi';
-                          }
+                          if (value == null || value.trim().isEmpty) return 'Nama wajib diisi';
                           return null;
                         },
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Nama',
                           hintText: 'Masukkan nama',
-                          prefixIcon: const Icon(Icons.person, color: AppColors.primaryRed),
-                          filled: true,
-                          fillColor: AppColors.white.withOpacity(0.1),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
+                          prefixIcon: Icon(Icons.person, color: AppColors.textSecondaryBlue),
                         ),
                         textInputAction: TextInputAction.next,
                       ),
@@ -220,40 +191,16 @@ class _AddPelangganPageState extends State<AddPelangganPage> with SingleTickerPr
                       TextFormField(
                         controller: _email,
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Email wajib diisi';
-                          }
+                          if (value == null || value.trim().isEmpty) return 'Email wajib diisi';
                           if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
                             return 'Masukkan email yang valid';
                           }
                           return null;
                         },
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Email',
                           hintText: 'Masukkan email',
-                          prefixIcon: const Icon(Icons.email, color: AppColors.primaryRed),
-                          filled: true,
-                          fillColor: AppColors.white.withOpacity(0.1),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
+                          prefixIcon: Icon(Icons.email, color: AppColors.textSecondaryBlue),
                         ),
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
@@ -262,72 +209,24 @@ class _AddPelangganPageState extends State<AddPelangganPage> with SingleTickerPr
                       TextFormField(
                         controller: _password,
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Password wajib diisi';
-                          }
-                          if (value.length < 6) {
-                            return 'Password minimal 6 karakter';
-                          }
+                          if (value == null || value.trim().isEmpty) return 'Password wajib diisi';
+                          if (value.length < 6) return 'Password minimal 6 karakter';
                           return null;
                         },
-                        decoration: InputDecoration(
+                        obscureText: true,
+                        decoration: const InputDecoration(
                           labelText: 'Password',
                           hintText: 'Masukkan password',
-                          prefixIcon: const Icon(Icons.lock, color: AppColors.primaryRed),
-                          filled: true,
-                          fillColor: AppColors.white.withOpacity(0.1),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
+                          prefixIcon: Icon(Icons.lock, color: AppColors.textSecondaryBlue),
                         ),
-                        obscureText: true,
                         textInputAction: TextInputAction.next,
                       ),
                       const SizedBox(height: AppSizes.paddingMedium),
                       DropdownButtonFormField<Paket>(
                         value: _selectedPaket,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Pilih Paket',
-                          prefixIcon: const Icon(Icons.wifi, color: AppColors.primaryRed),
-                          filled: true,
-                          fillColor: AppColors.white.withOpacity(0.1),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
+                          prefixIcon: Icon(Icons.wifi, color: AppColors.textSecondaryBlue),
                         ),
                         items: _pakets.map((p) => DropdownMenuItem(value: p, child: Text(p.namaPaket))).toList(),
                         onChanged: (v) => setState(() => _selectedPaket = v),
@@ -337,37 +236,13 @@ class _AddPelangganPageState extends State<AddPelangganPage> with SingleTickerPr
                       TextFormField(
                         controller: _alamat,
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Alamat wajib diisi';
-                          }
+                          if (value == null || value.trim().isEmpty) return 'Alamat wajib diisi';
                           return null;
                         },
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Alamat',
                           hintText: 'Masukkan alamat',
-                          prefixIcon: const Icon(Icons.home, color: AppColors.primaryRed),
-                          filled: true,
-                          fillColor: AppColors.white.withOpacity(0.1),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
+                          prefixIcon: Icon(Icons.home, color: AppColors.textSecondaryBlue),
                         ),
                         maxLines: 2,
                         textInputAction: TextInputAction.next,
@@ -376,40 +251,16 @@ class _AddPelangganPageState extends State<AddPelangganPage> with SingleTickerPr
                       TextFormField(
                         controller: _telepon,
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Telepon wajib diisi';
-                          }
+                          if (value == null || value.trim().isEmpty) return 'Telepon wajib diisi';
                           if (!RegExp(r'^\+?[1-9]\d{1,14}$').hasMatch(value)) {
                             return 'Masukkan nomor telepon yang valid';
                           }
                           return null;
                         },
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Telepon',
                           hintText: 'Masukkan telepon',
-                          prefixIcon: const Icon(Icons.phone, color: AppColors.primaryRed),
-                          filled: true,
-                          fillColor: AppColors.white.withOpacity(0.1),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
+                          prefixIcon: Icon(Icons.phone, color: AppColors.textSecondaryBlue),
                         ),
                         keyboardType: TextInputType.phone,
                         textInputAction: TextInputAction.next,
@@ -417,31 +268,9 @@ class _AddPelangganPageState extends State<AddPelangganPage> with SingleTickerPr
                       const SizedBox(height: AppSizes.paddingMedium),
                       DropdownButtonFormField<String>(
                         value: _status,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Status',
-                          prefixIcon: const Icon(Icons.toggle_on, color: AppColors.primaryRed),
-                          filled: true,
-                          fillColor: AppColors.white.withOpacity(0.1),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: Colors.red, width: 2),
-                          ),
+                          prefixIcon: Icon(Icons.toggle_on, color: AppColors.textSecondaryBlue),
                         ),
                         items: ['aktif', 'nonaktif', 'isolir'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
                         onChanged: (v) => setState(() => _status = v!),
@@ -453,7 +282,7 @@ class _AddPelangganPageState extends State<AddPelangganPage> with SingleTickerPr
                           _tanggalAktif == null ? 'Pilih Tanggal Aktif' : _tanggalAktif!.toLocal().toString().split(' ')[0],
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textPrimary),
                         ),
-                        trailing: Icon(Icons.calendar_today, color: AppColors.primaryRed),
+                        trailing: Icon(Icons.calendar_today, color: AppColors.accentRed),
                         onTap: () => _pickDate(true),
                       ),
                       const SizedBox(height: AppSizes.paddingMedium),
@@ -462,34 +291,19 @@ class _AddPelangganPageState extends State<AddPelangganPage> with SingleTickerPr
                           _tanggalLangganan == null ? 'Pilih Tanggal Langganan' : _tanggalLangganan!.toLocal().toString().split(' ')[0],
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textPrimary),
                         ),
-                        trailing: Icon(Icons.calendar_today, color: AppColors.primaryRed),
+                        trailing: Icon(Icons.calendar_today, color: AppColors.accentRed),
                         onTap: () => _pickDate(false),
                       ),
                       const SizedBox(height: AppSizes.paddingLarge),
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
                         child: _saving
-                            ? const Center(child: CircularProgressIndicator())
+                            ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed)))
                             : SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingMedium),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                              ),
-                              backgroundColor: AppColors.primaryRed,
-                              foregroundColor: AppColors.white,
-                              elevation: 2,
-                            ),
-                            onPressed: _saving ? null : _save,
-                            child: const Text(
-                              'Simpan',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            onPressed: _save,
+                            child: const Text('Simpan'),
                           ),
                         ),
                       ),
