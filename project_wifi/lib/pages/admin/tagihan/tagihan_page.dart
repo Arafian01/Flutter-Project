@@ -3,7 +3,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:intl/intl.dart';
 import '../../../models/tagihan.dart';
 import '../../../services/api_service.dart';
-import '/utils/utils.dart';
+import '../../../utils/utils.dart';
 
 class TagihanPage extends StatefulWidget {
   const TagihanPage({super.key});
@@ -58,7 +58,7 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusLarge)),
         title: Row(
           children: [
-            const Icon(Icons.warning, color: AppColors.accentRed),
+            const Icon(Icons.warning, color: AppColors.accentRed, size: AppSizes.iconSizeMedium),
             const SizedBox(width: AppSizes.paddingSmall),
             const Text('Konfirmasi Hapus'),
           ],
@@ -67,7 +67,7 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
+            child: const Text('Batal', style: TextStyle(color: AppColors.textSecondaryBlue)),
           ),
           TextButton(
             onPressed: () async {
@@ -76,11 +76,17 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
                 await TagihanService.deleteTagihan(tagihan.id);
                 setState(_loadTagihans);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Tagihan dihapus')),
+                  SnackBar(
+                    content: const Text('Tagihan dihapus'),
+                    backgroundColor: AppColors.primaryBlue,
+                  ),
                 );
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Gagal menghapus: $e')),
+                  SnackBar(
+                    content: Text('Gagal menghapus: $e'),
+                    backgroundColor: AppColors.accentRed,
+                  ),
                 );
               }
             },
@@ -146,7 +152,7 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
                         Text(
                           _formatRupiah(tagihan.harga),
                           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: AppColors.textSecondaryBlue,
                           ),
                         ),
                         Text(
@@ -184,7 +190,6 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
         title: const Text('Kelola Tagihan'),
         foregroundColor: AppColors.white,
         centerTitle: true,
-        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -197,7 +202,11 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
         future: _future,
         builder: (ctx, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
+              ),
+            );
           }
           if (snap.hasError) {
             return Center(child: Text('Error: ${snap.error}'));
@@ -220,6 +229,8 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
           final result = await Navigator.pushNamed(context, '/add_tagihan');
           if (result == true) setState(_loadTagihans);
         },
+        backgroundColor: AppColors.accentRed,
+        foregroundColor: AppColors.white,
         child: const Icon(Icons.add),
         tooltip: 'Tambah Tagihan',
       ),
