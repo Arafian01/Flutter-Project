@@ -1,19 +1,20 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import '../models/report_item.dart';
-import '../models/total_income_report.dart';
-import '../services/api_service.dart';
-import '../utils/utils.dart';
+import '../../../models/report_item.dart';
+import '../../../models/total_income_report.dart';
+import '../../../services/api_service.dart';
+import '../../../utils/utils.dart';
 
 enum ReportType { payment, income }
 
 class ReportPage extends StatefulWidget {
-  const ReportPage({Key? key}) : super(key: key);
+  const ReportPage({super.key});
 
   @override
   State<ReportPage> createState() => _ReportPageState();
@@ -23,7 +24,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
   int? _selectedYear;
   bool _loading = false;
   ReportType _reportType = ReportType.payment;
-  List<String> _monthsList = [];
+  List<int> _monthsList = [];
   List<ReportItem> _paymentItems = [];
   List<TotalIncomeReport> _incomeItems = [];
   late AnimationController _controller;
@@ -35,12 +36,13 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
+    initializeDateFormatting('id_ID');
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
     _controller.forward();
   }
@@ -54,10 +56,14 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
   Future<void> _loadReport() async {
     if (_selectedYear == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pilih tahun terlebih dahulu')),
+        const SnackBar(
+          content: Text('Pilih tahun terlebih dahulu'),
+          backgroundColor: AppColors.accentRed,
+        ),
       );
       return;
     }
+
     setState(() => _loading = true);
     try {
       if (_reportType == ReportType.payment) {
@@ -65,28 +71,39 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
         if (!result.containsKey('months') || !result.containsKey('data')) {
           throw Exception('Struktur respons API tidak valid');
         }
-        setState(() {
-          _monthsList = List<String>.from(result['months'] as List<dynamic>);
-          _paymentItems = (result['data'] as List<dynamic>)
-              .map((e) => ReportItem.fromJson(e as Map<String, dynamic>, _monthsList))
-              .toList();
-          _incomeItems = [];
-        });
+        if (mounted) {
+          setState(() {
+            _monthsList = List<int>.from(result['months']);
+            _paymentItems = (result['data'] as List<dynamic>)
+                .map((e) => ReportItem.fromJson(e as Map<String, dynamic>, _monthsList.map((m) => m.toString()).toList()))
+                .toList();
+            _incomeItems = [];
+          });
+        }
       } else {
         final result = await ReportService.fetchTotalIncomeReport(_selectedYear!);
-        setState(() {
-          _monthsList = List.generate(12, (i) => '${(i + 1).toString().padLeft(2, '0')}-$_selectedYear');
-          _incomeItems = result;
-          _paymentItems = [];
-        });
+        if (mounted) {
+          setState(() {
+            _monthsList = List.generate(12, (i) => i + 1);
+            _incomeItems = result;
+            _paymentItems = [];
+          });
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal memuat laporan: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memuat laporan: $e'),
+            backgroundColor: AppColors.accentRed,
+          ),
+        );
+      }
     } finally {
-      setState(() => _loading = false);
-      _controller.forward(from: 0);
+      if (mounted) {
+        setState(() => _loading = false);
+        _controller.forward(from: 0);
+      }
     }
   }
 
@@ -94,7 +111,10 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
     if (_reportType == ReportType.payment && _paymentItems.isEmpty ||
         _reportType == ReportType.income && _incomeItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tidak ada data untuk dicetak')),
+        const SnackBar(
+          content: Text('Tidak ada data untuk dicetak'),
+          backgroundColor: AppColors.accentRed,
+        ),
       );
       return;
     }
@@ -108,6 +128,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4.landscape,
+          margin: const pw.EdgeInsets.all(32),
           build: (pw.Context context) {
             if (_reportType == ReportType.payment) {
               return [
@@ -120,10 +141,10 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                 ),
                 pw.Table(
                   border: pw.TableBorder.all(),
-                  defaultColumnWidth: pw.FlexColumnWidth(1),
+                  defaultColumnWidth: const pw.FlexColumnWidth(),
                   children: [
                     pw.TableRow(
-                      decoration: pw.BoxDecoration(color: PdfColors.grey200),
+                      decoration: const pw.BoxDecoration(color: PdfColors.grey200),
                       children: [
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(8),
@@ -137,7 +158,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                           pw.Padding(
                             padding: const pw.EdgeInsets.all(8),
                             child: pw.Text(
-                              m.split('-')[0],
+                              DateFormat('MMMM', 'id_ID').format(DateTime(_selectedYear!, m)),
                               style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                             ),
                           ),
@@ -157,7 +178,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                           for (final m in _monthsList)
                             pw.Padding(
                               padding: const pw.EdgeInsets.all(8),
-                              child: pw.Text(_paymentItems[i].statusByMonth[m]!),
+                              child: pw.Text(_paymentItems[i].statusByMonth[m] ?? '-'),
                             ),
                         ],
                       ),
@@ -175,10 +196,10 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                 ),
                 pw.Table(
                   border: pw.TableBorder.all(),
-                  defaultColumnWidth: pw.FlexColumnWidth(1),
+                  defaultColumnWidth: const pw.FlexColumnWidth(),
                   children: [
                     pw.TableRow(
-                      decoration: pw.BoxDecoration(color: PdfColors.grey200),
+                      decoration: const pw.BoxDecoration(color: PdfColors.grey200),
                       children: [
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(8),
@@ -190,16 +211,18 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                         ),
                       ],
                     ),
-                    for (var i = 0; i < _incomeItems.length; i++)
+                    for (var item in _incomeItems)
                       pw.TableRow(
                         children: [
                           pw.Padding(
                             padding: const pw.EdgeInsets.all(8),
-                            child: pw.Text(_incomeItems[i].month),
+                            child: pw.Text(
+                              DateFormat('MMMM yyyy', 'id_ID').format(DateTime(item.tahun, item.bulan)),
+                            ),
                           ),
                           pw.Padding(
                             padding: const pw.EdgeInsets.all(8),
-                            child: pw.Text(_formatRupiah(_incomeItems[i].totalHarga)),
+                            child: pw.Text(_formatRupiah(item.totalHarga)),
                           ),
                         ],
                       ),
@@ -216,17 +239,33 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
       await file.writeAsBytes(await pdf.save());
 
       final result = await OpenFile.open(file.path);
-      if (result.type != ResultType.done) {
-        throw Exception('Gagal membuka PDF: ${result.message}');
+      if (result.type != ResultType.done && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal membuka PDF: ${result.message}'),
+            backgroundColor: AppColors.accentRed,
+          ),
+        );
+        return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Laporan berhasil dicetak ke PDF')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Laporan berhasil dicetak ke PDF'),
+            backgroundColor: AppColors.primaryBlue,
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mencetak laporan: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal mencetak laporan: $e'),
+            backgroundColor: AppColors.accentRed,
+          ),
+        );
+      }
     }
   }
 
@@ -244,23 +283,30 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
     return DropdownButtonFormField<T>(
       decoration: InputDecoration(
         labelText: label,
-        filled: true,
-        fillColor: AppColors.white.withOpacity(0.1),
+        prefixIcon: const Icon(Icons.calendar_today, color: AppColors.primaryBlue),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-          borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+          borderSide: const BorderSide(color: AppColors.textSecondaryBlue),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-          borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+          borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+          borderSide: const BorderSide(color: AppColors.primaryBlue, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+          borderSide: const BorderSide(color: AppColors.accentRed, width: 2),
         ),
       ),
       value: value,
-      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e.toString()))).toList(),
+      items: items
+          .map((e) => DropdownMenuItem<T>(
+        value: e,
+        child: Text('$e'),
+      ))
+          .toList(),
       onChanged: onChanged,
     );
   }
@@ -270,13 +316,13 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryRed,
+        backgroundColor: AppColors.primaryBlue,
         title: const Text('Laporan'),
         foregroundColor: AppColors.white,
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: AppColors.white),
+            icon: const Icon(Icons.refresh, color: AppColors.white, size: AppSizes.iconSizeMedium),
             onPressed: _loadReport,
             tooltip: 'Refresh Data',
           ),
@@ -285,20 +331,18 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
       body: Padding(
         padding: const EdgeInsets.all(AppSizes.paddingLarge),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _reportType == ReportType.payment
-                          ? AppColors.primaryRed
-                          : AppColors.textSecondary.withOpacity(0.3),
-                      foregroundColor: AppColors.white,
+                      backgroundColor: _reportType == ReportType.payment ? AppColors.primaryBlue : AppColors.white,
+                      foregroundColor: _reportType == ReportType.payment ? AppColors.white : AppColors.primaryBlue,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                       ),
+                      padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingMedium),
                     ),
                     onPressed: () {
                       setState(() {
@@ -315,13 +359,12 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                 Expanded(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _reportType == ReportType.income
-                          ? AppColors.primaryRed
-                          : AppColors.textSecondary.withOpacity(0.3),
-                      foregroundColor: AppColors.white,
+                      backgroundColor: _reportType == ReportType.income ? AppColors.primaryBlue : AppColors.white,
+                      foregroundColor: _reportType == ReportType.income ? AppColors.white : AppColors.primaryBlue,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                       ),
+                      padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingMedium),
                     ),
                     onPressed: () {
                       setState(() {
@@ -337,31 +380,42 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
               ],
             ),
             const SizedBox(height: AppSizes.paddingMedium),
-            _buildDropdown<int>(
+            _buildDropdown(
               label: 'Pilih Tahun',
               items: _years,
               value: _selectedYear,
-              onChanged: (v) => setState(() => _selectedYear = v),
+              onChanged: (value) => setState(() => _selectedYear = value),
             ),
             const SizedBox(height: AppSizes.paddingMedium),
-            _loading
-                ? const Center(child: CircularProgressIndicator())
-                : SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingMedium),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                  ),
-                  backgroundColor: AppColors.primaryRed,
-                  foregroundColor: AppColors.white,
-                  elevation: 2,
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: _loading
+                  ? const Center(
+                key: ValueKey('loading'),
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
                 ),
-                onPressed: _loadReport,
-                child: const Text(
-                  'Tampilkan Laporan',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              )
+                  : SizedBox(
+                key: ValueKey('button'),
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: AppColors.white,
+                    padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingMedium),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                    ),
+                  ),
+                  onPressed: _loadReport,
+                  child: const Text(
+                    'Tampilkan Laporan',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -369,9 +423,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
             Expanded(
               child: FadeTransition(
                 opacity: _fadeAnimation,
-                child: _reportType == ReportType.payment
-                    ? _buildPaymentReport()
-                    : _buildIncomeReport(),
+                child: _reportType == ReportType.payment ? _buildPaymentReport() : _buildIncomeReport(),
               ),
             ),
             if (_paymentItems.isNotEmpty || _incomeItems.isNotEmpty)
@@ -381,13 +433,12 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accentRed,
+                      foregroundColor: AppColors.white,
                       padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingMedium),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                       ),
-                      backgroundColor: AppColors.primaryRed,
-                      foregroundColor: AppColors.white,
-                      elevation: 2,
                     ),
                     onPressed: _printReport,
                     child: const Text(
@@ -405,35 +456,62 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
 
   Widget _buildPaymentReport() {
     if (_paymentItems.isEmpty) {
-      return const Center(child: Text('Belum ada data'));
+      return const Center(
+        child: Text(
+          'Belum ada data',
+          style: TextStyle(fontSize: 16, color: AppColors.textSecondaryBlue),
+        ),
+      );
     }
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
-        headingRowColor: MaterialStateProperty.all(AppColors.primaryRed.withOpacity(0.1)),
+        headingRowColor: MaterialStateProperty.all(AppColors.secondaryBlue.withOpacity(0.1)),
         columns: [
-          const DataColumn(label: Text('No', style: TextStyle(fontWeight: FontWeight.bold))),
+          DataColumn(
+            label: Text(
+              'No',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.primaryBlue,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           DataColumn(
             label: Text(
               'Nama',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.primaryBlue,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           for (final m in _monthsList)
             DataColumn(
               label: Text(
-                m.split('-')[0],
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                DateFormat('MMMM', 'id_ID').format(DateTime(_selectedYear!, m)),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.primaryBlue,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
         ],
         rows: List.generate(_paymentItems.length, (i) {
           final item = _paymentItems[i];
-          return DataRow(cells: [
-            DataCell(Text('${i + 1}')),
-            DataCell(Text(item.nama)),
-            for (final m in _monthsList) DataCell(Text(item.statusByMonth[m]!)),
-          ]);
+          return DataRow(
+            cells: [
+              DataCell(Text('${i + 1}', style: const TextStyle(color: AppColors.textSecondaryBlue))),
+              DataCell(Text(item.nama, style: const TextStyle(color: AppColors.textSecondaryBlue))),
+              for (final m in _monthsList)
+                DataCell(
+                  Text(
+                    item.statusByMonth[m] ?? '-',
+                    style: const TextStyle(color: AppColors.textSecondaryBlue),
+                  ),
+                ),
+            ],
+          );
         }),
       ),
     );
@@ -441,31 +519,54 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
 
   Widget _buildIncomeReport() {
     if (_incomeItems.isEmpty) {
-      return const Center(child: Text('Belum ada data'));
+      return const Center(
+        child: Text(
+          'Belum ada data',
+          style: TextStyle(fontSize: 16, color: AppColors.textSecondaryBlue),
+        ),
+      );
     }
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
-        headingRowColor: MaterialStateProperty.all(AppColors.primaryRed.withOpacity(0.1)),
+        headingRowColor: MaterialStateProperty.all(AppColors.secondaryBlue.withOpacity(0.1)),
         columns: [
           DataColumn(
             label: Text(
               'Bulan',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.primaryBlue,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           DataColumn(
             label: Text(
               'Total Harga',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.primaryBlue,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
         rows: _incomeItems.map((item) {
-          return DataRow(cells: [
-            DataCell(Text(item.month)),
-            DataCell(Text(_formatRupiah(item.totalHarga))),
-          ]);
+          return DataRow(
+            cells: [
+              DataCell(
+                Text(
+                  DateFormat('MMMM yyyy', 'id_ID').format(DateTime(item.tahun, item.bulan)),
+                  style: const TextStyle(color: AppColors.textSecondaryBlue),
+                ),
+              ),
+              DataCell(
+                Text(
+                  _formatRupiah(item.totalHarga),
+                  style: const TextStyle(color: AppColors.textSecondaryBlue),
+                ),
+              ),
+            ],
+          );
         }).toList(),
       ),
     );
