@@ -6,7 +6,7 @@ import '../../../utils/utils.dart';
 
 class EditTagihanPage extends StatefulWidget {
   final Tagihan tagihan;
-  const EditTagihanPage({Key? key, required this.tagihan}) : super(key: key);
+  const EditTagihanPage({super.key, required this.tagihan});
 
   @override
   State<EditTagihanPage> createState() => _EditTagihanPageState();
@@ -21,7 +21,6 @@ class _EditTagihanPageState extends State<EditTagihanPage> {
   bool _isLoading = false;
   String _statusPembayaran = 'belum_dibayar';
 
-  // Daftar nama bulan untuk dropdown dengan tipe eksplisit
   final List<Map<String, dynamic>> _bulanOptions = [
     {'nama': 'Januari', 'nomor': 1},
     {'nama': 'Februari', 'nomor': 2},
@@ -53,11 +52,16 @@ class _EditTagihanPageState extends State<EditTagihanPage> {
         _pelanggans = pelanggans;
         _selectedPelanggan = pelanggans.firstWhere(
               (p) => p.id == widget.tagihan.pelangganId,
-          orElse: () => pelanggans[0],
+          orElse: () => pelanggans.isNotEmpty ? pelanggans.first : throw Exception('No pelanggan available'),
         );
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: AppColors.accentRed,
+        ),
+      );
     }
   }
 
@@ -66,16 +70,26 @@ class _EditTagihanPageState extends State<EditTagihanPage> {
       setState(() => _isLoading = true);
       try {
         await TagihanService.updateTagihan(
-          widget.tagihan.id, // Pass as String
+          widget.tagihan.id,
           pelangganId: _selectedPelanggan!.id,
           bulan: _bulan!,
           tahun: _tahun!,
           statusPembayaran: _statusPembayaran,
         );
         Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tagihan diperbarui')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Tagihan diperbarui'),
+            backgroundColor: AppColors.primaryBlue,
+          ),
+        );
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.accentRed,
+          ),
+        );
       } finally {
         setState(() => _isLoading = false);
       }
@@ -87,10 +101,15 @@ class _EditTagihanPageState extends State<EditTagihanPage> {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryRed,
+        backgroundColor: AppColors.primaryBlue,
         title: const Text('Edit Tagihan'),
         foregroundColor: AppColors.white,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, size: AppSizes.iconSizeMedium),
+          onPressed: () => Navigator.pop(context),
+          tooltip: 'Kembali',
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(AppSizes.paddingLarge),
@@ -102,7 +121,7 @@ class _EditTagihanPageState extends State<EditTagihanPage> {
                 DropdownButtonFormField<Pelanggan>(
                   decoration: const InputDecoration(
                     labelText: 'Pelanggan',
-                    prefixIcon: Icon(Icons.person),
+                    prefixIcon: Icon(Icons.person, color: AppColors.textSecondaryBlue),
                   ),
                   value: _selectedPelanggan,
                   items: _pelanggans
@@ -115,7 +134,7 @@ class _EditTagihanPageState extends State<EditTagihanPage> {
                 DropdownButtonFormField<int>(
                   decoration: const InputDecoration(
                     labelText: 'Bulan',
-                    prefixIcon: Icon(Icons.calendar_today),
+                    prefixIcon: Icon(Icons.calendar_today, color: AppColors.textSecondaryBlue),
                   ),
                   value: _bulan,
                   items: _bulanOptions
@@ -131,7 +150,7 @@ class _EditTagihanPageState extends State<EditTagihanPage> {
                 DropdownButtonFormField<int>(
                   decoration: const InputDecoration(
                     labelText: 'Tahun',
-                    prefixIcon: Icon(Icons.calendar_today),
+                    prefixIcon: Icon(Icons.calendar_today, color: AppColors.textSecondaryBlue),
                   ),
                   value: _tahun,
                   items: List.generate(11, (i) => DateTime.now().year - 5 + i)
@@ -144,26 +163,30 @@ class _EditTagihanPageState extends State<EditTagihanPage> {
                 DropdownButtonFormField<String>(
                   decoration: const InputDecoration(
                     labelText: 'Status Pembayaran',
-                    prefixIcon: Icon(Icons.payment),
+                    prefixIcon: Icon(Icons.payment, color: AppColors.textSecondaryBlue),
                   ),
                   value: _statusPembayaran,
                   items: ['belum_dibayar', 'menunggu_verifikasi', 'lunas']
-                      .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                      .map((s) => DropdownMenuItem(value: s, child: Text(s.replaceAll('_', ' ').toUpperCase())))
                       .toList(),
                   onChanged: (value) => setState(() => _statusPembayaran = value!),
                 ),
                 const SizedBox(height: AppSizes.paddingLarge),
-                _isLoading
-                    ? const CircularProgressIndicator()
-                    : ElevatedButton(
-                  onPressed: _saveTagihan,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: _isLoading
+                      ? const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
+                    ),
+                  )
+                      : SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _saveTagihan,
+                      child: const Text('Simpan'),
                     ),
                   ),
-                  child: const Text('Simpan'),
                 ),
               ],
             ),
