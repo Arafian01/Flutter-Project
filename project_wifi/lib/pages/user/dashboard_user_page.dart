@@ -6,7 +6,7 @@ import '../../services/api_service.dart';
 import '../../utils/utils.dart';
 
 class DashboardUserPage extends StatefulWidget {
-  const DashboardUserPage({Key? key}) : super(key: key);
+  const DashboardUserPage({super.key});
 
   @override
   State<DashboardUserPage> createState() => _DashboardUserPageState();
@@ -70,7 +70,7 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
         title: Row(
           children: [
-            Icon(Icons.logout, color: AppColors.primaryRed),
+            const Icon(Icons.logout, color: AppColors.accentRed),
             const SizedBox(width: AppSizes.paddingSmall),
             const Text('Konfirmasi Logout'),
           ],
@@ -79,14 +79,14 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Batal', style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text('Batal', style: TextStyle(color: AppColors.textSecondaryBlue)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               _logout();
             },
-            child: Text('Logout', style: TextStyle(color: AppColors.primaryRed)),
+            child: const Text('Logout', style: TextStyle(color: AppColors.accentRed)),
           ),
         ],
       ),
@@ -108,33 +108,21 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primaryRed, AppColors.secondaryRed],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+            color: AppColors.white,
             child: Padding(
               padding: const EdgeInsets.all(AppSizes.paddingMedium),
               child: Row(
                 children: [
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: AppColors.white.withOpacity(0.2),
+                    backgroundColor: AppColors.secondaryBlue.withOpacity(0.2),
                     child: Icon(
                       icon,
                       size: AppSizes.iconSizeMedium,
-                      color: AppColors.white,
+                      color: AppColors.primaryBlue,
                     ),
                   ),
                   const SizedBox(width: AppSizes.paddingMedium),
@@ -146,7 +134,7 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
                         Text(
                           value,
                           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: AppColors.white,
+                            color: AppColors.primaryBlue,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -154,7 +142,7 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
                         Text(
                           title,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.white.withOpacity(0.9),
+                            color: AppColors.textSecondaryBlue,
                           ),
                         ),
                       ],
@@ -163,7 +151,7 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
                   if (onTap != null)
                     Icon(
                       Icons.arrow_forward_ios,
-                      color: AppColors.white.withOpacity(0.7),
+                      color: AppColors.textSecondaryBlue,
                       size: AppSizes.iconSizeSmall,
                     ),
                 ],
@@ -175,79 +163,6 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
     );
   }
 
-  // Widget _buildSummaryCard() {
-  //   return FadeTransition(
-  //     opacity: _fadeAnimation,
-  //     child: ScaleTransition(
-  //       scale: _scaleAnimation,
-  //       child: Container(
-  //         padding: const EdgeInsets.all(AppSizes.paddingMedium),
-  //         decoration: BoxDecoration(
-  //           gradient: const LinearGradient(
-  //             colors: [AppColors.primaryRed, AppColors.secondaryRed],
-  //             begin: Alignment.topLeft,
-  //             end: Alignment.bottomRight,
-  //           ),
-  //           borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-  //           boxShadow: [
-  //             BoxShadow(
-  //               color: Colors.black.withOpacity(0.2),
-  //               blurRadius: 8,
-  //               offset: const Offset(0, 4),
-  //             ),
-  //           ],
-  //         ),
-  //         child: Column(
-  //           crossAxisAlignment: CrossAxisAlignment.start,
-  //           children: [
-  //             Text(
-  //               'Tagihan Terbaru',
-  //               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-  //                 color: AppColors.white,
-  //                 fontWeight: FontWeight.bold,
-  //               ),
-  //             ),
-  //             const SizedBox(height: AppSizes.paddingSmall),
-  //             Row(
-  //               children: [
-  //                 Expanded(
-  //                   child: Column(
-  //                     crossAxisAlignment: CrossAxisAlignment.start,
-  //                     children: [
-  //                       Text(
-  //                         'Rp 150,000', // Dummy data
-  //                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-  //                           color: AppColors.white,
-  //                           fontWeight: FontWeight.bold,
-  //                         ),
-  //                       ),
-  //                       Text(
-  //                         'Tagihan Mei 2025',
-  //                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-  //                           color: AppColors.white.withOpacity(0.9),
-  //                         ),
-  //                       ),
-  //                     ],
-  //                   ),
-  //                 ),
-  //                 CircleAvatar(
-  //                   radius: 24,
-  //                   backgroundColor: AppColors.white.withOpacity(0.2),
-  //                   child: Icon(
-  //                     Icons.receipt_long,
-  //                     size: AppSizes.iconSizeMedium,
-  //                     color: AppColors.white,
-  //                   ),
-  //                 ),
-  //               ],
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
     final isSmallScreen = MediaQuery.of(context).size.width < 600;
@@ -255,7 +170,7 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryRed,
+        backgroundColor: AppColors.primaryBlue,
         title: const Text('Manajemen Dashboard'),
         foregroundColor: AppColors.white,
         centerTitle: true,
@@ -264,7 +179,6 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
           color: AppColors.white,
           size: AppSizes.iconSizeMedium,
         ),
-        elevation: 2,
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(
@@ -282,14 +196,14 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
                 value: 'logout',
                 child: Row(
                   children: [
-                    Icon(Icons.logout, color: AppColors.primaryRed),
+                    Icon(Icons.logout, color: AppColors.accentRed),
                     SizedBox(width: AppSizes.paddingSmall),
                     Text('Logout'),
                   ],
                 ),
               ),
             ],
-            color: AppColors.backgroundLight,
+            color: AppColors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
             ),
@@ -311,13 +225,19 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
           future: _future,
           builder: (ctx, snap) {
             if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
+                ),
+              );
             }
             if (snap.hasError) {
               return Center(
                 child: Text(
                   'Gagal memuat dashboard: ${snap.error}',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondaryBlue,
+                  ),
                 ),
               );
             }
@@ -326,42 +246,29 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSizes.paddingMedium,
-                      horizontal: AppSizes.paddingLarge,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppColors.primaryRed, AppColors.secondaryRed],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.wifi,
-                          size: AppSizes.iconSizeMedium,
-                          color: AppColors.white,
-                        ),
-                        const SizedBox(width: AppSizes.paddingSmall),
-                        Text(
-                          'Ringkasan Pengguna',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.bold,
+                  Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+                    color: AppColors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSizes.paddingLarge),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.wifi,
+                            size: AppSizes.iconSizeMedium,
+                            color: AppColors.primaryBlue,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: AppSizes.paddingSmall),
+                          Text(
+                            'Ringkasan Pengguna',
+                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              color: AppColors.primaryBlue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSizes.paddingMedium),
@@ -417,73 +324,56 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
                   ),
                   const SizedBox(height: AppSizes.paddingLarge),
                   if (data.tanggalAktif != null && data.tanggalLangganan != null)
-                    Container(
-                      padding: const EdgeInsets.all(AppSizes.paddingMedium),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AppColors.primaryRed, AppColors.secondaryRed],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
+                    Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+                      color: AppColors.white,
                       child: Column(
                         children: [
                           ListTile(
                             leading: const Icon(
                               Icons.calendar_today,
-                              color: AppColors.white,
+                              color: AppColors.primaryBlue,
                               size: AppSizes.iconSizeMedium,
                             ),
                             title: Text(
                               'Tanggal Aktif',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.white,
+                                color: AppColors.primaryBlue,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             subtitle: Text(
                               data.tanggalAktif!.toLocal().toString().split(' ')[0],
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.white.withOpacity(0.9),
-                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondaryBlue,
                               ),
                             ),
                           ),
-                          const Divider(height: 1, color: AppColors.white),
+                          const Divider(height: 1, color: AppColors.textSecondaryBlue),
                           ListTile(
                             leading: const Icon(
                               Icons.event,
-                              color: AppColors.white,
+                              color: AppColors.primaryBlue,
                               size: AppSizes.iconSizeMedium,
                             ),
                             title: Text(
                               'Langganan Sejak',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.white,
+                                color: AppColors.primaryBlue,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             subtitle: Text(
                               data.tanggalLangganan!.toLocal().toString().split(' ')[0],
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.white.withOpacity(0.9),
-                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondaryBlue,
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  // const SizedBox(height: AppSizes.paddingLarge),
-                  // _buildSummaryCard(),
                 ],
               ),
             );
@@ -491,7 +381,7 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.primaryRed,
+        backgroundColor: AppColors.accentRed,
         foregroundColor: AppColors.white,
         onPressed: () async {
           final result = await Navigator.pushNamed(context, '/add_pembayaran_user');
@@ -500,7 +390,6 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
           }
         },
         child: const Icon(Icons.add),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
         tooltip: 'Tambah Pembayaran',
       ),
     );
