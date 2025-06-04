@@ -36,11 +36,11 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
     final role = prefs.getString('role');
     final userId = prefs.getInt('user_id');
     await Future.delayed(const Duration(seconds: 2));
-    if (role != null && userId != null) {
-      Navigator.pushReplacementNamed(context, '/main', arguments: role);
-    } else {
+    // if (role != null && userId != null) {
+    //   Navigator.pushReplacementNamed(context, '/main', arguments: role);
+    // } else {
       Navigator.pushReplacementNamed(context, '/login');
-    }
+    // }
   }
 
   @override
