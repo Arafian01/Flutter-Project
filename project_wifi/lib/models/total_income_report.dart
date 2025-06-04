@@ -1,15 +1,18 @@
 class TotalIncomeReport {
-  final String month;
+  final int bulan;
+  final int tahun;
   final int totalHarga;
 
   TotalIncomeReport({
-    required this.month,
+    required this.bulan,
+    required this.tahun,
     required this.totalHarga,
   });
 
   factory TotalIncomeReport.fromJson(Map<String, dynamic> json) {
     return TotalIncomeReport(
-      month: json['month'] as String,
+      bulan: json['bulan'] as int,
+      tahun: json['tahun'] as int,
       totalHarga: json['total_harga'] as int,
     );
   }
