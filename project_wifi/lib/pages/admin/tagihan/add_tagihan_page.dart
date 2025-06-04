@@ -4,7 +4,7 @@ import '../../../models/pelanggan.dart';
 import '../../../utils/utils.dart';
 
 class AddTagihanPage extends StatefulWidget {
-  const AddTagihanPage({Key? key}) : super(key: key);
+  const AddTagihanPage({super.key});
 
   @override
   State<AddTagihanPage> createState() => _AddTagihanPageState();
@@ -19,7 +19,6 @@ class _AddTagihanPageState extends State<AddTagihanPage> {
   bool _isLoading = false;
   String _statusPembayaran = 'belum_dibayar';
 
-  // Daftar nama bulan untuk dropdown dengan tipe eksplisit
   final List<Map<String, dynamic>> _bulanOptions = [
     {'nama': 'Januari', 'nomor': 1},
     {'nama': 'Februari', 'nomor': 2},
@@ -46,7 +45,12 @@ class _AddTagihanPageState extends State<AddTagihanPage> {
       final pelanggans = await fetchPelanggans();
       setState(() => _pelanggans = pelanggans);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: AppColors.accentRed,
+        ),
+      );
     }
   }
 
@@ -61,9 +65,19 @@ class _AddTagihanPageState extends State<AddTagihanPage> {
           statusPembayaran: _statusPembayaran,
         );
         Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tagihan dibuat')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Tagihan dibuat'),
+            backgroundColor: AppColors.primaryBlue,
+          ),
+        );
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.accentRed,
+          ),
+        );
       } finally {
         setState(() => _isLoading = false);
       }
@@ -75,10 +89,15 @@ class _AddTagihanPageState extends State<AddTagihanPage> {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryRed,
+        backgroundColor: AppColors.primaryBlue,
         title: const Text('Tambah Tagihan'),
         foregroundColor: AppColors.white,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, size: AppSizes.iconSizeMedium),
+          onPressed: () => Navigator.pop(context),
+          tooltip: 'Kembali',
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(AppSizes.paddingLarge),
@@ -90,7 +109,7 @@ class _AddTagihanPageState extends State<AddTagihanPage> {
                 DropdownButtonFormField<Pelanggan>(
                   decoration: const InputDecoration(
                     labelText: 'Pelanggan',
-                    prefixIcon: Icon(Icons.person),
+                    prefixIcon: Icon(Icons.person, color: AppColors.textSecondaryBlue),
                   ),
                   items: _pelanggans
                       .map((p) => DropdownMenuItem(value: p, child: Text(p.name)))
@@ -102,7 +121,7 @@ class _AddTagihanPageState extends State<AddTagihanPage> {
                 DropdownButtonFormField<int>(
                   decoration: const InputDecoration(
                     labelText: 'Bulan',
-                    prefixIcon: Icon(Icons.calendar_today),
+                    prefixIcon: Icon(Icons.calendar_today, color: AppColors.textSecondaryBlue),
                   ),
                   items: _bulanOptions
                       .map((m) => DropdownMenuItem<int>(
@@ -117,7 +136,7 @@ class _AddTagihanPageState extends State<AddTagihanPage> {
                 DropdownButtonFormField<int>(
                   decoration: const InputDecoration(
                     labelText: 'Tahun',
-                    prefixIcon: Icon(Icons.calendar_today),
+                    prefixIcon: Icon(Icons.calendar_today, color: AppColors.textSecondaryBlue),
                   ),
                   items: List.generate(11, (i) => DateTime.now().year - 5 + i)
                       .map((y) => DropdownMenuItem(value: y, child: Text('$y')))
@@ -129,26 +148,30 @@ class _AddTagihanPageState extends State<AddTagihanPage> {
                 DropdownButtonFormField<String>(
                   decoration: const InputDecoration(
                     labelText: 'Status Pembayaran',
-                    prefixIcon: Icon(Icons.payment),
+                    prefixIcon: Icon(Icons.payment, color: AppColors.textSecondaryBlue),
                   ),
                   value: _statusPembayaran,
                   items: ['belum_dibayar', 'menunggu_verifikasi', 'lunas']
-                      .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                      .map((s) => DropdownMenuItem(value: s, child: Text(s.replaceAll('_', ' ').toUpperCase())))
                       .toList(),
                   onChanged: (value) => setState(() => _statusPembayaran = value!),
                 ),
                 const SizedBox(height: AppSizes.paddingLarge),
-                _isLoading
-                    ? const CircularProgressIndicator()
-                    : ElevatedButton(
-                  onPressed: _saveTagihan,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: _isLoading
+                      ? const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
+                    ),
+                  )
+                      : SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _saveTagihan,
+                      child: const Text('Simpan'),
                     ),
                   ),
-                  child: const Text('Simpan'),
                 ),
               ],
             ),
