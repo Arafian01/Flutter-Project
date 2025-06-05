@@ -4,7 +4,7 @@ import 'dart:convert';
 import '../../utils/utils.dart';
 
 class ProfilPage extends StatefulWidget {
-  const ProfilPage({Key? key}) : super(key: key);
+  const ProfilPage({super.key});
 
   @override
   State<ProfilPage> createState() => _ProfilPageState();
@@ -72,7 +72,7 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
         title: Row(
           children: [
-            Icon(Icons.logout, color: AppColors.primaryRed),
+            const Icon(Icons.logout, color: AppColors.accentRed),
             const SizedBox(width: AppSizes.paddingSmall),
             const Text('Konfirmasi Logout'),
           ],
@@ -81,14 +81,14 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Batal', style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text('Batal', style: TextStyle(color: AppColors.textSecondaryBlue)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               _logout();
             },
-            child: Text('Logout', style: TextStyle(color: AppColors.primaryRed)),
+            child: const Text('Logout', style: TextStyle(color: AppColors.accentRed)),
           ),
         ],
       ),
@@ -96,50 +96,40 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
   }
 
   Widget _buildInfoCard(IconData icon, String label, String? value) {
-    return Container(
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+      color: AppColors.white,
       margin: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
-      padding: const EdgeInsets.all(AppSizes.paddingMedium),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primaryRed, AppColors.secondaryRed],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: AppColors.white.withOpacity(0.9), size: AppSizes.iconSizeMedium),
-          const SizedBox(width: AppSizes.paddingMedium),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.white.withOpacity(0.9),
-                    fontWeight: FontWeight.bold,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSizes.paddingMedium),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.primaryBlue, size: AppSizes.iconSizeMedium),
+            const SizedBox(width: AppSizes.paddingMedium),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.primaryBlue,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSizes.paddingSmall),
-                Text(
-                  value ?? '-',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.white.withOpacity(0.9),
+                  const SizedBox(height: AppSizes.paddingSmall),
+                  Text(
+                    value ?? '-',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondaryBlue,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -149,7 +139,7 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryRed,
+        backgroundColor: AppColors.primaryBlue,
         title: const Text('Profil Saya'),
         foregroundColor: AppColors.white,
         centerTitle: true,
@@ -158,7 +148,6 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
           color: AppColors.white,
           size: AppSizes.iconSizeMedium,
         ),
-        elevation: 2,
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(
@@ -176,14 +165,14 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
                 value: 'logout',
                 child: Row(
                   children: [
-                    Icon(Icons.logout, color: AppColors.primaryRed),
+                    Icon(Icons.logout, color: AppColors.accentRed),
                     SizedBox(width: AppSizes.paddingSmall),
                     Text('Logout'),
                   ],
                 ),
               ),
             ],
-            color: AppColors.backgroundLight,
+            color: AppColors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
             ),
@@ -191,7 +180,11 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
         ],
       ),
       body: _name == null
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
+        ),
+      )
           : SingleChildScrollView(
         padding: const EdgeInsets.all(AppSizes.paddingMedium),
         child: FadeTransition(
@@ -201,78 +194,52 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppSizes.paddingMedium,
-                    horizontal: AppSizes.paddingLarge,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primaryRed, AppColors.secondaryRed],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.person,
-                        size: AppSizes.iconSizeMedium,
-                        color: AppColors.white,
-                      ),
-                      const SizedBox(width: AppSizes.paddingSmall),
-                      Text(
-                        'Profil Saya',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.bold,
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+                  color: AppColors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSizes.paddingLarge),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.person,
+                          size: AppSizes.iconSizeMedium,
+                          color: AppColors.primaryBlue,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: AppSizes.paddingSmall),
+                        Text(
+                          'Profil Saya',
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            color: AppColors.primaryBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSizes.paddingMedium),
-                Container(
-                  padding: const EdgeInsets.all(AppSizes.paddingMedium),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primaryRed, AppColors.secondaryRed],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+                  color: AppColors.white,
                   child: Column(
                     children: [
                       CircleAvatar(
                         radius: 48,
-                        backgroundColor: AppColors.white.withOpacity(0.2),
+                        backgroundColor: AppColors.secondaryBlue.withOpacity(0.2),
                         child: Icon(
                           Icons.person,
                           size: 48,
-                          color: AppColors.white,
+                          color: AppColors.primaryBlue,
                         ),
                       ),
                       const SizedBox(height: AppSizes.paddingMedium),
                       Text(
                         _name!,
                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: AppColors.white,
+                          color: AppColors.primaryBlue,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -280,7 +247,7 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
                       Text(
                         _email!,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.white.withOpacity(0.9),
+                          color: AppColors.textSecondaryBlue,
                         ),
                       ),
                     ],
@@ -298,8 +265,8 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
                   child: ElevatedButton(
                     onPressed: _showLogoutDialog,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.white,
-                      foregroundColor: AppColors.primaryRed,
+                      backgroundColor: AppColors.accentRed,
+                      foregroundColor: AppColors.white,
                       padding: const EdgeInsets.symmetric(
                         vertical: AppSizes.paddingMedium,
                         horizontal: AppSizes.paddingLarge,
@@ -314,7 +281,6 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSizes.paddingLarge),
               ],
             ),
           ),
