@@ -18,7 +18,7 @@ String formatBulanTahunFromInt(int bulan, int tahun) {
 }
 
 class TagihanUserPage extends StatefulWidget {
-  const TagihanUserPage({Key? key}) : super(key: key);
+  const TagihanUserPage({super.key});
 
   @override
   State<TagihanUserPage> createState() => _TagihanUserPageState();
@@ -78,13 +78,13 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
     switch (t.statusPembayaran) {
       case 'belum_dibayar':
         statusIcon = Icons.warning;
-        statusColor = Colors.orange;
+        statusColor = AppColors.accentRed;
         statusText = 'Belum Dibayar';
         canPay = true;
         break;
       case 'menunggu_verifikasi':
         statusIcon = Icons.hourglass_empty;
-        statusColor = Colors.blue;
+        statusColor = AppColors.secondaryBlue;
         statusText = 'Menunggu Verifikasi';
         canPay = false;
         break;
@@ -96,7 +96,7 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
         break;
       default:
         statusIcon = Icons.help;
-        statusColor = Colors.grey;
+        statusColor = AppColors.textSecondaryBlue;
         statusText = 'Tidak Diketahui';
         canPay = false;
     }
@@ -105,28 +105,16 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
       opacity: _fadeAnimation,
       child: ScaleTransition(
         scale: _scaleAnimation,
-        child: Container(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+          color: AppColors.white,
           margin: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.primaryRed, AppColors.secondaryRed],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
           child: ListTile(
             contentPadding: const EdgeInsets.all(AppSizes.paddingMedium),
             leading: CircleAvatar(
               radius: 24,
-              backgroundColor: AppColors.white.withOpacity(0.2),
+              backgroundColor: AppColors.secondaryBlue.withOpacity(0.2),
               child: Icon(
                 statusIcon,
                 color: statusColor,
@@ -134,10 +122,10 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
               ),
             ),
             title: Text(
-              formatBulanTahunFromInt(t.bulan, t.tahun), // Updated
+              formatBulanTahunFromInt(t.bulan, t.tahun),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppColors.white,
+                color: AppColors.primaryBlue,
               ),
             ),
             subtitle: Column(
@@ -146,7 +134,7 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
                 Text(
                   'Rp ${t.harga}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.white.withOpacity(0.9),
+                    color: AppColors.textSecondaryBlue,
                   ),
                 ),
                 Text(
@@ -172,8 +160,8 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
               }
                   : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.white,
-                foregroundColor: AppColors.primaryRed,
+                backgroundColor: AppColors.primaryBlue,
+                foregroundColor: AppColors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
                 ),
@@ -191,7 +179,7 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryRed,
+        backgroundColor: AppColors.primaryBlue,
         title: const Text('Manajemen Tagihan'),
         foregroundColor: AppColors.white,
         centerTitle: true,
@@ -200,7 +188,6 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
           color: AppColors.white,
           size: AppSizes.iconSizeMedium,
         ),
-        elevation: 2,
         actions: [
           IconButton(
             icon: const Icon(
@@ -218,42 +205,29 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(
-                vertical: AppSizes.paddingMedium,
-                horizontal: AppSizes.paddingLarge,
-              ),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primaryRed, AppColors.secondaryRed],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.receipt_long,
-                    size: AppSizes.iconSizeMedium,
-                    color: AppColors.white,
-                  ),
-                  const SizedBox(width: AppSizes.paddingSmall),
-                  Text(
-                    'Ringkasan Tagihan',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.bold,
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+              color: AppColors.white,
+              child: Padding(
+                padding: const EdgeInsets.all(AppSizes.paddingLarge),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.receipt_long,
+                      size: AppSizes.iconSizeMedium,
+                      color: AppColors.primaryBlue,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: AppSizes.paddingSmall),
+                    Text(
+                      'Ringkasan Tagihan',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: AppColors.primaryBlue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: AppSizes.paddingMedium),
@@ -262,13 +236,19 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
                 future: _future,
                 builder: (ctx, snap) {
                   if (snap.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
+                      ),
+                    );
                   }
                   if (snap.hasError) {
                     return Center(
                       child: Text(
                         'Gagal memuat tagihan: ${snap.error}',
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondaryBlue,
+                        ),
                       ),
                     );
                   }
@@ -277,7 +257,7 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
                     return const Center(
                       child: Text(
                         'Belum ada tagihan',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textSecondaryBlue),
                       ),
                     );
                   }
