@@ -9,6 +9,7 @@ class AppColors {
   static const Color textPrimary = Color(0xFF1A1A1A); // Teks utama
   static const Color textSecondary = Color(0xFF4A4A4A); // Teks sekunder
   static const Color white = Color(0xFFFFFFFF);
+  static const textSecondaryBlue = Color(0xFF607D8B);
 }
 
 class AppTheme {
