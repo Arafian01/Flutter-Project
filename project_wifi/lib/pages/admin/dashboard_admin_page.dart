@@ -153,32 +153,6 @@ class _DashboardAdminPageState extends State<DashboardAdminPage>
     child: Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-    Card(
-    elevation: 4,
-    shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-    ),
-    child: Padding(
-    padding: const EdgeInsets.all(AppSizes.paddingMedium),
-    child: Row(
-    children: [
-    const Icon(
-    Icons.wifi,
-    size: AppSizes.iconSizeMedium,
-    color: AppColors.primaryBlue,
-    ),
-    const SizedBox(width: AppSizes.paddingSmall),
-    Text(
-    'Ringkasan Admin',
-    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-    color: AppColors.primaryBlue,
-    fontWeight: FontWeight.bold,
-    ),
-    ),
-    ],
-    ),
-    ),
-    ),
     const SizedBox(height: AppSizes.paddingMedium),
     GridView(
     shrinkWrap: true,
