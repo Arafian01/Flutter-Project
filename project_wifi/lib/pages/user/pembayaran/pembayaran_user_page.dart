@@ -184,7 +184,7 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
-        title: const Text('Manajemen Pembayaran'),
+        title: const Text('Daftar Pembayaran'),
         foregroundColor: AppColors.white,
         centerTitle: true,
         leading: const Icon(
@@ -237,32 +237,6 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-              color: AppColors.white,
-              child: Padding(
-                padding: const EdgeInsets.all(AppSizes.paddingLarge),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.payment,
-                      size: AppSizes.iconSizeMedium,
-                      color: AppColors.primaryBlue,
-                    ),
-                    const SizedBox(width: AppSizes.paddingSmall),
-                    Text(
-                      'Ringkasan Pembayaran',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: AppColors.primaryBlue,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSizes.paddingMedium),
             Expanded(
               child: FutureBuilder<List<Pembayaran>>(
                 future: _future,
