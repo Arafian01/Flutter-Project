@@ -140,7 +140,7 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
-        title: const Text('Profil Saya'),
+        title: const Text('Profil'),
         foregroundColor: AppColors.white,
         centerTitle: true,
         leading: const Icon(
@@ -194,32 +194,6 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-                  color: AppColors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSizes.paddingLarge),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.person,
-                          size: AppSizes.iconSizeMedium,
-                          color: AppColors.primaryBlue,
-                        ),
-                        const SizedBox(width: AppSizes.paddingSmall),
-                        Text(
-                          'Profil Saya',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: AppColors.primaryBlue,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSizes.paddingMedium),
                 Card(
                   elevation: 4,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
