@@ -171,7 +171,7 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
-        title: const Text('Manajemen Dashboard'),
+        title: const Text('Dashboard'),
         foregroundColor: AppColors.white,
         centerTitle: true,
         leading: const Icon(
@@ -246,32 +246,6 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-                    color: AppColors.white,
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSizes.paddingLarge),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.wifi,
-                            size: AppSizes.iconSizeMedium,
-                            color: AppColors.primaryBlue,
-                          ),
-                          const SizedBox(width: AppSizes.paddingSmall),
-                          Text(
-                            'Ringkasan Pengguna',
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              color: AppColors.primaryBlue,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.paddingMedium),
                   GridView(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -379,18 +353,6 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
             );
           },
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.accentRed,
-        foregroundColor: AppColors.white,
-        onPressed: () async {
-          final result = await Navigator.pushNamed(context, '/add_pembayaran_user');
-          if (result == true) {
-            _loadDashboard();
-          }
-        },
-        child: const Icon(Icons.add),
-        tooltip: 'Tambah Pembayaran',
       ),
     );
   }
