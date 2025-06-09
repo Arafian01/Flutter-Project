@@ -180,7 +180,7 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
-        title: const Text('Manajemen Tagihan'),
+        title: const Text('Daftar Tagihan'),
         foregroundColor: AppColors.white,
         centerTitle: true,
         leading: const Icon(
@@ -205,32 +205,6 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-              color: AppColors.white,
-              child: Padding(
-                padding: const EdgeInsets.all(AppSizes.paddingLarge),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.receipt_long,
-                      size: AppSizes.iconSizeMedium,
-                      color: AppColors.primaryBlue,
-                    ),
-                    const SizedBox(width: AppSizes.paddingSmall),
-                    Text(
-                      'Ringkasan Tagihan',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: AppColors.primaryBlue,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSizes.paddingMedium),
             Expanded(
               child: FutureBuilder<List<Tagihan>>(
                 future: _future,
