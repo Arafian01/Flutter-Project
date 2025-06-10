@@ -9,6 +9,7 @@ import 'package:pdf/widgets.dart' as pw;
 import '../../../models/report_item.dart';
 import '../../../models/total_income_report.dart';
 import '../../../services/api_service.dart';
+import '../../../utils/constants.dart';
 import '../../../utils/utils.dart';
 
 enum ReportType { payment, income }
@@ -73,9 +74,9 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
         }
         if (mounted) {
           setState(() {
-            _monthsList = List<int>.from(result['months']);
+            _monthsList = (result['months'] as List<dynamic>).map((m) => m['bulan'] as int).toList();
             _paymentItems = (result['data'] as List<dynamic>)
-                .map((e) => ReportItem.fromJson(e as Map<String, dynamic>, _monthsList.map((m) => m.toString()).toList()))
+                .map((e) => ReportItem.fromJson(e as Map<String, dynamic>, _monthsList))
                 .toList();
             _incomeItems = [];
           });
@@ -141,24 +142,23 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                 ),
                 pw.Table(
                   border: pw.TableBorder.all(),
-                  defaultColumnWidth: const pw.FlexColumnWidth(),
                   children: [
                     pw.TableRow(
                       decoration: const pw.BoxDecoration(color: PdfColors.grey200),
                       children: [
-                        pw.Padding(
+                        pw.Container(
                           padding: const pw.EdgeInsets.all(8),
                           child: pw.Text('No', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                         ),
-                        pw.Padding(
+                        pw.Container(
                           padding: const pw.EdgeInsets.all(8),
                           child: pw.Text('Nama', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                         ),
                         for (final m in _monthsList)
-                          pw.Padding(
+                          pw.Container(
                             padding: const pw.EdgeInsets.all(8),
                             child: pw.Text(
-                              DateFormat('MMMM', 'id_ID').format(DateTime(_selectedYear!, m)),
+                              DateFormat('MMMM', 'id').format(DateTime(_selectedYear!, m)),
                               style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                             ),
                           ),
@@ -167,21 +167,42 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                     for (var i = 0; i < _paymentItems.length; i++)
                       pw.TableRow(
                         children: [
-                          pw.Padding(
+                          pw.Container(
                             padding: const pw.EdgeInsets.all(8),
                             child: pw.Text('${i + 1}'),
                           ),
-                          pw.Padding(
+                          pw.Container(
                             padding: const pw.EdgeInsets.all(8),
                             child: pw.Text(_paymentItems[i].nama),
                           ),
                           for (final m in _monthsList)
-                            pw.Padding(
+                            pw.Container(
                               padding: const pw.EdgeInsets.all(8),
-                              child: pw.Text(_paymentItems[i].statusByMonth[m] ?? '-'),
+                              child: pw.Text(
+                                _paymentItems[i].statusByMonth[m] == 'lunas'
+                                    ? '✔'
+                                    : _paymentItems[i].statusByMonth[m] == 'belum_dibayar'
+                                    ? 'X'
+                                    : '-',
+                                textAlign: pw.TextAlign.center,
+                              ),
                             ),
                         ],
                       ),
+                  ],
+                ),
+                pw.SizedBox(height: 20),
+                pw.Text(
+                  'Keterangan Simbol:',
+                  style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 8),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('✔: Lunas - Pembayaran telah diselesaikan.'),
+                    pw.Text('X: Belum Dibayar - Pembayaran belum dilakukan.'),
+                    pw.Text('-: Tidak Ada Data - Tidak ada tagihan untuk periode tersebut.'),
                   ],
                 ),
               ];
@@ -196,16 +217,15 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                 ),
                 pw.Table(
                   border: pw.TableBorder.all(),
-                  defaultColumnWidth: const pw.FlexColumnWidth(),
                   children: [
                     pw.TableRow(
                       decoration: const pw.BoxDecoration(color: PdfColors.grey200),
                       children: [
-                        pw.Padding(
+                        pw.Container(
                           padding: const pw.EdgeInsets.all(8),
                           child: pw.Text('Bulan', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                         ),
-                        pw.Padding(
+                        pw.Container(
                           padding: const pw.EdgeInsets.all(8),
                           child: pw.Text('Total Harga', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                         ),
@@ -214,15 +234,15 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                     for (var item in _incomeItems)
                       pw.TableRow(
                         children: [
-                          pw.Padding(
+                          pw.Container(
                             padding: const pw.EdgeInsets.all(8),
                             child: pw.Text(
-                              DateFormat('MMMM yyyy', 'id_ID').format(DateTime(item.tahun, item.bulan)),
+                              DateFormat('MMMM yyyy', 'id').format(DateTime(item.tahun, item.bulan)),
                             ),
                           ),
-                          pw.Padding(
+                          pw.Container(
                             padding: const pw.EdgeInsets.all(8),
-                            child: pw.Text(_formatRupiah(item.totalHarga)),
+                            child: pw.Text(item.totalHarga.toString()),
                           ),
                         ],
                       ),
@@ -234,11 +254,10 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
         ),
       );
 
-      final tempDir = await getTemporaryDirectory();
-      final file = File('${tempDir.path}/laporan_${_reportType.name}_$_selectedYear.pdf');
-      await file.writeAsBytes(await pdf.save());
+      final File tempDir = File('${(await getTemporaryDirectory()).path}/laporan_${_reportType.name}_$_selectedYear.pdf');
+      await tempDir.writeAsBytes(await pdf.save());
 
-      final result = await OpenFile.open(file.path);
+      final result = await OpenFile.open(tempDir.path);
       if (result.type != ResultType.done && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -269,11 +288,6 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
     }
   }
 
-  String _formatRupiah(int amount) {
-    final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
-    return formatter.format(amount);
-  }
-
   Widget _buildDropdown<T>({
     required String label,
     required List<T> items,
@@ -289,7 +303,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-          borderSide: const BorderSide(color: AppColors.textSecondaryBlue),
+          borderSide: const BorderSide(color: AppColors.secondaryBlue),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
@@ -317,7 +331,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
-        title: const Text('Laporan'),
+        title: const Text('Laporan', style: TextStyle(color: AppColors.white)),
         foregroundColor: AppColors.white,
         centerTitle: true,
         actions: [
@@ -409,13 +423,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                     ),
                   ),
                   onPressed: _loadReport,
-                  child: const Text(
-                    'Tampilkan Laporan',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: const Text('Tampilkan Laporan'),
                 ),
               ),
             ),
@@ -441,10 +449,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                       ),
                     ),
                     onPressed: _printReport,
-                    child: const Text(
-                      'Cetak Laporan',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
+                    child: const Text('Cetak Laporan'),
                   ),
                 ),
               ),
@@ -459,7 +464,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
       return const Center(
         child: Text(
           'Belum ada data',
-          style: TextStyle(fontSize: 16, color: AppColors.textSecondaryBlue),
+          style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
         ),
       );
     }
@@ -489,7 +494,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
           for (final m in _monthsList)
             DataColumn(
               label: Text(
-                DateFormat('MMMM', 'id_ID').format(DateTime(_selectedYear!, m)),
+                DateFormat('MMMM', 'id').format(DateTime(_selectedYear!, m)),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.primaryBlue,
                   fontWeight: FontWeight.bold,
@@ -501,13 +506,13 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
           final item = _paymentItems[i];
           return DataRow(
             cells: [
-              DataCell(Text('${i + 1}', style: const TextStyle(color: AppColors.textSecondaryBlue))),
-              DataCell(Text(item.nama, style: const TextStyle(color: AppColors.textSecondaryBlue))),
+              DataCell(Text('${i + 1}', style: const TextStyle(color: AppColors.textSecondary))),
+              DataCell(Text(item.nama, style: const TextStyle(color: AppColors.textSecondary))),
               for (final m in _monthsList)
                 DataCell(
                   Text(
                     item.statusByMonth[m] ?? '-',
-                    style: const TextStyle(color: AppColors.textSecondaryBlue),
+                    style: const TextStyle(color: AppColors.textSecondary),
                   ),
                 ),
             ],
@@ -522,7 +527,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
       return const Center(
         child: Text(
           'Belum ada data',
-          style: TextStyle(fontSize: 16, color: AppColors.textSecondaryBlue),
+          style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
         ),
       );
     }
@@ -555,14 +560,14 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
             cells: [
               DataCell(
                 Text(
-                  DateFormat('MMMM yyyy', 'id_ID').format(DateTime(item.tahun, item.bulan)),
-                  style: const TextStyle(color: AppColors.textSecondaryBlue),
+                  DateFormat('MMMM yyyy', 'id').format(DateTime(item.tahun, item.bulan)),
+                  style: const TextStyle(color: AppColors.textSecondary),
                 ),
               ),
               DataCell(
                 Text(
-                  _formatRupiah(item.totalHarga),
-                  style: const TextStyle(color: AppColors.textSecondaryBlue),
+                  item.totalHarga.toString(),
+                  style: const TextStyle(color: AppColors.textSecondary),
                 ),
               ),
             ],
