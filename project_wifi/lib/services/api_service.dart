@@ -10,6 +10,8 @@ import '../models/pembayaran.dart';
 import '../models/report_item.dart';
 import '../models/dashboard_user.dart';
 import '../models/total_income_report.dart';
+import 'dart:typed_data';
+import 'package:image/image.dart' as img;
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -214,14 +216,47 @@ class PembayaranService {
     required String statusVerifikasi,
     required File imageFile,
   }) async {
-    final uri = Uri.parse('${AppConstants.baseUrl}/pembayaran');
-    final req = http.MultipartRequest('POST', uri)
-      ..fields['tagihan_id'] = tagihanId.toString()
-      ..fields['status_verifikasi'] = statusVerifikasi
-      ..files.add(await http.MultipartFile.fromPath('image', imageFile.path));
-    final res = await req.send().timeout(const Duration(seconds: 15));
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception('Create pembayaran failed (${res.statusCode})');
+    try {
+      // Read and compress image
+      final bytes = await imageFile.readAsBytes();
+      final imgFile = img.decodeImage(Uint8List.fromList(bytes));
+      if (imgFile == null) throw Exception('Invalid image');
+
+      // Resize and compress to ~500KB
+      const maxWidth = 1024;
+      final resized = img.copyResize(imgFile, width: maxWidth, maintainAspect: true);
+      var quality = 90;
+      List<int> compressed = img.encodeJpg(resized, quality: quality);
+      const targetSize = 500 * 1024; // 500KB
+      while (compressed.length > targetSize && quality > 10) {
+        quality -= 5;
+        compressed = img.encodeJpg(resized, quality: quality);
+      }
+
+      // Create multipart request
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${AppConstants.baseUrl}/pembayaran'), // Replace with your API endpoint
+      );
+      request.fields['tagihan_id'] = tagihanId.toString();
+      request.fields['status_verifikasi'] = statusVerifikasi;
+      request.files.add(http.MultipartFile.fromBytes(
+        'image',
+        compressed,
+        filename: 'payment_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      ));
+
+      // Send request with 30-second timeout
+      final response = await request.send().timeout(Duration(seconds: 30));
+
+      if (response.statusCode == 201) {
+        return;
+      } else {
+        final body = await response.stream.bytesToString();
+        throw Exception('Error ${response.statusCode}: $body');
+      }
+    } catch (e) {
+      throw Exception(e.toString());
     }
   }
 
@@ -304,7 +339,7 @@ class ReportService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final List<dynamic> reportData = data['data'] as List<dynamic>;
-      return reportData.map((json) => TotalIncomeReport.fromJson(json)).toList();
+      return reportData.map((json) => TotalIncomeReport.fromJson(json as Map<String, dynamic>)).toList();
     }
     throw Exception('Gagal memuat laporan penghasilan: ${response.statusCode}');
   }
