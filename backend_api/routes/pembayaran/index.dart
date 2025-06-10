@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:dart_frog/dart_frog.dart';
+import 'package:image/image.dart' as img;
 import '../../lib/database.dart';
 import '../../lib/models/pembayaran.dart';
 
@@ -76,13 +78,28 @@ Future<Response> onRequest(RequestContext context) async {
 
         final bytes = await file.readAsBytes();
         final ext = file.name.split('.').last;
-        final img = 'img_${DateTime.now().millisecondsSinceEpoch}.$ext';
+        final imgFile = img.decodeImage(Uint8List.fromList(bytes));
+        if (imgFile == null) {
+          return Response.json(
+              statusCode: 400, body: {'error': 'Invalid image'});
+        }
+
+        // Compress image to target size (~1MB)
+        const targetSize = 1 * 1024 * 1024; // 1MB in bytes
+        var quality = 90;
+        List<int> compressed = img.encodeJpg(imgFile, quality: quality);
+        while (compressed.length > targetSize && quality > 10) {
+          quality -= 5;
+          compressed = img.encodeJpg(imgFile, quality: quality);
+        }
+
+        final imgName = 'img_${DateTime.now().millisecondsSinceEpoch}.$ext';
         final uploadDir = Directory('uploads');
         if (!await uploadDir.exists()) {
           await uploadDir.create(recursive: true);
         }
-        final filePath = 'uploads/$img';
-        await File(filePath).writeAsBytes(bytes);
+        final filePath = 'uploads/$imgName';
+        await File(filePath).writeAsBytes(compressed);
 
         final tv = (st == 'diterima' || st == 'ditolak')
             ? DateTime.now().toIso8601String().split('T')[0]
@@ -96,7 +113,7 @@ Future<Response> onRequest(RequestContext context) async {
           RETURNING id;
         ''', substitutionValues: {
           'tid': tid,
-          'img': '/Uploads/$img',
+          'img': '/Uploads/$imgName',
           'st': st,
           'tv': tv,
         });
