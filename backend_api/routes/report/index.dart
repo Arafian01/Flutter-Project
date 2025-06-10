@@ -52,8 +52,8 @@ Future<Response> onRequest(RequestContext context) async {
     final report = <Map<String, dynamic>>[];
     for (final pid in nameMap.keys) {
       final entry = <String, dynamic>{
-        'pelanggan_id': pid,
         'nama': nameMap[pid],
+        'tahun': year,
       };
       for (final m in months) {
         final key = '${m['bulan']}-${m['tahun']}';
