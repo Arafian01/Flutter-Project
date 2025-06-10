@@ -7,16 +7,24 @@ class ReportItem {
     required this.statusByMonth,
   });
 
-  factory ReportItem.fromJson(Map<String, dynamic> json, List<String> monthsList) {
-    final statusMap = <int, String>{};
-    final data = json['data'] as Map<String, dynamic>;
-    for (int i = 0; i < monthsList.length; i++) {
-      final month = i + 1;
-      statusMap[month] = data[month.toString()] ?? '-';
+  factory ReportItem.fromJson(Map<String, dynamic> json, List<int> monthsList) {
+    try {
+      final nama = json['nama'] as String? ?? 'Unknown';
+      final statusMap = <int, String>{};
+      for (final month in monthsList) {
+        final key = '$month-${json['tahun'] ?? DateTime.now().year}';
+        statusMap[month] = json[key] as String? ?? '-';
+      }
+      return ReportItem(
+        nama: nama,
+        statusByMonth: statusMap,
+      );
+    } catch (e) {
+      print('Error parsing ReportItem: $e, JSON: $json');
+      return ReportItem(
+        nama: 'Error',
+        statusByMonth: {for (var m in monthsList) m: '-'},
+      );
     }
-    return ReportItem(
-      nama: json['nama'] as String,
-      statusByMonth: statusMap,
-    );
   }
 }
