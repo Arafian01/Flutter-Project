@@ -33,13 +33,13 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
     _loadTagihans();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 600),
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    _scaleAnimation = Tween<double>(begin: 0.9, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
     _controller.forward();
   }
@@ -109,23 +109,43 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusLarge)),
+        backgroundColor: AppColors.white,
+        elevation: 8,
         title: Row(
           children: [
-            const Icon(Icons.error, color: AppColors.accentRed),
+            Icon(Icons.error_outline, color: AppColors.accentRed, size: AppSizes.iconSizeMedium),
             const SizedBox(width: AppSizes.paddingSmall),
-            const Text('Gagal'),
+            Text('Error', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppColors.primaryBlue)),
           ],
         ),
-        content: Text(message),
+        content: Text(message, style: Theme.of(context).textTheme.bodyMedium),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK', style: TextStyle(color: AppColors.accentRed)),
+            child: Text('OK', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.accentRed)),
           ),
         ],
       ),
     );
+  }
+
+  void _showImagePreview() {
+    if (_image != null) {
+      showDialog(
+        context: context,
+        builder: (_) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+            child: Image.file(
+              _image!,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -134,187 +154,203 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> with SingleTicker
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
-        title: const Text('Tambah Pembayaran'),
-        foregroundColor: AppColors.white,
+        title: Text(
+          'Tambah Pembayaran',
+          style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(fontSize: 22, fontWeight: FontWeight.w700),
+        ),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: AppColors.white,
-            size: AppSizes.iconSizeMedium,
-          ),
+          icon: const Icon(Icons.arrow_back, color: AppColors.white, size: AppSizes.iconSizeMedium),
           onPressed: () => Navigator.pop(context),
           tooltip: 'Kembali',
         ),
+        elevation: 4,
       ),
       body: _isLoadingTagihans
-          ? const Center(
+          ? Center(
         child: CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
+          strokeWidth: 5,
         ),
       )
           : Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 400),
+          constraints: const BoxConstraints(maxWidth: 450),
           padding: const EdgeInsets.all(AppSizes.paddingLarge),
           child: SingleChildScrollView(
             child: FadeTransition(
               opacity: _fadeAnimation,
               child: ScaleTransition(
                 scale: _scaleAnimation,
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Buat Pembayaran Baru',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: AppColors.primaryBlue,
-                          fontWeight: FontWeight.bold,
-                        ),
+                child: Card(
+                  elevation: 8,
+                  shadowColor: AppColors.primaryBlue.withOpacity(0.3),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusLarge)),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [AppColors.white, AppColors.backgroundLight.withOpacity(0.9)],
                       ),
-                      const SizedBox(height: AppSizes.paddingLarge),
-                      DropdownButtonFormField<Tagihan>(
-                        value: _selected,
-                        decoration: InputDecoration(
-                          labelText: 'Pilih Tagihan',
-                          prefixIcon: const Icon(Icons.receipt, color: AppColors.textSecondaryBlue),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                    ),
+                    padding: const EdgeInsets.all(AppSizes.paddingLarge),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Buat Pembayaran Baru',
+                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              color: AppColors.primaryBlue,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.textSecondaryBlue),
+                          const SizedBox(height: AppSizes.paddingLarge),
+                          DropdownButtonFormField<Tagihan>(
+                            value: _selected,
+                            decoration: InputDecoration(
+                              labelText: 'Pilih Tagihan',
+                              prefixIcon: Icon(Icons.receipt, color: AppColors.secondaryBlue),
+                              filled: true,
+                              fillColor: AppColors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                                borderSide: BorderSide(color: AppColors.secondaryBlue.withOpacity(0.4)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                                borderSide: const BorderSide(color: AppColors.accentRed, width: 2),
+                              ),
+                              errorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                                borderSide: const BorderSide(color: AppColors.accentRed, width: 2),
+                              ),
+                            ),
+                            items: _tagihans.map((t) {
+                              return DropdownMenuItem(
+                                value: t,
+                                child: Text(
+                                  '${t.bulan}-${t.tahun} • ${_formatter.format(t.harga)} • ${t.pelangganName}',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (v) => setState(() => _selected = v),
+                            validator: (v) => v == null ? 'Pilih tagihan' : null,
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.primaryBlue, width: 2),
+                          const SizedBox(height: AppSizes.paddingMedium),
+                          DropdownButtonFormField<String>(
+                            value: _status,
+                            decoration: InputDecoration(
+                              labelText: 'Status Verifikasi',
+                              prefixIcon: Icon(Icons.verified, color: AppColors.secondaryBlue),
+                              filled: true,
+                              fillColor: AppColors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                                borderSide: BorderSide(color: AppColors.secondaryBlue.withOpacity(0.4)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                                borderSide: const BorderSide(color: AppColors.accentRed, width: 2),
+                              ),
+                              errorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                                borderSide: const BorderSide(color: AppColors.accentRed, width: 2),
+                              ),
+                            ),
+                            items: ['menunggu_verifikasi', 'diterima', 'ditolak'].map((s) {
+                              return DropdownMenuItem(
+                                value: s,
+                                child: Text(s.replaceAll('_', ' ').toUpperCase()),
+                              );
+                            }).toList(),
+                            onChanged: (v) => setState(() => _status = v!),
+                            validator: (v) => v == null ? 'Pilih status' : null,
                           ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.accentRed, width: 2),
-                          ),
-                        ),
-                        items: _tagihans.map((t) {
-                          return DropdownMenuItem(
-                            value: t,
-                            child: Text('${t.bulan}-${t.tahun} • ${_formatter.format(t.harga)} • ${t.pelangganName}'),
-                          );
-                        }).toList(),
-                        onChanged: (v) => setState(() => _selected = v),
-                        validator: (v) => v == null ? 'Pilih tagihan' : null,
-                      ),
-                      const SizedBox(height: AppSizes.paddingMedium),
-                      DropdownButtonFormField<String>(
-                        value: _status,
-                        decoration: InputDecoration(
-                          labelText: 'Status Verifikasi',
-                          prefixIcon: const Icon(Icons.verified, color: AppColors.textSecondaryBlue),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.textSecondaryBlue),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.primaryBlue, width: 2),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.accentRed, width: 2),
-                          ),
-                        ),
-                        items: ['menunggu_verifikasi', 'diterima', 'ditolak']
-                            .map((s) => DropdownMenuItem(
-                          value: s,
-                          child: Text(s.replaceAll('_', ' ').toUpperCase()),
-                        ))
-                            .toList(),
-                        onChanged: (v) => setState(() => _status = v!),
-                        validator: (v) => v == null ? 'Pilih status' : null,
-                      ),
-                      const SizedBox(height: AppSizes.paddingMedium),
-                      InputDecorator(
-                        decoration: InputDecoration(
-                          labelText: 'Bukti Pembayaran',
-                          prefixIcon: const Icon(Icons.image, color: AppColors.textSecondaryBlue),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.textSecondaryBlue),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            borderSide: const BorderSide(color: AppColors.primaryBlue, width: 2),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            if (_image != null)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: AppSizes.paddingSmall),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                                  child: Image.file(
-                                    _image!,
-                                    height: 150,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
+                          const SizedBox(height: AppSizes.paddingMedium),
+                          InputDecorator(
+                            decoration: InputDecoration(
+                              labelText: 'Bukti Pembayaran',
+                              prefixIcon: Icon(Icons.image, color: AppColors.secondaryBlue),
+                              filled: true,
+                              fillColor: AppColors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                                borderSide: BorderSide(color: AppColors.secondaryBlue.withOpacity(0.4)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                                borderSide: const BorderSide(color: AppColors.accentRed, width: 2),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                if (_image != null)
+                                  GestureDetector(
+                                    onTap: _showImagePreview,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                                        child: Image.file(
+                                          _image!,
+                                          height: 180,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ElevatedButton.icon(
+                                  onPressed: _pickImage,
+                                  icon: Icon(Icons.upload_file, size: AppSizes.iconSizeSmall),
+                                  label: Text(_image == null ? 'Pilih Bukti' : 'Ganti Bukti'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.secondaryBlue,
+                                    foregroundColor: AppColors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                   ),
                                 ),
-                              ),
-                            ElevatedButton.icon(
-                              onPressed: _pickImage,
-                              icon: const Icon(Icons.upload_file, size: AppSizes.iconSizeSmall),
-                              label: Text(_image == null ? 'Pilih Bukti' : 'Ganti Bukti'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.secondaryBlue,
-                                foregroundColor: AppColors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                                ),
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: AppSizes.paddingLarge),
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: _saving
-                            ? const Center(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
                           ),
-                        )
-                            : SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _save,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryBlue,
-                              foregroundColor: AppColors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                              ),
-                            ),
-                            child: const Text('Simpan'),
-                          ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
         ),
+      ),
+      floatingActionButton: _isLoadingTagihans || _saving
+          ? null
+          : FloatingActionButton(
+        onPressed: _save,
+        backgroundColor: AppColors.accentRed,
+        foregroundColor: AppColors.white,
+        tooltip: 'Simpan Pembayaran',
+        child: const Icon(Icons.save, size: AppSizes.iconSizeMedium),
       ),
     );
   }
