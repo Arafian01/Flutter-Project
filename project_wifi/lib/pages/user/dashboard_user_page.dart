@@ -57,41 +57,6 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
     return DashboardUserService.fetchDashboardUser(pid);
   }
 
-  Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-  }
-
-  void _showLogoutDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-        title: Row(
-          children: [
-            const Icon(Icons.logout, color: AppColors.accentRed),
-            const SizedBox(width: AppSizes.paddingSmall),
-            const Text('Konfirmasi Logout'),
-          ],
-        ),
-        content: const Text('Apakah Anda yakin ingin logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal', style: TextStyle(color: AppColors.textSecondaryBlue)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _logout();
-            },
-            child: const Text('Logout', style: TextStyle(color: AppColors.accentRed)),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildCard({
     required String title,
@@ -174,50 +139,6 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
         title: const Text('Dashboard'),
         foregroundColor: AppColors.white,
         centerTitle: true,
-        leading: const Icon(
-          Icons.wifi,
-          color: AppColors.white,
-          size: AppSizes.iconSizeMedium,
-        ),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(
-              Icons.person,
-              color: AppColors.white,
-              size: AppSizes.iconSizeMedium,
-            ),
-            onSelected: (value) {
-              if (value == 'logout') {
-                _showLogoutDialog();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem<String>(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, color: AppColors.accentRed),
-                    SizedBox(width: AppSizes.paddingSmall),
-                    Text('Logout'),
-                  ],
-                ),
-              ),
-            ],
-            color: AppColors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.refresh,
-              color: AppColors.white,
-              size: AppSizes.iconSizeMedium,
-            ),
-            onPressed: _loadDashboard,
-            tooltip: 'Refresh Data',
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(AppSizes.paddingMedium),
