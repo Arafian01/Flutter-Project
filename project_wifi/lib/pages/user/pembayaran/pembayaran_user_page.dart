@@ -69,41 +69,7 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
     return await PembayaranService.fetchPembayaransByPelanggan(pid);
   }
 
-  Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-  }
 
-  void _showLogoutDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-        title: Row(
-          children: [
-            const Icon(Icons.logout, color: AppColors.accentRed),
-            const SizedBox(width: AppSizes.paddingSmall),
-            const Text('Konfirmasi Logout'),
-          ],
-        ),
-        content: const Text('Apakah Anda yakin ingin logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal', style: TextStyle(color: AppColors.textSecondaryBlue)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _logout();
-            },
-            child: const Text('Logout', style: TextStyle(color: AppColors.accentRed)),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildPembayaranCard(Pembayaran p, int index) {
     IconData statusIcon;
@@ -193,34 +159,6 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
           size: AppSizes.iconSizeMedium,
         ),
         actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(
-              Icons.person,
-              color: AppColors.white,
-              size: AppSizes.iconSizeMedium,
-            ),
-            onSelected: (value) {
-              if (value == 'logout') {
-                _showLogoutDialog();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem<String>(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, color: AppColors.accentRed),
-                    SizedBox(width: AppSizes.paddingSmall),
-                    Text('Logout'),
-                  ],
-                ),
-              ),
-            ],
-            color: AppColors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-            ),
-          ),
           IconButton(
             icon: const Icon(
               Icons.refresh,
