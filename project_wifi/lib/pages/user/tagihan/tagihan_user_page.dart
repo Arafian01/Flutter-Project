@@ -6,6 +6,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import '../../../models/tagihan.dart';
 import '../../../services/api_service.dart';
 import '../../../utils/utils.dart';
+import '../pembayaran/add_pembayaran_user_page.dart';
 
 String formatBulanTahunFromInt(int bulan, int tahun) {
   initializeDateFormatting('id_ID');
@@ -42,7 +43,7 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
     _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
     _controller.forward();
   }
@@ -149,12 +150,13 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
             trailing: ElevatedButton(
               onPressed: canPay
                   ? () async {
-                final result = await Navigator.pushNamed(
+                final result = await Navigator.push(
                   context,
-                  '/add_pembayaran_user',
-                  arguments: t,
+                  MaterialPageRoute(
+                    builder: (context) => AddPembayaranUserPage(tagihan: t),
+                  ),
                 );
-                if (result == true) {
+                if (result == true && mounted) {
                   _loadTagihan();
                 }
               }
@@ -231,7 +233,11 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
                     return const Center(
                       child: Text(
                         'Belum ada tagihan',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textSecondaryBlue),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondaryBlue,
+                        ),
                       ),
                     );
                   }
