@@ -122,6 +122,10 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
 
     try {
       final pdf = pw.Document();
+      // Load local font
+      final fontData = await DefaultAssetBundle.of(context).load('assets/fonts/Roboto-Regular.ttf');
+      final ttf = pw.Font.ttf(fontData);
+
       final title = _reportType == ReportType.payment
           ? 'Laporan Pembayaran Tahun $_selectedYear'
           : 'Laporan Penghasilan Tahun $_selectedYear';
@@ -137,7 +141,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                   level: 0,
                   child: pw.Text(
                     title,
-                    style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                    style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, font: ttf),
                   ),
                 ),
                 pw.Table(
@@ -148,18 +152,18 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                       children: [
                         pw.Container(
                           padding: const pw.EdgeInsets.all(8),
-                          child: pw.Text('No', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                          child: pw.Text('No', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: ttf)),
                         ),
                         pw.Container(
                           padding: const pw.EdgeInsets.all(8),
-                          child: pw.Text('Nama', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                          child: pw.Text('Nama', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: ttf)),
                         ),
                         for (final m in _monthsList)
                           pw.Container(
                             padding: const pw.EdgeInsets.all(8),
                             child: pw.Text(
                               DateFormat('MMMM', 'id').format(DateTime(_selectedYear!, m)),
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: ttf),
                             ),
                           ),
                       ],
@@ -169,22 +173,25 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                         children: [
                           pw.Container(
                             padding: const pw.EdgeInsets.all(8),
-                            child: pw.Text('${i + 1}'),
+                            child: pw.Text('${i + 1}', style: pw.TextStyle(font: ttf)),
                           ),
                           pw.Container(
                             padding: const pw.EdgeInsets.all(8),
-                            child: pw.Text(_paymentItems[i].nama),
+                            child: pw.Text(_paymentItems[i].nama, style: pw.TextStyle(font: ttf)),
                           ),
                           for (final m in _monthsList)
                             pw.Container(
                               padding: const pw.EdgeInsets.all(8),
                               child: pw.Text(
                                 _paymentItems[i].statusByMonth[m] == 'lunas'
-                                    ? '✔'
+                                    ? 'o'
                                     : _paymentItems[i].statusByMonth[m] == 'belum_dibayar'
-                                    ? 'X'
-                                    : '-',
+                                    ? '~'
+                                    : _paymentItems[i].statusByMonth[m] == 'menunggu_verifikasi'
+                                    ? '×'
+                                    : '',
                                 textAlign: pw.TextAlign.center,
+                                style: pw.TextStyle(font: ttf),
                               ),
                             ),
                         ],
@@ -194,15 +201,15 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                 pw.SizedBox(height: 20),
                 pw.Text(
                   'Keterangan Simbol:',
-                  style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+                  style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, font: ttf),
                 ),
                 pw.SizedBox(height: 8),
                 pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Text('✔: Lunas - Pembayaran telah diselesaikan.'),
-                    pw.Text('X: Belum Dibayar - Pembayaran belum dilakukan.'),
-                    pw.Text('-: Tidak Ada Data - Tidak ada tagihan untuk periode tersebut.'),
+                    pw.Text('o: Lunas - Pembayaran telah diselesaikan.', style: pw.TextStyle(font: ttf)),
+                    pw.Text('~: Menunggu Verifikasi - Pembayaran belum diverifikasi.', style: pw.TextStyle(font: ttf)),
+                    pw.Text('×: Belum Dibayar - Pembayaran belum dilakukan.', style: pw.TextStyle(font: ttf)),
                   ],
                 ),
               ];
@@ -212,7 +219,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                   level: 0,
                   child: pw.Text(
                     title,
-                    style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                    style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, font: ttf),
                   ),
                 ),
                 pw.Table(
@@ -223,11 +230,11 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                       children: [
                         pw.Container(
                           padding: const pw.EdgeInsets.all(8),
-                          child: pw.Text('Bulan', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                          child: pw.Text('Bulan', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: ttf)),
                         ),
                         pw.Container(
                           padding: const pw.EdgeInsets.all(8),
-                          child: pw.Text('Total Harga', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                          child: pw.Text('Total Harga', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: ttf)),
                         ),
                       ],
                     ),
@@ -238,11 +245,12 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
                             padding: const pw.EdgeInsets.all(8),
                             child: pw.Text(
                               DateFormat('MMMM yyyy', 'id').format(DateTime(item.tahun, item.bulan)),
+                              style: pw.TextStyle(font: ttf),
                             ),
                           ),
                           pw.Container(
                             padding: const pw.EdgeInsets.all(8),
-                            child: pw.Text(item.totalHarga.toString()),
+                            child: pw.Text(item.totalHarga.toString(), style: pw.TextStyle(font: ttf)),
                           ),
                         ],
                       ),
