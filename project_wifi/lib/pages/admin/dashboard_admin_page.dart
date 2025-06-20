@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:intl/intl.dart';
 import '../../models/dashboard.dart';
 import '../../services/api_service.dart';
@@ -11,37 +12,19 @@ class DashboardAdminPage extends StatefulWidget {
   State<DashboardAdminPage> createState() => _DashboardAdminPageState();
 }
 
-class _DashboardAdminPageState extends State<DashboardAdminPage> with SingleTickerProviderStateMixin {
+class _DashboardAdminPageState extends State<DashboardAdminPage> {
   late Future<Dashboard> _future;
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _loadDashboard();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
-    _scaleAnimation = Tween<double>(begin: 0.9, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   void _loadDashboard() {
-    _future = fetchDashboard();
+    setState(() {
+      _future = fetchDashboard();
+    });
   }
 
   String _formatRupiah(int amount) {
@@ -55,40 +38,27 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> with SingleTick
     required IconData icon,
     VoidCallback? onTap,
   }) {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
+    return AnimationConfiguration.staggeredList(
+      position: 0,
+      duration: const Duration(milliseconds: 300),
+      child: FadeInAnimation(
         child: Card(
-          elevation: 10,
-          shadowColor: AppColors.primaryBlue.withOpacity(0.3),
+          elevation: 4,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
           ),
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.white,
-                    AppColors.backgroundLight.withOpacity(0.9),
-                  ],
-                ),
-              ),
-              padding: const EdgeInsets.all(AppSizes.paddingLarge),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSizes.paddingMedium),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.secondaryBlue.withOpacity(0.2),
+                      color: AppColors.secondaryBlue.withOpacity(0.1),
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.secondaryBlue.withOpacity(0.5)),
                     ),
                     child: Icon(
                       icon,
@@ -103,16 +73,16 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> with SingleTick
                       children: [
                         Text(
                           value,
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             color: AppColors.primaryBlue,
                             fontWeight: FontWeight.w700,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
                         Text(
                           title,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppColors.textSecondaryBlue,
                             fontWeight: FontWeight.w500,
                           ),
@@ -137,55 +107,44 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> with SingleTick
 
   @override
   Widget build(BuildContext context) {
-    final isSmallScreen = MediaQuery.of(context).size.width < 600;
-
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
-        title: Text(
+        title: const Text(
           'Dashboard Admin',
-          style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
+          style: TextStyle(
+            color: AppColors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
           ),
         ),
         centerTitle: true,
+        foregroundColor: AppColors.white,
+        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, size: AppSizes.iconSizeMedium),
-            onPressed: () {
-              setState(() {
-                _loadDashboard();
-                _controller.reset();
-                _controller.forward();
-              });
-            },
+            onPressed: _loadDashboard,
             tooltip: 'Refresh Data',
           ),
         ],
-        elevation: 4,
       ),
       body: RefreshIndicator(
         color: AppColors.accentRed,
         backgroundColor: AppColors.white,
         onRefresh: () async {
-          setState(() {
-            _loadDashboard();
-            _controller.reset();
-            _controller.forward();
-          });
+          _loadDashboard();
         },
         child: Padding(
-          padding: const EdgeInsets.all(AppSizes.paddingLarge),
+          padding: const EdgeInsets.all(AppSizes.paddingMedium),
           child: FutureBuilder<Dashboard>(
             future: _future,
             builder: (ctx, snap) {
               if (snap.connectionState == ConnectionState.waiting) {
-                return Center(
+                return const Center(
                   child: CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
-                    strokeWidth: 5,
                   ),
                 );
               }
@@ -195,21 +154,23 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> with SingleTick
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Error: ${snap.error}',
+                        'Gagal memuat data: ${snap.error}',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: AppColors.accentRed,
                           fontWeight: FontWeight.w600,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppSizes.paddingMedium),
                       ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            _loadDashboard();
-                            _controller.reset();
-                            _controller.forward();
-                          });
-                        },
+                        onPressed: _loadDashboard,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryBlue,
+                          foregroundColor: AppColors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+                          ),
+                        ),
                         child: const Text('Coba Lagi'),
                       ),
                     ],
@@ -217,96 +178,43 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> with SingleTick
                 );
               }
               final data = snap.data!;
-              return SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Ringkasan',
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        color: AppColors.primaryBlue,
-                        fontWeight: FontWeight.w700,
+              return AnimationLimiter(
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: AnimationConfiguration.toStaggeredList(
+                    duration: const Duration(milliseconds: 300),
+                    childAnimationBuilder: (widget) => FadeInAnimation(child: widget),
+                    children: [
+                      const SizedBox(height: AppSizes.paddingMedium),
+                      _buildCard(
+                        title: 'Total Pelanggan',
+                        value: data.totalPelanggan.toString(),
+                        icon: Icons.people,
+                        onTap: () => Navigator.pushNamed(context, '/pelanggan'),
                       ),
-                    ),
-                    const SizedBox(height: AppSizes.paddingMedium),
-                    isSmallScreen
-                        ? Column(
-                      children: [
-                        _buildCard(
-                          title: 'Total Pelanggan',
-                          value: data.totalPelanggan.toString(),
-                          icon: Icons.people,
-                          onTap: () => Navigator.pushNamed(context, '/pelanggan'),
-                        ),
-                        const SizedBox(height: AppSizes.paddingMedium),
-                        _buildCard(
-                          title: 'Total Paket',
-                          value: data.totalPaket.toString(),
-                          icon: Icons.wifi,
-                          onTap: () => Navigator.pushNamed(context, '/paket'),
-                        ),
-                        const SizedBox(height: AppSizes.paddingMedium),
-                        _buildCard(
-                          title: 'Total Tagihan Lunas',
-                          value: data.tagihanLunas.toString(),
-                          icon: Icons.receipt_long,
-                          onTap: () => Navigator.pushNamed(context, '/tagihan'),
-                        ),
-                        const SizedBox(height: AppSizes.paddingMedium),
-                        _buildCard(
-                          title: 'Total Pendapatan',
-                          value: _formatRupiah(data.totalHargaLunas),
-                          icon: Icons.monetization_on,
-                          onTap: () => Navigator.pushNamed(context, '/report'),
-                        ),
-                      ],
-                    )
-                        : Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            children: [
-                              _buildCard(
-                                title: 'Total Pelanggan',
-                                value: data.totalPelanggan.toString(),
-                                icon: Icons.people,
-                                onTap: () => Navigator.pushNamed(context, '/pelanggan'),
-                              ),
-                              const SizedBox(height: AppSizes.paddingMedium),
-                              _buildCard(
-                                title: 'Total Paket',
-                                value: data.totalPaket.toString(),
-                                icon: Icons.wifi,
-                                onTap: () => Navigator.pushNamed(context, '/paket'),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: AppSizes.paddingMedium),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              _buildCard(
-                                title: 'Total Tagihan Lunas',
-                                value: data.tagihanLunas.toString(),
-                                icon: Icons.receipt_long,
-                                onTap: () => Navigator.pushNamed(context, '/tagihan'),
-                              ),
-                              const SizedBox(height: AppSizes.paddingMedium),
-                              _buildCard(
-                                title: 'Total Pendapatan',
-                                value: _formatRupiah(data.totalHargaLunas),
-                                icon: Icons.monetization_on,
-                                onTap: () => Navigator.pushNamed(context, '/report'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                      const SizedBox(height: AppSizes.paddingMedium),
+                      _buildCard(
+                        title: 'Total Paket',
+                        value: data.totalPaket.toString(),
+                        icon: Icons.wifi,
+                        onTap: () => Navigator.pushNamed(context, '/paket'),
+                      ),
+                      const SizedBox(height: AppSizes.paddingMedium),
+                      _buildCard(
+                        title: 'Total Tagihan Lunas',
+                        value: data.tagihanLunas.toString(),
+                        icon: Icons.receipt_long,
+                        onTap: () => Navigator.pushNamed(context, '/tagihan'),
+                      ),
+                      const SizedBox(height: AppSizes.paddingMedium),
+                      _buildCard(
+                        title: 'Total Pendapatan',
+                        value: _formatRupiah(data.totalHargaLunas),
+                        icon: Icons.monetization_on,
+                        onTap: () => Navigator.pushNamed(context, '/report'),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
