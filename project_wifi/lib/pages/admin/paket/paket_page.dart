@@ -16,6 +16,9 @@ class _PaketPageState extends State<PaketPage> with SingleTickerProviderStateMix
   late Future<List<Paket>> _future;
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _isSearching = false;
 
   @override
   void initState() {
@@ -23,17 +26,21 @@ class _PaketPageState extends State<PaketPage> with SingleTickerProviderStateMix
     _loadPakets();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 600),
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
     _controller.forward();
+    _searchController.addListener(() {
+      setState(() => _searchQuery = _searchController.text.trim());
+    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -50,42 +57,69 @@ class _PaketPageState extends State<PaketPage> with SingleTickerProviderStateMix
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusLarge)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: AppColors.white,
         title: Row(
           children: [
-            const Icon(Icons.warning, color: AppColors.accentRed),
-            const SizedBox(width: AppSizes.paddingSmall),
-            const Text('Konfirmasi Hapus'),
+            const Icon(Icons.warning, color: AppColors.accentRed, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Konfirmasi Hapus',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: AppColors.primaryBlue,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
-        content: Text('Hapus paket ${paket.namaPaket}?'),
+        content: Text(
+          'Hapus paket ${paket.namaPaket}?',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: AppColors.textSecondaryBlue,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Batal', style: TextStyle(color: AppColors.textSecondary)),
+            child: Text(
+              'Batal',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.secondaryBlue,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
               try {
                 await deletePaket(paket.id);
-                setState(_loadPakets);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Paket dihapus'),
-                    backgroundColor: AppColors.primaryBlue,
-                  ),
-                );
+                if (mounted) {
+                  setState(_loadPakets);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Paket dihapus'),
+                      backgroundColor: AppColors.primaryBlue,
+                    ),
+                  );
+                }
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Gagal menghapus: $e'),
-                    backgroundColor: AppColors.accentRed,
-                  ),
-                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Gagal menghapus: $e'),
+                      backgroundColor: AppColors.accentRed,
+                    ),
+                  );
+                }
               }
             },
-            child: const Text('Hapus', style: TextStyle(color: AppColors.accentRed)),
+            child: Text(
+              'Hapus',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.accentRed,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -95,68 +129,89 @@ class _PaketPageState extends State<PaketPage> with SingleTickerProviderStateMix
   Widget _buildPaketCard(Paket paket, int index) {
     return AnimationConfiguration.staggeredList(
       position: index,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 400),
       child: FadeTransition(
         opacity: _fadeAnimation,
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
+        child: SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+            CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
           ),
-          child: InkWell(
-            onTap: () async {
-              final result = await Navigator.pushNamed(
-                context,
-                '/edit_paket',
-                arguments: paket,
-              );
-              if (result == true) setState(_loadPakets);
-            },
-            borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSizes.paddingMedium),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.secondaryBlue.withOpacity(0.1),
-                      shape: BoxShape.circle,
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            color: AppColors.white,
+            child: InkWell(
+              onTap: () async {
+                final result = await Navigator.pushNamed(
+                  context,
+                  '/edit_paket',
+                  arguments: paket,
+                );
+                if (result == true && mounted) {
+                  setState(_loadPakets);
+                }
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondaryBlue.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.wifi,
+                        size: 24,
+                        color: AppColors.primaryBlue,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.wifi,
-                      size: AppSizes.iconSizeMedium,
-                      color: AppColors.primaryBlue,
-                    ),
-                  ),
-                  const SizedBox(width: AppSizes.paddingMedium),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          paket.namaPaket,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppColors.primaryBlue,
-                            fontWeight: FontWeight.w700,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            paket.namaPaket,
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: AppColors.primaryBlue,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _formatRupiah(paket.harga ?? 0),
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: AppColors.textSecondary,
+                          const SizedBox(height: 4),
+                          Text(
+                            _formatRupiah(paket.harga ?? 0),
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: AppColors.textSecondaryBlue,
+                              fontSize: 16,
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Text(
+                            paket.deskripsi ?? '-',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.textSecondaryBlue,
+                              fontSize: 14,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: AppColors.accentRed),
-                    onPressed: () => _showDeleteDialog(paket),
-                    tooltip: 'Hapus Paket',
-                  ),
-                ],
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: AppColors.accentRed, size: 24),
+                      onPressed: () => _showDeleteDialog(paket),
+                      tooltip: 'Hapus Paket',
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -171,45 +226,152 @@ class _PaketPageState extends State<PaketPage> with SingleTickerProviderStateMix
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
-        title: const Text('Kelola Paket'),
-        foregroundColor: AppColors.white,
+        title: _isSearching
+            ? TextField(
+          controller: _searchController,
+          autofocus: true,
+          style: const TextStyle(color: AppColors.white, fontSize: 16),
+          decoration: InputDecoration(
+            hintText: 'Cari paket...',
+            hintStyle: TextStyle(color: AppColors.white.withOpacity(0.6)),
+            border: InputBorder.none,
+            prefixIcon: IconButton(
+              icon: const Icon(Icons.arrow_back, color: AppColors.white, size: 24),
+              onPressed: () {
+                _searchController.clear();
+                setState(() {
+                  _searchQuery = '';
+                  _isSearching = false;
+                });
+              },
+              tooltip: 'Kembali',
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+            suffixIcon: _searchQuery.isNotEmpty
+                ? IconButton(
+              icon: const Icon(Icons.clear, color: AppColors.white, size: 24),
+              onPressed: () {
+                _searchController.clear();
+                setState(() => _searchQuery = '');
+              },
+            )
+                : const Icon(Icons.search, color: AppColors.white, size: 24),
+          ),
+          textInputAction: TextInputAction.search,
+          onSubmitted: (value) => setState(() => _searchQuery = value.trim()),
+        )
+            : const Text(
+          'Kelola Paket',
+          style: TextStyle(
+            color: AppColors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
         centerTitle: true,
         actions: [
+          if (!_isSearching)
+            IconButton(
+              icon: const Icon(Icons.search, color: AppColors.white, size: 24),
+              onPressed: () => setState(() => _isSearching = true),
+              tooltip: 'Cari',
+            ),
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => setState(_loadPakets),
+            icon: const Icon(Icons.refresh, color: AppColors.white, size: 24),
+            onPressed: () {
+              _searchController.clear();
+              setState(() {
+                _searchQuery = '';
+                _isSearching = false;
+                _loadPakets();
+              });
+            },
             tooltip: 'Refresh',
           ),
         ],
+        elevation: 0,
       ),
-      body: FutureBuilder<List<Paket>>(
-        future: _future,
-        builder: (ctx, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed)));
-          }
-          if (snap.hasError) {
-            return Center(child: Text('Error: ${snap.error}'));
-          }
-          final pakets = snap.data!;
-          if (pakets.isEmpty) {
-            return const Center(child: Text('Belum ada paket'));
-          }
-          return AnimationLimiter(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(AppSizes.paddingMedium),
-              itemCount: pakets.length,
-              itemBuilder: (ctx, i) => _buildPaketCard(pakets[i], i),
-            ),
-          );
-        },
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: FutureBuilder<List<Paket>>(
+          future: _future,
+          builder: (ctx, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
+                ),
+              );
+            }
+            if (snap.hasError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Gagal memuat data: ${snap.error}',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppColors.textSecondaryBlue,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => setState(_loadPakets),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryBlue,
+                        foregroundColor: AppColors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('Coba Lagi'),
+                    ),
+                  ],
+                ),
+              );
+            }
+            final pakets = snap.data!;
+            final filteredPakets = _searchQuery.isEmpty
+                ? pakets
+                : pakets
+                .where((paket) =>
+            paket.namaPaket.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                (paket.deskripsi?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false))
+                .toList();
+            if (filteredPakets.isEmpty) {
+              return Center(
+                child: Text(
+                  _searchQuery.isEmpty ? 'Belum ada paket' : 'Tidak ada paket ditemukan',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppColors.textSecondaryBlue,
+                    fontSize: 16,
+                  ),
+                ),
+              );
+            }
+            return AnimationLimiter(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: filteredPakets.length,
+                itemBuilder: (ctx, i) => _buildPaketCard(filteredPakets[i], i),
+              ),
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.pushNamed(context, '/add_paket');
-          if (result == true) setState(_loadPakets);
+          if (result == true && mounted) {
+            setState(_loadPakets);
+          }
         },
-        child: const Icon(Icons.add),
+        backgroundColor: AppColors.accentRed,
+        foregroundColor: AppColors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(Icons.add, size: 24),
         tooltip: 'Tambah Paket',
       ),
     );
