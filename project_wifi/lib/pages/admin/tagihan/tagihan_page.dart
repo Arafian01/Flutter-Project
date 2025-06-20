@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:intl/intl.dart';
+import 'dart:async';
 import '../../../models/tagihan.dart';
 import '../../../services/api_service.dart';
 import '../../../utils/utils.dart';
@@ -16,6 +17,10 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
   late Future<List<Tagihan>> _future;
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _isSearching = false;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -29,16 +34,22 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
     _controller.forward();
+    _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
     _controller.dispose();
     super.dispose();
   }
 
   void _loadTagihans() {
-    _future = TagihanService.fetchTagihans();
+    setState(() {
+      _future = TagihanService.fetchTagihans();
+    });
   }
 
   String formatPeriode(int bulan, int tahun) {
@@ -49,6 +60,17 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
   String _formatRupiah(int amount) {
     final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
     return formatter.format(amount);
+  }
+
+  void _onSearchChanged() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        setState(() {
+          _searchQuery = _searchController.text.trim();
+        });
+      }
+    });
   }
 
   void _showDeleteDialog(Tagihan tagihan) {
@@ -74,7 +96,7 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
               Navigator.pop(context);
               try {
                 await TagihanService.deleteTagihan(tagihan.id);
-                setState(_loadTagihans);
+                _loadTagihans();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: const Text('Tagihan dihapus'),
@@ -115,7 +137,7 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
                 '/edit_tagihan',
                 arguments: tagihan,
               );
-              if (result == true) setState(_loadTagihans);
+              if (result == true) _loadTagihans();
             },
             borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
             child: Padding(
@@ -131,9 +153,7 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
                     child: Icon(
                       Icons.receipt,
                       size: AppSizes.iconSizeMedium,
-                      color: tagihan.statusPembayaran == 'lunas'
-                          ? Colors.green
-                          : AppColors.accentRed,
+                      color: tagihan.statusPembayaran == 'lunas' ? Colors.green : AppColors.accentRed,
                     ),
                   ),
                   const SizedBox(width: AppSizes.paddingMedium),
@@ -142,10 +162,17 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          formatPeriode(tagihan.bulan, tagihan.tahun),
+                          tagihan.pelangganName ?? '-',
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             color: AppColors.primaryBlue,
                             fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          formatPeriode(tagihan.bulan, tagihan.tahun),
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: AppColors.textSecondaryBlue,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -155,12 +182,11 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
                             color: AppColors.textSecondaryBlue,
                           ),
                         ),
+                        const SizedBox(height: 4),
                         Text(
                           tagihan.statusPembayaran.replaceAll('_', ' ').toUpperCase(),
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: tagihan.statusPembayaran == 'lunas'
-                                ? Colors.green
-                                : AppColors.accentRed,
+                            color: tagihan.statusPembayaran == 'lunas' ? Colors.green : AppColors.accentRed,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -187,51 +213,153 @@ class _TagihanPageState extends State<TagihanPage> with SingleTickerProviderStat
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
-        title: const Text('Kelola Tagihan'),
-        foregroundColor: AppColors.white,
+        title: _isSearching
+            ? TextField(
+          controller: _searchController,
+          autofocus: true,
+          style: const TextStyle(color: AppColors.white, fontSize: 16),
+          decoration: InputDecoration(
+            hintText: 'Cari tagihan...',
+            hintStyle: TextStyle(color: AppColors.white.withOpacity(0.6)),
+            border: InputBorder.none,
+            prefixIcon: IconButton(
+              icon: const Icon(Icons.arrow_back, color: AppColors.white, size: 24),
+              onPressed: () {
+                _searchController.clear();
+                setState(() {
+                  _searchQuery = '';
+                  _isSearching = false;
+                });
+              },
+              tooltip: 'Kembali',
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+            suffixIcon: _searchQuery.isNotEmpty
+                ? IconButton(
+              icon: const Icon(Icons.clear, color: AppColors.white, size: 24),
+              onPressed: () {
+                _searchController.clear();
+                setState(() => _searchQuery = '');
+              },
+            )
+                : const Icon(Icons.search, color: AppColors.white, size: 24),
+          ),
+        )
+            : const Text(
+          'Kelola Tagihan',
+          style: TextStyle(
+            color: AppColors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
         centerTitle: true,
+        foregroundColor: AppColors.white,
         actions: [
+          if (!_isSearching)
+            IconButton(
+              icon: const Icon(Icons.search, color: AppColors.white, size: 24),
+              onPressed: () => setState(() => _isSearching = true),
+              tooltip: 'Cari',
+            ),
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => setState(_loadTagihans),
+            icon: const Icon(Icons.refresh, color: AppColors.white, size: 24),
+            onPressed: () {
+              _searchController.clear();
+              setState(() {
+                _searchQuery = '';
+                _isSearching = false;
+                _loadTagihans();
+              });
+            },
             tooltip: 'Refresh',
           ),
         ],
+        elevation: 0,
       ),
-      body: FutureBuilder<List<Tagihan>>(
-        future: _future,
-        builder: (ctx, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: FutureBuilder<List<Tagihan>>(
+          future: _future,
+          builder: (ctx, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
+                ),
+              );
+            }
+            if (snap.hasError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Gagal memuat data: ${snap.error}',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppColors.textSecondaryBlue,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadTagihans,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryBlue,
+                        foregroundColor: AppColors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('Coba Lagi'),
+                    ),
+                  ],
+                ),
+              );
+            }
+            final tagihans = snap.data ?? [];
+            final filteredTagihans = _searchQuery.isEmpty
+                ? tagihans
+                : tagihans
+                .where((tagihan) =>
+            formatPeriode(tagihan.bulan, tagihan.tahun)
+                .toLowerCase()
+                .contains(_searchQuery.toLowerCase()) ||
+                tagihan.statusPembayaran.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                _formatRupiah(tagihan.harga).toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                (tagihan.pelangganName?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false))
+                .toList();
+            if (filteredTagihans.isEmpty) {
+              return Center(
+                child: Text(
+                  _searchQuery.isEmpty ? 'Belum ada tagihan' : 'Tidak ada tagihan ditemukan',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppColors.textSecondaryBlue,
+                    fontSize: 16,
+                  ),
+                ),
+              );
+            }
+            return AnimationLimiter(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(AppSizes.paddingMedium),
+                itemCount: filteredTagihans.length,
+                itemBuilder: (ctx, i) => _buildTagihanCard(filteredTagihans[i], i),
               ),
             );
-          }
-          if (snap.hasError) {
-            return Center(child: Text('Error: ${snap.error}'));
-          }
-          final tagihans = snap.data!;
-          if (tagihans.isEmpty) {
-            return const Center(child: Text('Belum ada tagihan'));
-          }
-          return AnimationLimiter(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(AppSizes.paddingMedium),
-              itemCount: tagihans.length,
-              itemBuilder: (ctx, i) => _buildTagihanCard(tagihans[i], i),
-            ),
-          );
-        },
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.pushNamed(context, '/add_tagihan');
-          if (result == true) setState(_loadTagihans);
+          if (result == true) _loadTagihans();
         },
         backgroundColor: AppColors.accentRed,
         foregroundColor: AppColors.white,
-        child: const Icon(Icons.add),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(Icons.add, size: 24),
         tooltip: 'Tambah Tagihan',
       ),
     );
