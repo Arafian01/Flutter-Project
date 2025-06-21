@@ -61,6 +61,9 @@ class _LoginPageState extends State<LoginPage> {
           if (role == 'pelanggan') {
             try {
               final pelanggan = await fetchPelangganByUserId(userId);
+              if (pelanggan.status == 'nonaktif') {
+                throw Exception('Akun Anda tidak aktif. Silakan hubungi admin.');
+              }
               final pelangganData = jsonEncode({
                 'pelanggan_id': pelanggan.id,
                 'name': pelanggan.name,
@@ -73,7 +76,16 @@ class _LoginPageState extends State<LoginPage> {
                 'tanggalLangganan': pelanggan.tanggalLangganan.toString(),
               });
               await prefs.setString('pelanggan_data', pelangganData);
-            } catch (_) {}
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(e.toString().contains('Akun Anda') ? e.toString() : 'Gagal memuat data pelanggan'),
+                  backgroundColor: AppColors.accentRed,
+                ),
+              );
+              setState(() => _isLoading = false);
+              return;
+            }
           }
 
           Navigator.pushReplacement(
