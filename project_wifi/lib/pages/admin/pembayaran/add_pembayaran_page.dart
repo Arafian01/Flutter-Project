@@ -45,8 +45,20 @@ class _AddPembayaranPageState extends State<AddPembayaranPage> {
   }
 
   Future<void> _pickImage() async {
-    final f = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (f != null) setState(() => _image = File(f.path));
+    try {
+      final f = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (f != null) {
+        final file = File(f.path);
+        final sizeInBytes = await file.length();
+        if (sizeInBytes > 5000000) { // 5MB
+          _showErrorDialog('Gambar terlalu besar. Maksimum 5MB.');
+          return;
+        }
+        setState(() => _image = file);
+      }
+    } catch (e) {
+      _showErrorDialog('Gagal memilih gambar: $e');
+    }
   }
 
   Future<void> _save() async {
