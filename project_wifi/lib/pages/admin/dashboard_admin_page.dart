@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/dashboard.dart';
 import '../../services/api_service.dart';
 import '../../utils/utils.dart';
@@ -30,6 +31,39 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
   String _formatRupiah(int amount) {
     final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
     return formatter.format(amount);
+  }
+
+  Future<void> _logout() async {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Row(
+          children: [
+            Icon(Icons.logout, color: AppColors.accentRed, size: 24),
+            SizedBox(width: 8),
+            Text('Konfirmasi Logout'),
+          ],
+        ),
+        content: Text('Apakah Anda yakin ingin logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Batal', style: TextStyle(color: AppColors.textSecondaryBlue)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.clear();
+              if (mounted) {
+                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+              }
+            },
+            child: Text('Logout', style: TextStyle(color: AppColors.accentRed)),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildCard({
@@ -127,6 +161,11 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
             icon: const Icon(Icons.refresh, size: AppSizes.iconSizeMedium),
             onPressed: _loadDashboard,
             tooltip: 'Refresh Data',
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, size: AppSizes.iconSizeMedium),
+            onPressed: _logout,
+            tooltip: 'Logout',
           ),
         ],
       ),
