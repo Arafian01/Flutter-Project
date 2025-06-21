@@ -27,11 +27,16 @@ class TagihanUserPage extends StatefulWidget {
 
 class _TagihanUserPageState extends State<TagihanUserPage> {
   late Future<List<Tagihan>> _future;
+  final _searchCtrl = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _loadTagihan();
+    _searchCtrl.addListener(() {
+      setState(() => _searchQuery = _searchCtrl.text.toLowerCase());
+    });
   }
 
   void _loadTagihan() {
@@ -168,30 +173,60 @@ class _TagihanUserPageState extends State<TagihanUserPage> {
           padding: EdgeInsets.all(16),
           child: Container(
             constraints: BoxConstraints(maxWidth: 400),
-            child: FutureBuilder<List>(
-              future: _future,
-              builder: (ctx, snap) {
-                if (snap.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                if (snap.hasError) {
-                  return Center(child: Text('Gagal memuat: ${snap.error}', style: TextStyle(fontSize: 14)));
-                }
-                final list = snap.data!;
-                if (list.isEmpty) {
-                  return Center(child: Text('Belum ada tagihan.', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)));
-                }
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: list.length,
-                  itemBuilder: (ctx, i) => _buildTagihanCard(list[i], i),
-                );
-              },
+            child: Column(
+              children: [
+                TextField(
+                  controller: _searchCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'Cari berdasarkan bulan tahun',
+                    prefixIcon: Icon(Icons.search, color: AppColors.secondaryBlue),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: AppColors.white,
+                  ),
+                ),
+                SizedBox(height: 16),
+                FutureBuilder<List>(
+                  future: _future,
+                  builder: (ctx, snap) {
+                    if (snap.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+                    if (snap.hasError) {
+                      return Center(child: Text('Gagal memuat: ${snap.error}', style: TextStyle(fontSize: 14)));
+                    }
+                    final list = snap.data!;
+                    if (list.isEmpty) {
+                      return Center(child: Text('Belum ada tagihan.', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)));
+                    }
+                    final filteredList = list.where((t) {
+                      final monthYear = formatBulanTahunFromInt(t.bulan, t.tahun).toLowerCase();
+                      return monthYear.contains(_searchQuery);
+                    }).toList();
+                    if (filteredList.isEmpty) {
+                      return Center(child: Text('Tagihan tidak ditemukan.', style: TextStyle(fontSize: 16)));
+                    }
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: filteredList.length,
+                      itemBuilder: (ctx, i) => _buildTagihanCard(filteredList[i], i),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
   }
 }
