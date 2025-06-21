@@ -30,8 +30,30 @@ class _EditPembayaranPageState extends State<EditPembayaranPage> {
   }
 
   Future<void> _pickImage() async {
-    final f = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (f != null) setState(() => _image = File(f.path));
+    try {
+      final f = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (f != null) {
+        final file = File(f.path);
+        final sizeInBytes = await file.length();
+        if (sizeInBytes > 5000000) { // 5MB
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Gambar terlalu besar. Maksimum 5MB.'),
+              backgroundColor: AppColors.accentRed,
+            ),
+          );
+          return;
+        }
+        setState(() => _image = file);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memilih gambar: $e'),
+          backgroundColor: AppColors.accentRed,
+        ),
+      );
+    }
   }
 
   Future<void> _save() async {
