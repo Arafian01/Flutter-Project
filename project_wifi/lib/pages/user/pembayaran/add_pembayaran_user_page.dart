@@ -36,7 +36,15 @@ class _AddPembayaranUserPageState extends State<AddPembayaranUserPage> {
     try {
       final picker = ImagePicker();
       final picked = await picker.pickImage(source: ImageSource.gallery);
-      if (picked != null && mounted) setState(() => _imageFile = File(picked.path));
+      if (picked != null) {
+        final file = File(picked.path);
+        final sizeInBytes = await file.length();
+        if (sizeInBytes > 5000000) { // 5MB
+          _showErrorDialog('Gambar terlalu besar. Maksimum 5MB.');
+          return;
+        }
+        if (mounted) setState(() => _imageFile = file);
+      }
     } catch (e) {
       _showErrorDialog('Gagal memilih gambar: $e');
     }
