@@ -26,11 +26,16 @@ class PembayaranUserPage extends StatefulWidget {
 
 class _PembayaranUserPageState extends State<PembayaranUserPage> {
   late Future<List<Pembayaran>> _future;
+  final _searchCtrl = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _loadPembayaran();
+    _searchCtrl.addListener(() {
+      setState(() => _searchQuery = _searchCtrl.text.toLowerCase());
+    });
   }
 
   void _loadPembayaran() {
@@ -140,30 +145,60 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> {
           padding: EdgeInsets.all(16),
           child: Container(
             constraints: BoxConstraints(maxWidth: 400),
-            child: FutureBuilder<List>(
-              future: _future,
-              builder: (ctx, snap) {
-                if (snap.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                if (snap.hasError) {
-                  return Center(child: Text('Gagal memuat: ${snap.error}', style: TextStyle(fontSize: 14)));
-                }
-                final list = snap.data!;
-                if (list.isEmpty) {
-                  return Center(child: Text('Belum ada pembayaran.', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)));
-                }
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: list.length,
-                  itemBuilder: (ctx, i) => _buildPembayaranCard(list[i], i),
-                );
-              },
+            child: Column(
+              children: [
+                TextField(
+                  controller: _searchCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'Cari berdasarkan bulan tahun',
+                    prefixIcon: Icon(Icons.search, color: AppColors.secondaryBlue),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: AppColors.white,
+                  ),
+                ),
+                SizedBox(height: 16),
+                FutureBuilder<List>(
+                  future: _future,
+                  builder: (ctx, snap) {
+                    if (snap.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+                    if (snap.hasError) {
+                      return Center(child: Text('Gagal memuat: ${snap.error}', style: TextStyle(fontSize: 14)));
+                    }
+                    final list = snap.data!;
+                    if (list.isEmpty) {
+                      return Center(child: Text('Belum ada pembayaran.', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)));
+                    }
+                    final filteredList = list.where((p) {
+                      final monthYear = formatBulanTahunFromInt(p.bulan, p.tahun).toLowerCase();
+                      return monthYear.contains(_searchQuery);
+                    }).toList();
+                    if (filteredList.isEmpty) {
+                      return Center(child: Text('Pembayaran tidak ditemukan.', style: TextStyle(fontSize: 16)));
+                    }
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: filteredList.length,
+                      itemBuilder: (ctx, i) => _buildPembayaranCard(filteredList[i], i),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
   }
 }
