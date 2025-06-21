@@ -24,33 +24,13 @@ class PembayaranUserPage extends StatefulWidget {
   State<PembayaranUserPage> createState() => _PembayaranUserPageState();
 }
 
-class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTickerProviderStateMixin {
+class _PembayaranUserPageState extends State<PembayaranUserPage> {
   late Future<List<Pembayaran>> _future;
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _loadPembayaran();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   void _loadPembayaran() {
@@ -69,7 +49,26 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
     return await PembayaranService.fetchPembayaransByPelanggan(pid);
   }
 
-
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Row(children: [
+          Icon(Icons.error_outline, color: AppColors.accentRed, size: 24),
+          SizedBox(width: 8),
+          Text('Error'),
+        ]),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK', style: TextStyle(color: AppColors.accentRed)),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildPembayaranCard(Pembayaran p, int index) {
     IconData statusIcon;
@@ -84,7 +83,7 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
         statusColor = Colors.green;
         break;
       case 'ditolak':
-        statusIcon = Icons.cancel;
+        statusIcon = Icons.error;
         statusColor = AppColors.accentRed;
         break;
       default:
@@ -92,53 +91,29 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
         statusColor = AppColors.textSecondaryBlue;
     }
 
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-          color: AppColors.white,
-          margin: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
-          child: InkWell(
-            onTap: () => Navigator.pushNamed(
-              context,
-              '/detail_pembayaran',
-              arguments: p,
-            ),
-            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(AppSizes.paddingMedium),
-              leading: CircleAvatar(
-                radius: 24,
-                backgroundColor: AppColors.secondaryBlue.withOpacity(0.2),
-                child: Icon(
-                  statusIcon,
-                  color: statusColor,
-                  size: AppSizes.iconSizeMedium,
-                ),
-              ),
-              title: Text(
-                formatBulanTahunFromInt(p.bulan, p.tahun),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryBlue,
-                ),
-              ),
-              subtitle: Text(
-                'Rp ${p.harga} • ${p.statusVerifikasi.replaceAll('_', ' ').toUpperCase()}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondaryBlue,
-                ),
-              ),
-              trailing: Icon(
-                Icons.arrow_forward_ios,
-                color: AppColors.textSecondaryBlue,
-                size: AppSizes.iconSizeSmall,
-              ),
-            ),
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () => Navigator.pushNamed(context, '/detail_pembayaran', arguments: p),
+        borderRadius: BorderRadius.circular(12),
+        child: ListTile(
+          contentPadding: EdgeInsets.all(16),
+          leading: CircleAvatar(
+            radius: 20,
+            backgroundColor: AppColors.secondaryBlue.withOpacity(0.1),
+            child: Icon(statusIcon, color: statusColor, size: 24),
           ),
+          title: Text(
+            formatBulanTahunFromInt(p.bulan, p.tahun),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.primaryBlue),
+          ),
+          subtitle: Text(
+            'Rp ${p.harga} • ${p.statusVerifikasi.replaceAll('_', ' ').toUpperCase()}',
+            style: TextStyle(fontSize: 14, color: AppColors.textSecondaryBlue),
+          ),
+          trailing: Icon(Icons.arrow_forward_ios, color: AppColors.textSecondaryBlue, size: 16),
         ),
       ),
     );
@@ -150,70 +125,43 @@ class _PembayaranUserPageState extends State<PembayaranUserPage> with SingleTick
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
-        title: const Text('Daftar Pembayaran'),
-        foregroundColor: AppColors.white,
+        title: Text('Daftar Pembayaran', style: TextStyle(color: AppColors.white, fontSize: 18)),
         centerTitle: true,
-        leading: const Icon(
-          Icons.payment,
-          color: AppColors.white,
-          size: AppSizes.iconSizeMedium,
-        ),
+        leading: Icon(Icons.payment, color: AppColors.white, size: 24),
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.refresh,
-              color: AppColors.white,
-              size: AppSizes.iconSizeMedium,
-            ),
+            icon: Icon(Icons.refresh, color: AppColors.white, size: 24),
             onPressed: _loadPembayaran,
-            tooltip: 'Refresh Data',
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(AppSizes.paddingMedium),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: FutureBuilder<List<Pembayaran>>(
-                future: _future,
-                builder: (ctx, snap) {
-                  if (snap.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
-                      ),
-                    );
-                  }
-                  if (snap.hasError) {
-                    return Center(
-                      child: Text(
-                        'Gagal memuat pembayaran: ${snap.error}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondaryBlue,
-                        ),
-                      ),
-                    );
-                  }
-                  final list = snap.data!;
-                  if (list.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'Belum ada pembayaran',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textSecondaryBlue),
-                      ),
-                    );
-                  }
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(0),
-                    itemCount: list.length,
-                    itemBuilder: (ctx, i) => _buildPembayaranCard(list[i], i),
-                  );
-                },
-              ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 400),
+            child: FutureBuilder<List>(
+              future: _future,
+              builder: (ctx, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+                if (snap.hasError) {
+                  return Center(child: Text('Gagal memuat: ${snap.error}', style: TextStyle(fontSize: 14)));
+                }
+                final list = snap.data!;
+                if (list.isEmpty) {
+                  return Center(child: Text('Belum ada pembayaran.', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)));
+                }
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: list.length,
+                  itemBuilder: (ctx, i) => _buildPembayaranCard(list[i], i),
+                );
+              },
             ),
-          ],
+          ),
         ),
       ),
     );

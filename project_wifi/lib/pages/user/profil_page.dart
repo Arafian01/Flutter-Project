@@ -10,43 +10,21 @@ class ProfilPage extends StatefulWidget {
   State<ProfilPage> createState() => _ProfilPageState();
 }
 
-class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateMixin {
+class _ProfilPageState extends State<ProfilPage> {
   String? _name, _email, _telepon, _alamat, _namaPaket, _status, _tanggalAktif, _tanggalLangganan;
   bool _isLoading = true;
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
     _loadProfile();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   Future<void> _loadProfile() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final pelangganData = prefs.getString('pelanggan_data');
-      if (pelangganData == null) {
-        throw Exception('Data pelanggan tidak ditemukan');
-      }
+      if (pelangganData == null) throw Exception('Data pelanggan tidak ditemukan');
       final data = jsonDecode(pelangganData) as Map<String, dynamic>;
       if (mounted) {
         setState(() {
@@ -64,12 +42,7 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal memuat profil: $e'),
-            backgroundColor: AppColors.accentRed,
-          ),
-        );
+        _showErrorDialog('Gagal memuat profil: $e');
       }
     }
   }
@@ -82,64 +55,53 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
         await Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal logout: $e'),
-            backgroundColor: AppColors.accentRed,
-          ),
-        );
-      }
+      if (mounted) _showErrorDialog('Gagal logout: $e');
     }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Row(children: [
+          Icon(Icons.error_outline, color: AppColors.accentRed, size: 24),
+          SizedBox(width: 8),
+          Text('Error'),
+        ]),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK', style: TextStyle(color: AppColors.accentRed)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showLogoutDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-        backgroundColor: AppColors.white,
-        title: Row(
-          children: [
-            const Icon(Icons.logout, color: AppColors.accentRed, size: AppSizes.iconSizeMedium),
-            const SizedBox(width: AppSizes.paddingSmall),
-            Text(
-              'Konfirmasi Logout',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppColors.primaryBlue,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          'Apakah Anda yakin ingin logout?',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.textSecondaryBlue,
-          ),
-        ),
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Row(children: [
+          Icon(Icons.logout, color: AppColors.accentRed, size: 24),
+          SizedBox(width: 8),
+          Text('Konfirmasi Logout', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        ]),
+        content: Text('Apakah Anda yakin ingin logout?', style: TextStyle(fontSize: 14)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Batal',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.secondaryBlue,
-              ),
-            ),
+            child: Text('Batal', style: TextStyle(fontSize: 14, color: AppColors.secondaryBlue)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               _logout();
             },
-            child: Text(
-              'Logout',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.accentRed,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: Text('Logout', style: TextStyle(fontSize: 14, color: AppColors.accentRed, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -148,34 +110,19 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
 
   Widget _buildInfoItem(IconData icon, String label, String? value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingSmall),
+      padding: EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: AppColors.secondaryBlue,
-            size: AppSizes.iconSizeMedium,
-          ),
-          const SizedBox(width: AppSizes.paddingMedium),
+          Icon(icon, color: AppColors.secondaryBlue, size: 24),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondaryBlue,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value ?? '-',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.primaryBlue,
-                  ),
-                ),
+                Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondaryBlue)),
+                SizedBox(height: 4),
+                Text(value ?? '-', style: TextStyle(fontSize: 14, color: AppColors.primaryBlue)),
               ],
             ),
           ),
@@ -188,145 +135,71 @@ class _ProfilPageState extends State<ProfilPage> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
+      appBar: AppBar(
+        backgroundColor: AppColors.primaryBlue,
+        title: Text('Profil Akun', style: TextStyle(color: AppColors.white, fontSize: 18)),
+        centerTitle: true,
+      ),
       body: _isLoading
-          ? const Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
-        ),
-      )
+          ? Center(child: CircularProgressIndicator())
           : SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              backgroundColor: AppColors.primaryBlue,
-              floating: true,
-              pinned: false,
-              title: const Text(
-                'Profil Akun',
-                style: TextStyle(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-              centerTitle: true,
-              elevation: 0,
-            ),
-            SliverToBoxAdapter(
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 400),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingLarge, vertical: AppSizes.paddingMedium),
+                    padding: EdgeInsets.all(16),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(AppSizes.paddingLarge),
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              CircleAvatar(
-                                radius: 50,
-                                backgroundColor: AppColors.secondaryBlue.withOpacity(0.3),
-                                child: const Icon(
-                                  Icons.person,
-                                  size: 50,
-                                  color: AppColors.primaryBlue,
-                                ),
-                              ),
-                              const SizedBox(height: AppSizes.paddingMedium),
-                              Text(
-                                _name?.toUpperCase() ?? '-',
-                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  color: AppColors.primaryBlue,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: AppSizes.paddingSmall),
-                              Text(
-                                _email ?? '-',
-                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  color: AppColors.textSecondaryBlue,
-                                  fontSize: 18,
-                                ),
-                              ),
-                            ],
-                          ),
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundColor: AppColors.secondaryBlue.withOpacity(0.1),
+                          child: Icon(Icons.person, size: 40, color: AppColors.primaryBlue),
                         ),
-                        const SizedBox(height: AppSizes.paddingLarge),
-                        Container(
-                          padding: const EdgeInsets.all(AppSizes.paddingMedium),
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Informasi Akun',
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  color: AppColors.primaryBlue,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: AppSizes.paddingMedium),
-                              _buildInfoItem(Icons.phone, 'Telepon', _telepon),
-                              _buildInfoItem(Icons.home, 'Alamat', _alamat),
-                              _buildInfoItem(Icons.card_giftcard, 'Nama Paket', _namaPaket),
-                              _buildInfoItem(Icons.toggle_on, 'Status', _status),
-                              _buildInfoItem(Icons.check_circle, 'Tanggal Aktif', _tanggalAktif),
-                              _buildInfoItem(Icons.calendar_month, 'Tanggal Langganan', _tanggalLangganan),
-                            ],
-                          ),
+                        SizedBox(height: 12),
+                        Text(
+                          _name?.toUpperCase() ?? '-',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.primaryBlue),
                         ),
-                        const SizedBox(height: AppSizes.paddingLarge),
-                        ElevatedButton(
-                          onPressed: _showLogoutDialog,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.accentRed,
-                            foregroundColor: AppColors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                            ),
-                            textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                            minimumSize: const Size(double.infinity, 56),
-                            elevation: 4,
-                          ),
-                          child: const Text('Logout'),
-                        ),
-                        const SizedBox(height: AppSizes.paddingLarge),
+                        SizedBox(height: 8),
+                        Text(_email ?? '-', style: TextStyle(fontSize: 14, color: AppColors.textSecondaryBlue)),
+                        SizedBox(height: 16),
+                        Divider(color: AppColors.secondaryBlue.withOpacity(0.3)),
+                        SizedBox(height: 12),
+                        _buildInfoItem(Icons.phone, 'Telepon', _telepon),
+                        _buildInfoItem(Icons.home, 'Alamat', _alamat),
+                        _buildInfoItem(Icons.card_giftcard, 'Nama Paket', _namaPaket),
+                        _buildInfoItem(Icons.toggle_on, 'Status', _status),
+                        _buildInfoItem(Icons.check_circle, 'Tanggal Aktif', _tanggalAktif),
+                        _buildInfoItem(Icons.calendar_month, 'Tanggal Langganan', _tanggalLangganan),
                       ],
                     ),
                   ),
                 ),
-              ),
+                SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _showLogoutDialog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accentRed,
+                      foregroundColor: AppColors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text('Logout', style: TextStyle(fontSize: 16)),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

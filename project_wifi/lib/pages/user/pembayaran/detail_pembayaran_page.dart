@@ -25,6 +25,27 @@ class DetailPembayaranPage extends StatelessWidget {
     return formatter.format(amount);
   }
 
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Row(children: [
+          Icon(Icons.error_outline, color: AppColors.accentRed, size: 24),
+          SizedBox(width: 8),
+          Text('Error'),
+        ]),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK', style: TextStyle(color: AppColors.accentRed)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     initializeDateFormatting('id_ID');
@@ -32,118 +53,96 @@ class DetailPembayaranPage extends StatelessWidget {
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
-        title: const Text('Detail Pembayaran'),
-        foregroundColor: AppColors.white,
+        title: Text('Detail Pembayaran', style: TextStyle(color: AppColors.white, fontSize: 18)),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.white, size: AppSizes.iconSizeMedium),
+          icon: Icon(Icons.arrow_back, color: AppColors.white, size: 24),
           onPressed: () => Navigator.pop(context),
-          tooltip: 'Kembali',
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(AppSizes.paddingLarge),
+      body: SafeArea(
         child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-                color: AppColors.white,
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSizes.paddingMedium),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Periode: ${formatBulanTahunFromInt(pembayaran.bulan, pembayaran.tahun)}',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppColors.primaryBlue,
-                          fontWeight: FontWeight.bold,
-                        ),
+          padding: EdgeInsets.all(16),
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 400),
+            child: Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Periode: ${formatBulanTahunFromInt(pembayaran.bulan, pembayaran.tahun)}',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.primaryBlue),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Harga: ${_formatRupiah(pembayaran.harga)}',
+                      style: TextStyle(fontSize: 14, color: AppColors.textSecondaryBlue),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Status: ${pembayaran.statusVerifikasi.replaceAll('_', ' ').toUpperCase()}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: pembayaran.statusVerifikasi == 'diterima'
+                            ? Colors.green
+                            : pembayaran.statusVerifikasi == 'ditolak'
+                            ? AppColors.accentRed
+                            : AppColors.secondaryBlue,
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(height: AppSizes.paddingSmall),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Tanggal Pengiriman: ${DateFormat('dd MMMM yyyy', 'id_ID').format(pembayaran.tanggalKirim)}',
+                      style: TextStyle(fontSize: 14, color: AppColors.textSecondaryBlue),
+                    ),
+                    if (pembayaran.tanggalVerifikasi != null)
                       Text(
-                        'Harga: ${_formatRupiah(pembayaran.harga)}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondaryBlue,
-                        ),
+                        'Tanggal Verifikasi: ${DateFormat('dd MMMM yyyy', 'id_ID').format(pembayaran.tanggalVerifikasi!)}',
+                        style: TextStyle(fontSize: 14, color: AppColors.textSecondaryBlue),
                       ),
-                      const SizedBox(height: AppSizes.paddingSmall),
-                      Text(
-                        'Status: ${pembayaran.statusVerifikasi.replaceAll('_', ' ').toUpperCase()}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: pembayaran.statusVerifikasi == 'diterima'
-                              ? Colors.green
-                              : pembayaran.statusVerifikasi == 'ditolak'
-                              ? AppColors.accentRed
-                              : AppColors.secondaryBlue,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: AppSizes.paddingSmall),
-                      Text(
-                        'Tanggal Pengiriman: ${DateFormat('dd MMMM yyyy', 'id_ID').format(pembayaran.tanggalKirim)}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondaryBlue,
-                        ),
-                      ),
-                      if (pembayaran.tanggalVerifikasi != null)
-                        Text(
-                          'Tanggal Verifikasi: ${DateFormat('dd MMMM yyyy', 'id_ID').format(pembayaran.tanggalVerifikasi!)}',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondaryBlue,
+                    SizedBox(height: 8),
+                    Text(
+                      'Pelanggan: ${pembayaran.pelangganName}',
+                      style: TextStyle(fontSize: 14, color: AppColors.textSecondaryBlue),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Bukti Pembayaran:',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.primaryBlue),
+                    ),
+                    SizedBox(height: 8),
+                    if (pembayaran.image.isNotEmpty)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          '${AppConstants.baseUrl}${pembayaran.image}',
+                          height: 150,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (ctx, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(child: CircularProgressIndicator());
+                          },
+                          errorBuilder: (ctx, error, stackTrace) => Text(
+                            'Gagal memuat gambar',
+                            style: TextStyle(fontSize: 14, color: AppColors.textSecondaryBlue),
                           ),
                         ),
-                      const SizedBox(height: AppSizes.paddingSmall),
+                      )
+                    else
                       Text(
-                        'Pelanggan ID: ${pembayaran.pelangganName}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondaryBlue,
-                        ),
+                        'Gambar tidak tersedia',
+                        style: TextStyle(fontSize: 14, color: AppColors.textSecondaryBlue),
                       ),
-                      const SizedBox(height: AppSizes.paddingMedium),
-                      Text(
-                        'Bukti Pembayaran:',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.primaryBlue,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: AppSizes.paddingSmall),
-                      if (pembayaran.image.isNotEmpty)
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                          child: Image.network(
-                            '${AppConstants.baseUrl}${pembayaran.image}',
-                            height: 200,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            loadingBuilder: (ctx, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return const Center(
-                                child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
-                                ),
-                              );
-                            },
-                            errorBuilder: (ctx, error, stackTrace) => const Text(
-                              'Gagal memuat gambar',
-                              style: TextStyle(color: AppColors.textSecondaryBlue),
-                            ),
-                          ),
-                        )
-                      else
-                        const Text(
-                          'Gambar tidak tersedia',
-                          style: TextStyle(color: AppColors.textSecondaryBlue),
-                        ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),

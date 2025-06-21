@@ -12,33 +12,13 @@ class DashboardUserPage extends StatefulWidget {
   State<DashboardUserPage> createState() => _DashboardUserPageState();
 }
 
-class _DashboardUserPageState extends State<DashboardUserPage> with SingleTickerProviderStateMixin {
+class _DashboardUserPageState extends State<DashboardUserPage> {
   late Future<DashboardUser> _future;
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _loadDashboard();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   void _loadDashboard() {
@@ -57,71 +37,44 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
     return DashboardUserService.fetchDashboardUser(pid);
   }
 
-
   Widget _buildCard({
     required String title,
     required String value,
     required IconData icon,
     VoidCallback? onTap,
-    required Animation<double> fadeAnimation,
-    required Animation<double> scaleAnimation,
   }) {
-    return FadeTransition(
-      opacity: fadeAnimation,
-      child: ScaleTransition(
-        scale: scaleAnimation,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-          child: Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-            color: AppColors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(AppSizes.paddingMedium),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: AppColors.secondaryBlue.withOpacity(0.2),
-                    child: Icon(
-                      icon,
-                      size: AppSizes.iconSizeMedium,
-                      color: AppColors.primaryBlue,
-                    ),
-                  ),
-                  const SizedBox(width: AppSizes.paddingMedium),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          value,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: AppColors.primaryBlue,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: AppSizes.paddingSmall),
-                        Text(
-                          title,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondaryBlue,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (onTap != null)
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      color: AppColors.textSecondaryBlue,
-                      size: AppSizes.iconSizeSmall,
-                    ),
-                ],
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: AppColors.secondaryBlue.withOpacity(0.1),
+                child: Icon(icon, size: 24, color: AppColors.primaryBlue),
               ),
-            ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      value,
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.primaryBlue),
+                    ),
+                    SizedBox(height: 4),
+                    Text(title, style: TextStyle(fontSize: 14, color: AppColors.textSecondaryBlue)),
+                  ],
+                ),
+              ),
+              if (onTap != null)
+                Icon(Icons.arrow_forward_ios, color: AppColors.textSecondaryBlue, size: 16),
+            ],
           ),
         ),
       ),
@@ -130,149 +83,86 @@ class _DashboardUserPageState extends State<DashboardUserPage> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
-    final isSmallScreen = MediaQuery.of(context).size.width < 600;
-
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
-        title: const Text('Dashboard'),
-        foregroundColor: AppColors.white,
+        title: Text('Dashboard', style: TextStyle(color: AppColors.white, fontSize: 18)),
         centerTitle: true,
+        foregroundColor: AppColors.white,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(AppSizes.paddingMedium),
-        child: FutureBuilder<DashboardUser>(
-          future: _future,
-          builder: (ctx, snap) {
-            if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
-                ),
-              );
-            }
-            if (snap.hasError) {
-              return Center(
-                child: Text(
-                  'Gagal memuat dashboard: ${snap.error}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondaryBlue,
-                  ),
-                ),
-              );
-            }
-            final data = snap.data!;
-            return SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GridView(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: isSmallScreen ? 1 : 2,
-                      crossAxisSpacing: AppSizes.paddingMedium,
-                      mainAxisSpacing: AppSizes.paddingMedium,
-                      childAspectRatio: isSmallScreen ? 3 / 1 : 4 / 3,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 400),
+            child: FutureBuilder<DashboardUser>(
+              future: _future,
+              builder: (ctx, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+                if (snap.hasError) {
+                  return Center(child: Text('Gagal memuat: ${snap.error}', style: TextStyle(fontSize: 14)));
+                }
+                final data = snap.data!;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildCard(
+                      title: 'Total Tagihan',
+                      value: data.totalTagihan.toString(),
+                      icon: Icons.receipt_long,
+                      onTap: () => Navigator.pushNamed(context, '/tagihan'),
                     ),
-                    children: [
-                      _buildCard(
-                        title: 'Total Tagihan',
-                        value: data.totalTagihan.toString(),
-                        icon: Icons.receipt_long,
-                        onTap: () => Navigator.pushNamed(context, '/tagihan'),
-                        fadeAnimation: _fadeAnimation,
-                        scaleAnimation: _scaleAnimation,
-                      ),
-                      _buildCard(
-                        title: 'Lunas',
-                        value: data.tagihanLunas.toString(),
-                        icon: Icons.check_circle,
-                        onTap: () => Navigator.pushNamed(context, '/tagihan', arguments: 'lunas'),
-                        fadeAnimation: _fadeAnimation,
-                        scaleAnimation: _scaleAnimation,
-                      ),
-                      _buildCard(
-                        title: 'Belum Bayar',
-                        value: data.tagihanPending.toString(),
-                        icon: Icons.pending,
-                        onTap: () => Navigator.pushNamed(context, '/tagihan', arguments: 'pending'),
-                        fadeAnimation: _fadeAnimation,
-                        scaleAnimation: _scaleAnimation,
-                      ),
-                      _buildCard(
-                        title: 'Paket Aktif',
-                        value: data.paketAktif ?? '-',
-                        icon: Icons.wifi,
-                        fadeAnimation: _fadeAnimation,
-                        scaleAnimation: _scaleAnimation,
-                      ),
-                      _buildCard(
-                        title: 'Status Akun',
-                        value: data.statusAkun,
-                        icon: Icons.person,
-                        fadeAnimation: _fadeAnimation,
-                        scaleAnimation: _scaleAnimation,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSizes.paddingLarge),
-                  if (data.tanggalAktif != null && data.tanggalLangganan != null)
-                    Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-                      color: AppColors.white,
-                      child: Column(
-                        children: [
-                          ListTile(
-                            leading: const Icon(
-                              Icons.calendar_today,
-                              color: AppColors.primaryBlue,
-                              size: AppSizes.iconSizeMedium,
-                            ),
-                            title: Text(
-                              'Tanggal Aktif',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.primaryBlue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text(
-                              data.tanggalAktif!.toLocal().toString().split(' ')[0],
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.textSecondaryBlue,
-                              ),
-                            ),
-                          ),
-                          const Divider(height: 1, color: AppColors.textSecondaryBlue),
-                          ListTile(
-                            leading: const Icon(
-                              Icons.event,
-                              color: AppColors.primaryBlue,
-                              size: AppSizes.iconSizeMedium,
-                            ),
-                            title: Text(
-                              'Langganan Sejak',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.primaryBlue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text(
-                              data.tanggalLangganan!.toLocal().toString().split(' ')[0],
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.textSecondaryBlue,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                    _buildCard(
+                      title: 'Lunas',
+                      value: data.tagihanLunas.toString(),
+                      icon: Icons.check_circle,
+                      onTap: () => Navigator.pushNamed(context, '/tagihan', arguments: 'lunas'),
                     ),
-                ],
-              ),
-            );
-          },
+                    _buildCard(
+                      title: 'Belum Bayar',
+                      value: data.tagihanPending.toString(),
+                      icon: Icons.pending,
+                      onTap: () => Navigator.pushNamed(context, '/tagihan', arguments: 'pending'),
+                    ),
+                    _buildCard(
+                      title: 'Paket Aktif',
+                      value: data.paketAktif ?? '-',
+                      icon: Icons.wifi,
+                    ),
+                    _buildCard(
+                      title: 'Status Akun',
+                      value: data.statusAkun,
+                      icon: Icons.person,
+                    ),
+                    SizedBox(height: 16),
+                    if (data.tanggalAktif != null && data.tanggalLangganan != null)
+                      Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: Column(
+                          children: [
+                            ListTile(
+                              leading: Icon(Icons.calendar_today, color: AppColors.primaryBlue, size: 24),
+                              title: Text('Tanggal Aktif', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                              subtitle: Text(data.tanggalAktif!.toLocal().toString().split(' ')[0], style: TextStyle(fontSize: 14)),
+                            ),
+                            Divider(height: 1, color: AppColors.textSecondaryBlue),
+                            ListTile(
+                              leading: Icon(Icons.event, color: AppColors.primaryBlue, size: 24),
+                              title: Text('Langganan Sejak', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                              subtitle: Text(data.tanggalLangganan!.toLocal().toString().split(' ')[0], style: TextStyle(fontSize: 14)),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
         ),
       ),
     );

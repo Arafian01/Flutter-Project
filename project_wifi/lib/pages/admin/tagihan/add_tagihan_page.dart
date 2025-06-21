@@ -45,43 +45,53 @@ class _AddTagihanPageState extends State<AddTagihanPage> {
       final pelanggans = await fetchPelanggans();
       setState(() => _pelanggans = pelanggans);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: AppColors.accentRed,
-        ),
-      );
+      _showErrorDialog('Gagal memuat pelanggan: $e');
     }
   }
 
   Future<void> _saveTagihan() async {
-    if (_formKey.currentState!.validate() && _selectedPelanggan != null && _bulan != null && _tahun != null) {
-      setState(() => _isLoading = true);
-      try {
-        await TagihanService.createTagihan(
-          pelangganId: _selectedPelanggan!.id,
-          bulan: _bulan!,
-          tahun: _tahun!,
-          statusPembayaran: _statusPembayaran,
-        );
-        Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Tagihan dibuat'),
-            backgroundColor: AppColors.primaryBlue,
-          ),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppColors.accentRed,
-          ),
-        );
-      } finally {
-        setState(() => _isLoading = false);
-      }
+    if (!_formKey.currentState!.validate() || _selectedPelanggan == null || _bulan == null || _tahun == null) {
+      _showErrorDialog('Lengkapi semua field');
+      return;
     }
+    setState(() => _isLoading = true);
+    try {
+      await TagihanService.createTagihan(
+        pelangganId: _selectedPelanggan!.id,
+        bulan: _bulan!,
+        tahun: _tahun!,
+        statusPembayaran: _statusPembayaran,
+      );
+      Navigator.pop(context, true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Tagihan dibuat'), backgroundColor: AppColors.primaryBlue),
+      );
+    } catch (e) {
+      _showErrorDialog('Gagal membuat tagihan: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Row(children: [
+          Icon(Icons.error_outline, color: AppColors.accentRed, size: 24),
+          SizedBox(width: 8),
+          Text('Error'),
+        ]),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK', style: TextStyle(color: AppColors.accentRed)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -90,90 +100,98 @@ class _AddTagihanPageState extends State<AddTagihanPage> {
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
-        title: const Text('Tambah Tagihan'),
-        foregroundColor: AppColors.white,
+        title: Text('Tambah Tagihan', style: TextStyle(color: AppColors.white, fontSize: 18)),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, size: AppSizes.iconSizeMedium),
+          icon: Icon(Icons.arrow_back, color: AppColors.white, size: 24),
           onPressed: () => Navigator.pop(context),
-          tooltip: 'Kembali',
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(AppSizes.paddingLarge),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                DropdownButtonFormField<Pelanggan>(
-                  decoration: const InputDecoration(
-                    labelText: 'Pelanggan',
-                    prefixIcon: Icon(Icons.person, color: AppColors.textSecondaryBlue),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 400),
+            child: Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 12),
+                      DropdownButtonFormField<Pelanggan>(
+                        decoration: InputDecoration(
+                          labelText: 'Pelanggan',
+                          prefixIcon: Icon(Icons.person),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        items: _pelanggans.map((p) => DropdownMenuItem(value: p, child: Text(p.name))).toList(),
+                        onChanged: (value) => setState(() => _selectedPelanggan = value),
+                        validator: (value) => value == null ? 'Pilih pelanggan' : null,
+                      ),
+                      SizedBox(height: 12),
+                      DropdownButtonFormField<int>(
+                        decoration: InputDecoration(
+                          labelText: 'Bulan',
+                          prefixIcon: Icon(Icons.calendar_today),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        items: _bulanOptions
+                            .map((m) => DropdownMenuItem<int>(value: m['nomor'] as int, child: Text(m['nama'] as String)))
+                            .toList(),
+                        onChanged: (value) => setState(() => _bulan = value),
+                        validator: (value) => value == null ? 'Pilih bulan' : null,
+                      ),
+                      SizedBox(height: 12),
+                      DropdownButtonFormField<int>(
+                        decoration: InputDecoration(
+                          labelText: 'Tahun',
+                          prefixIcon: Icon(Icons.calendar_today),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        items: List.generate(11, (i) => DateTime.now().year - 5 + i)
+                            .map((y) => DropdownMenuItem(value: y, child: Text('$y')))
+                            .toList(),
+                        onChanged: (value) => setState(() => _tahun = value),
+                        validator: (value) => value == null ? 'Pilih tahun' : null,
+                      ),
+                      SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          labelText: 'Status Pembayaran',
+                          prefixIcon: Icon(Icons.payment),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        value: _statusPembayaran,
+                        items: ['belum_dibayar', 'menunggu_verifikasi', 'lunas']
+                            .map((s) => DropdownMenuItem(value: s, child: Text(s.replaceAll('_', ' ').toUpperCase())))
+                            .toList(),
+                        onChanged: (value) => setState(() => _statusPembayaran = value!),
+                      ),
+                      SizedBox(height: 16),
+                      _isLoading
+                          ? Center(child: CircularProgressIndicator())
+                          : SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _saveTagihan,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryBlue,
+                            foregroundColor: AppColors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: Text('Simpan'),
+                        ),
+                      ),
+                    ],
                   ),
-                  items: _pelanggans
-                      .map((p) => DropdownMenuItem(value: p, child: Text(p.name)))
-                      .toList(),
-                  onChanged: (value) => setState(() => _selectedPelanggan = value),
-                  validator: (value) => value == null ? 'Pilih pelanggan' : null,
                 ),
-                const SizedBox(height: AppSizes.paddingMedium),
-                DropdownButtonFormField<int>(
-                  decoration: const InputDecoration(
-                    labelText: 'Bulan',
-                    prefixIcon: Icon(Icons.calendar_today, color: AppColors.textSecondaryBlue),
-                  ),
-                  items: _bulanOptions
-                      .map((m) => DropdownMenuItem<int>(
-                    value: m['nomor'] as int,
-                    child: Text(m['nama'] as String),
-                  ))
-                      .toList(),
-                  onChanged: (value) => setState(() => _bulan = value),
-                  validator: (value) => value == null ? 'Pilih bulan' : null,
-                ),
-                const SizedBox(height: AppSizes.paddingMedium),
-                DropdownButtonFormField<int>(
-                  decoration: const InputDecoration(
-                    labelText: 'Tahun',
-                    prefixIcon: Icon(Icons.calendar_today, color: AppColors.textSecondaryBlue),
-                  ),
-                  items: List.generate(11, (i) => DateTime.now().year - 5 + i)
-                      .map((y) => DropdownMenuItem(value: y, child: Text('$y')))
-                      .toList(),
-                  onChanged: (value) => setState(() => _tahun = value),
-                  validator: (value) => value == null ? 'Pilih tahun' : null,
-                ),
-                const SizedBox(height: AppSizes.paddingMedium),
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Status Pembayaran',
-                    prefixIcon: Icon(Icons.payment, color: AppColors.textSecondaryBlue),
-                  ),
-                  value: _statusPembayaran,
-                  items: ['belum_dibayar', 'menunggu_verifikasi', 'lunas']
-                      .map((s) => DropdownMenuItem(value: s, child: Text(s.replaceAll('_', ' ').toUpperCase())))
-                      .toList(),
-                  onChanged: (value) => setState(() => _statusPembayaran = value!),
-                ),
-                const SizedBox(height: AppSizes.paddingLarge),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: _isLoading
-                      ? const Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
-                    ),
-                  )
-                      : SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _saveTagihan,
-                      child: const Text('Simpan'),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),

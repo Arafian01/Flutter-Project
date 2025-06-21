@@ -94,52 +94,7 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
     return status.replaceAll('_', ' ').toUpperCase();
   }
 
-  void _showDeleteDialog(Pembayaran pembayaran) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusLarge)),
-        backgroundColor: AppColors.white,
-        title: Row(
-          children: [
-            const Icon(Icons.warning, color: AppColors.accentRed, size: AppSizes.iconSizeMedium),
-            const SizedBox(width: AppSizes.paddingSmall),
-            const Text('Konfirmasi Hapus'),
-          ],
-        ),
-        content: Text('Hapus pembayaran untuk ${pembayaran.pelangganName}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal', style: TextStyle(color: AppColors.textSecondaryBlue)),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await PembayaranService.deletePembayaran(pembayaran.id);
-                _load();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Pembayaran dihapus'),
-                    backgroundColor: AppColors.primaryBlue,
-                  ),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Gagal menghapus: $e'),
-                    backgroundColor: AppColors.accentRed,
-                  ),
-                );
-              }
-            },
-            child: const Text('Hapus', style: TextStyle(color: AppColors.accentRed)),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildPembayaranCard(Pembayaran pembayaran, int index) {
     return AnimationConfiguration.staggeredList(
@@ -217,11 +172,6 @@ class _PembayaranPageState extends State<PembayaranPage> with SingleTickerProvid
                         ),
                       ],
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: AppColors.accentRed),
-                    onPressed: () => _showDeleteDialog(pembayaran),
-                    tooltip: 'Hapus Pembayaran',
                   ),
                 ],
               ),

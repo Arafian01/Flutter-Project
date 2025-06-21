@@ -25,33 +25,13 @@ class TagihanUserPage extends StatefulWidget {
   State<TagihanUserPage> createState() => _TagihanUserPageState();
 }
 
-class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProviderStateMixin {
+class _TagihanUserPageState extends State<TagihanUserPage> {
   late Future<List<Tagihan>> _future;
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _loadTagihan();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   void _loadTagihan() {
@@ -68,6 +48,27 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
     final pid = data['pelanggan_id'] as int?;
     if (pid == null) return [];
     return await TagihanService.fetchTagihansByPelanggan(pid);
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Row(children: [
+          Icon(Icons.error_outline, color: AppColors.accentRed, size: 24),
+          SizedBox(width: 8),
+          Text('Error'),
+        ]),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK', style: TextStyle(color: AppColors.accentRed)),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildTagihanCard(Tagihan t, int index) {
@@ -102,75 +103,45 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
         canPay = false;
     }
 
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSizes.radiusMedium)),
-          color: AppColors.white,
-          margin: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(AppSizes.paddingMedium),
-            leading: CircleAvatar(
-              radius: 24,
-              backgroundColor: AppColors.secondaryBlue.withOpacity(0.2),
-              child: Icon(
-                statusIcon,
-                color: statusColor,
-                size: AppSizes.iconSizeMedium,
-              ),
-            ),
-            title: Text(
-              formatBulanTahunFromInt(t.bulan, t.tahun),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.primaryBlue,
-              ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Rp ${t.harga}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondaryBlue,
-                  ),
-                ),
-                Text(
-                  statusText,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: statusColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            trailing: ElevatedButton(
-              onPressed: canPay
-                  ? () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddPembayaranUserPage(tagihan: t),
-                  ),
-                );
-                if (result == true && mounted) {
-                  _loadTagihan();
-                }
-              }
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                foregroundColor: AppColors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.radiusSmall),
-                ),
-              ),
-              child: const Text('Bayar'),
-            ),
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        contentPadding: EdgeInsets.all(16),
+        leading: CircleAvatar(
+          radius: 20,
+          backgroundColor: AppColors.secondaryBlue.withOpacity(0.1),
+          child: Icon(statusIcon, color: statusColor, size: 24),
+        ),
+        title: Text(
+          formatBulanTahunFromInt(t.bulan, t.tahun),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.primaryBlue),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Rp ${t.harga}', style: TextStyle(fontSize: 14, color: AppColors.textSecondaryBlue)),
+            Text(statusText, style: TextStyle(fontSize: 14, color: statusColor, fontWeight: FontWeight.w600)),
+          ],
+        ),
+        trailing: ElevatedButton(
+          onPressed: canPay
+              ? () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AddPembayaranUserPage(tagihan: t)),
+            );
+            if (result == true && mounted) _loadTagihan();
+          }
+              : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryBlue,
+            foregroundColor: AppColors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           ),
+          child: Text('Bayar', style: TextStyle(fontSize: 14)),
         ),
       ),
     );
@@ -182,74 +153,43 @@ class _TagihanUserPageState extends State<TagihanUserPage> with SingleTickerProv
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
-        title: const Text('Daftar Tagihan'),
-        foregroundColor: AppColors.white,
+        title: Text('Daftar Tagihan', style: TextStyle(color: AppColors.white, fontSize: 18)),
         centerTitle: true,
-        leading: const Icon(
-          Icons.receipt_long,
-          color: AppColors.white,
-          size: AppSizes.iconSizeMedium,
-        ),
+        leading: Icon(Icons.receipt_long, color: AppColors.white, size: 24),
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.refresh,
-              color: AppColors.white,
-              size: AppSizes.iconSizeMedium,
-            ),
+            icon: Icon(Icons.refresh, color: AppColors.white, size: 24),
             onPressed: _loadTagihan,
-            tooltip: 'Refresh Data',
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(AppSizes.paddingMedium),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: FutureBuilder<List<Tagihan>>(
-                future: _future,
-                builder: (ctx, snap) {
-                  if (snap.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentRed),
-                      ),
-                    );
-                  }
-                  if (snap.hasError) {
-                    return Center(
-                      child: Text(
-                        'Gagal memuat tagihan: ${snap.error}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondaryBlue,
-                        ),
-                      ),
-                    );
-                  }
-                  final list = snap.data!;
-                  if (list.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'Belum ada tagihan',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondaryBlue,
-                        ),
-                      ),
-                    );
-                  }
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(0),
-                    itemCount: list.length,
-                    itemBuilder: (ctx, i) => _buildTagihanCard(list[i], i),
-                  );
-                },
-              ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 400),
+            child: FutureBuilder<List>(
+              future: _future,
+              builder: (ctx, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+                if (snap.hasError) {
+                  return Center(child: Text('Gagal memuat: ${snap.error}', style: TextStyle(fontSize: 14)));
+                }
+                final list = snap.data!;
+                if (list.isEmpty) {
+                  return Center(child: Text('Belum ada tagihan.', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)));
+                }
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: list.length,
+                  itemBuilder: (ctx, i) => _buildTagihanCard(list[i], i),
+                );
+              },
             ),
-          ],
+          ),
         ),
       ),
     );
